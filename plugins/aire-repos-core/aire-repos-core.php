@@ -71,3 +71,6 @@ function aire_repos_install_database_schema() {
 
 // Enregistrement du hook d'activation ciblant la fonction ci-dessus
 register_activation_hook( __FILE__, 'aire_repos_install_database_schema' );
+
+// Inclusion des routes de l'API REST
+require_once plugin_dir_path(__FILE__) . 'api-endpoints.php';

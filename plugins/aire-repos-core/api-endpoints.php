@@ -1,0 +1,85 @@
+<?php
+// Fichier : wp-content/plugins/aire-repos-core/api-endpoints.php
+
+// Sécurité : Empêcher l'accès direct
+if ( !defined('ABSPATH')) {
+    exit;
+}
+
+add_action( 'rest_api_init', 'aire_repos_register_api_endpoints' );
+
+// Enregistrement des routes personnalisées de l'API REST
+function aire_repos_register_api_endpoints() {
+    // Endpoint 1 : Enregistrement de la visite initiale
+    register_rest_route( 'aire-repos/v1', '/scan', array(
+        'methods' => WP_REST_Server::CREATABLE, // Constante pour 'POST'
+        'callback' => 'aire_repos_log_qr_scan',
+        'permission_callback' => '__return_true',
+    ));
+}
+
+// Logique de traitement pour l'endpoint /scan
+function aire_repos_log_qr_scan( WP_REST_Request $request ) {
+    global $wpdb;
+
+    // 1. Validation et Nettoyage (Sanitization)
+    $id_aire = absint( $request->get_param( 'id_aire' ) );
+    $code_langue = sanitize_text_field( $request->get_param( 'code_langue' ) );
+
+    // Contrôle d'intégrité
+    if ( empty($id_aire) || empty($code_langue) || strlen($code_langue) > 2) {
+        return new WP_Error( 'invalid_data', 'Paramètres de scan invalides.', array( 'status' => 400 ) );
+    }
+
+    // 2. Préparation des variables
+    $table_visite = $wpdb->prefix . 'visite_site';
+    $current_time = current_time( 'mysql' );
+
+    // 3. Insertion sécurisée
+    $inserted = $wpdb->insert(
+        $table_visite,
+        array(
+            'date_visite' => $current_time,
+            'id_aire' => $id_aire,
+            'code_langue' => strtoupper( $code_langue ),
+            'temps_total' => 0
+        ),
+        array( '%s', '%d', '%s', '%d' )
+    );
+
+    if ( false === $inserted ) {
+        return new WP_Error( 'db_error', 'Erreur interne de journalisation.', array( 'status' => 500 ) );
+    }
+
+    // 4. Réponse JSON formatée
+    return rest_ensure_response( array(
+        'status' => 'success',
+        'message' => 'Scan enregistré de manière anonyme.',
+        'id_visite' => $wpdb->insert_id
+    ));
+}
+
+// Logique de traitement pour l'endpoint /update-time
+function aire_repos_update_visit_time( WP_REST_Request $request ) {
+    global $wpdb;
+
+    $id_visite = absint( $request->get_param( 'id_visie'));
+    $temps_total = absint( $request->get_param('temps_total'));
+
+    if ( empty($id_visite) || empty($temps_total) ) {
+        return new WP_Error( 'invalid_dat', 'Données de mise à jour invalides.', array( 'status' => 400 ) );
+    }
+
+    $table_visite = $wpdb->prefix . 'visite_site';
+
+    // Sécurité : mise à jour préparée
+    $wpdb->update(
+        $table_visite,
+        array( 'temps_total' => $temps_total ),
+        array( 'id_visite' => $id_visite ),
+        array( '%d'),
+        array( '%d')
+    );
+
+    return rest_ensure_response( array( 'status' => 'success' ) );
+}
