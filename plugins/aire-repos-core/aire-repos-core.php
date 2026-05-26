@@ -1,89 +1,73 @@
 <?php
-/*
- Plugin Name: Aire Repos Core
-Description: Plugin métier gérant la logique des tables sur mesure pour les statistiques de scan (Cookieless).
-Version: 1.0
-Author: Samuel et Semih étudiants à la fabrique numérique 41
+/**
+ * Plugin Name: Aire de Repos - Logique Métier & Tracking
+ * Description: API REST et architecture de base de données sur mesure pour les statistiques de scans QR Code.
+ * Version: 1.0.0
+ * Author: Équipe Technique
+ *
+ * Chemin du fichier : /wp-content/plugins/aire-repos-core/aire-repos-core.php
  */
 
-// Sécurité : Empêcher l'accès direct au fichier
-if (! defined('ABSPATH' )) {
-    exit;
+if (! defined( 'ABSPATH' ) ) {
+    exit; // Mesure de sécurité : blocage de l'accès direct au fichier
 }
 
-// Déclaration de la fonction à lancer lors de l'activation du plugin
-register_activation_hook(__FILE__, 'aire_repos_creer_tables_statistiques' );
-
-function aire_repos_creer_tables_statistiques() {
+/**
+ * Fonction d'installation déclenchée exclusivement à l'activation du plugin.
+ * Responsable de la création et de la mise à jour du schéma de base de données.
+ */
+function aire_repos_install_database_schema() {
     global $wpdb;
 
-    // 1. Récupération de l'interclassement (Collation) défini par WordPress
-    // (Correspond généralement à utf8mb4_unicode_520_ci comme demandé)
+    // Récupération automatique de la collation définie dans wp-config.php (ex: utf8mb4_unicode_ci)
     $charset_collate = $wpdb->get_charset_collate();
 
-    // Inclusion du fichier natif de WordPress requis pour utiliser la fonction dbDelta()
-    require_once( ABSPATH . 'wp-admin/includes/upgrade.php' );
+    // Préfixage des tables pour garantir la sécurité et la compatibilité multisite
+    $table_visite = $wpdb->prefix. 'visite_site';
+    $table_vue    = $wpdb->prefix. 'vue_page';
 
-    // TABLE 1 : visite_site (Enregistre le scan initial du QR Code)
-    // Rescpect des consignes : Type INT pour l'ID (pas BIGINT) et moteur InnoDB
-    $nom_table_visite = $wpdb->prefix . 'visite_site';
-    $sql_visite = "CREATE TABLE $nom_table_visite (
-        id_visite INT NOT NULL AUTO_INCREMENT,
-        id_aire_repos INT NOT NULL,
-        id_langue INT NOT NULL,
-        date_scan DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL,
-        user_agent VARCHAR(255) DEFAULT '' NOT NULL,
-        PRIMARY KEY (id_visite)
-    ) $charset_collate ENGINE=InnoDB;";
+    // Inclusion du fichier Core de WordPress contenant la définition de dbDelta()
+    require_once( ABSPATH. 'wp-admin/includes/upgrade.php' );
 
-    // Exécution sécurisée de la requête SQL via dbDelta
-    dbDelta($sql_visite);
+    /*
+     * Définition de la Table 1 : visite_site (Tracking Global)
+     * Attention : Respect absolu des règles d'espacement et de casse de dbDelta.
+     */
+    $sql_visite = "CREATE TABLE $table_visite (
+        id_visite int(11) NOT NULL AUTO_INCREMENT,
+        date_visite datetime NOT NULL,
+        temps_total int(11) DEFAULT 0,
+        id_aire int(11) NOT NULL,
+        code_langue varchar(2) NOT NULL,
+        PRIMARY KEY  (id_visite),
+        KEY id_aire (id_aire),
+        KEY code_langue (code_langue)
+    ) $charset_collate;";
 
-    // TABLE 2 : vue_page (Enregistre le temps passé par visite)
-    // Respect des consignes : Type INT, Moteur InnoDB
-    $nom_table_vue = $wpdb->prefix . 'vue_page';
+    dbDelta( $sql_visite );
 
-    $sql_vue = "CREATE TABLE $nom_table_vue (
-        id_vue INT NOT NULL AUTO_INCREMENT,
-        id_visite INT NOT NULL,
-        page_vue VARCHAR(100) NOT NULL,
-        temps_passe_secondes INT NOT NULL,
-        PRIMARY KEY (id_vue),
+    /*
+     * Définition de la Table 2 : vue_page (Tracking comportemental détaillé)
+     * Note technique : dbDelta gère mal les déclarations FOREIGN KEY natives.
+     * Il est stratégiquement préférable de définir des index (KEY) sur les clés
+     * relationnelles et de gérer l'intégrité référentielle et les suppressions
+     * en cascade côté applicatif (en PHP).
+     */
+    $sql_vue = "CREATE TABLE $table_vue (
+        id_vue int(11) NOT NULL AUTO_INCREMENT,
+        nom_page varchar(100) NOT NULL,
+        temps_passe int(11) NOT NULL,
+        id_visite int(11) NOT NULL,
+        PRIMARY KEY  (id_vue),
         KEY id_visite (id_visite)
-    ) $charset_collate ENGINE=InnoDB;";
+    ) $charset_collate;";
 
     dbDelta( $sql_vue );
+
+    // Sauvegarde de la version de la base pour permettre des migrations
+    // conditionnelles lors des futures mises à jour du plugin.
+    add_option( 'aire_repos_db_version', '1.0' );
 }
 
-// ENREGISTRER DES SCANS
-// On "accroche" la fonction au chargement des pages du site (template_redirect)
-add_action( 'template_redirect', 'aire_repos_enregistrer_nouveau_scan' );
-
-function aire_repos_enregistrer_nouveau_scan() {
-
-    // 1. On vérifie si l'URL contient le paramètre "?action=scan-qr"
-    if ( isset($_GET['action']) && $_GET['aire_id'] === 'scan_qr' ) {
-
-        // 2. On récupère de manière sécurisée (intval) les numéros dans l'URL
-        $id_aire = isset($_GET['aire_id']) ? intval($_GET['aire_id']) : 0;
-        $id_langue = isset($_GET['langue_id']) ? intval($_GET['langue_id']) : 1;
-
-        // 3. On récupère le navigateur du téléphone (Safari, Chrome...) pour les stats
-        $user_agent = isset($_SERVER['HTTP_USER_AGENT']) ? sanitize_text_field($_SERVER['HTTP_USER_AGENT']) : '';
-
-        // 4. Si l'ID de l'aire est valide, on déclenche ce code
-        if ( $id_aire > 0 ) {
-            global $wpdb;
-
-            $wpdb->insert(
-                    $wpdb->prefix . 'visite_site', // La table sur mesure
-                    array(
-                            'id_aire_repos' => $id_aire,
-                        'id_langue' => $id_langue,
-                        'user_agent' => $user_agent
-                    ),
-                    array( '%d', '%d', '%s' ) // Précisition des formats : entier, entier, chaine de caractère
-            );
-        }
-    }
-}
+// Enregistrement du hook d'activation ciblant la fonction ci-dessus
+register_activation_hook( __FILE__, 'aire_repos_install_database_schema' );
