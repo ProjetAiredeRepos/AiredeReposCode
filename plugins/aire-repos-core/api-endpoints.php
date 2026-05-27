@@ -10,10 +10,18 @@ add_action( 'rest_api_init', 'aire_repos_register_api_endpoints' );
 
 // Enregistrement des routes personnalisées de l'API REST
 function aire_repos_register_api_endpoints() {
+
     // Endpoint 1 : Enregistrement de la visite initiale
     register_rest_route( 'aire-repos/v1', '/scan', array(
         'methods' => WP_REST_Server::CREATABLE, // Constante pour 'POST'
         'callback' => 'aire_repos_log_qr_scan',
+        'permission_callback' => '__return_true', // Autorise l'accès public (Cookieless)
+    ));
+
+    // Endpoint 2 : Mise à jour du temps de visie à la fermeture
+    register_rest_route( 'aire-repos/v1', '/update-time', array(
+        'methods' => WP_REST_Server::CREATABLE,
+        'callback' => 'aire_repos_update_visit_time',
         'permission_callback' => '__return_true',
     ));
 }
@@ -63,7 +71,7 @@ function aire_repos_log_qr_scan( WP_REST_Request $request ) {
 function aire_repos_update_visit_time( WP_REST_Request $request ) {
     global $wpdb;
 
-    $id_visite = absint( $request->get_param( 'id_visie'));
+    $id_visite = absint( $request->get_param( 'id_visite'));
     $temps_total = absint( $request->get_param('temps_total'));
 
     if ( empty($id_visite) || empty($temps_total) ) {
