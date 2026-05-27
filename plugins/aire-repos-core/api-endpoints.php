@@ -74,8 +74,8 @@ function aire_repos_update_visit_time( WP_REST_Request $request ) {
     $id_visite = absint( $request->get_param( 'id_visite'));
     $temps_total = absint( $request->get_param('temps_total'));
 
-    if ( empty($id_visite) || empty($temps_total) ) {
-        return new WP_Error( 'invalid_dat', 'Données de mise à jour invalides.', array( 'status' => 400 ) );
+    if ( empty($id_visite) || !isset($_REQUEST['temps_total']) ) {
+        return new WP_Error( 'invalid_data', 'Données de mise à jour invalides.', array( 'status' => 400 ) );
     }
 
     $table_visite = $wpdb->prefix . 'visite_site';
