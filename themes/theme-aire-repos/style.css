@@ -6,4 +6,236 @@ Version: 1.0.0
 */
 
 
-/* 1. Déclaration des variables globales (Figma Local Styles) */
+/* 1. Déclaration des variables globales (Figma) */
+:root{
+    /* Couleurs de fond et texte */
+    --bg-light: #F4F4F0; /* Fond beige clair de la carte */
+    --bg-dark: #1A1C1A; /* Fond sombre des cartes */
+    --text-light: #FFFFFF;
+    --text-dark: 333333;
+
+    /* Couleurs Thématiques (Ls pastilles) */
+    --theme-nature: #2B593F;  /* Vert - Fleuve sauvage */
+    --theme-histoire: #C5833B; /* Orange - Site marqué par l'histoire */
+    --theme-velo: #3A73A9;     /* Bleu - La Loire à vélo */
+    --theme-vin: #8B2642;      /* Bordeaux - AOC Touraine */
+
+    /* Paramètres d'interface */
+    --border-radius-xl: 24px;
+    --border-radius-pill: 50px;
+    --spacing-base: 16px;
+}
+
+/* 2. Reset et typographie */
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    background-color: var(--bg-light);
+    color: var(--text-dark);
+    /* Empêche le scroll horizontal de toute la page */
+    overflow-x: hidden;
+}
+
+/* Cacher le header WordPress natif */
+.site-header { display: none; }
+
+/* 3. Bouton menu burger et overplay*/
+.burger-btn {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 999;
+    background: #222;
+    color: white;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    border: none;
+}
+
+/* Le menu complet (caché par défaut avec opacity et pointer-events) */
+.menu-overlay {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: linear-gradient(135deg, #18281F, #2A3B31);
+    z-index: 998;
+    padding: 80px 20px 20px;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+}
+
+/* Classe qui sera ajoutée en JS pour afficher le menu */
+.menu-overlay.is-active {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+/* 4. Section 1 : Hero */
+
+.hero-section {
+    position: relative;
+    height: 80vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: var(--spacing-base);
+    color: var(--text-light);
+    text-align: center;
+    /* Image de fond par défaut */
+    /* background-image: url('images/hero-chaumont.jpg'); */
+    background-size: cover;
+    background-position: center;
+}
+
+.hero-content {
+    position: relative;
+    z-index: 10;
+}
+
+/* 5. Section 2 : Carte (Découverte du milieu) */
+.map-section {
+    padding: 40px var(--spacing-base);
+    text-align: center;
+    position: relative;
+    min-height: 50vh;
+}
+
+/* Conteneur pour l'image de la carte physique */
+.map-container {
+    position: relative;
+    margin-top: 30px;
+    width: 100%;
+    height: 300px;
+    /* background-image: url('images/carte-base.png'); */ /* à remplacer avec l'image de la carte */
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+}
+
+/* Les points sur la carte (Positionnés en absolu) */
+.map-pin {
+    position: absolute;
+    width: 24px; height: 24px;
+    border-radius: 50%;
+    border: 3px solid white;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+}
+.pin-nature { background-color: var(--theme-nature); top: 50%; left: 30%; }
+.pin-histoire { background-color: var(--theme-histoire); top: 60%; left: 15%; }
+
+/* 6. Section 3 : Slider de cartes (Laissez-vous surprendre...) */
+.slider-section {
+    background: linear-gradient(to bottom, #d6d5cf, #8c8982);
+    padding: 40px 0;
+    overflow: hidden;
+}
+
+/* La magie du défilement au doigt (Scroll Snap) */
+.cards-slider {
+    display: flex;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    gap: 15px;
+    padding: 0 var(--spacing-base);
+    /* Masquer la barre de défilement (Chrome/Safari/Firefox) */
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+.cards-slider::-webkit-scrollbar { display: none; }
+
+.slider-card {
+    /* La carte prend 85% de l'écran, laissant voir la suivante */
+    flex: 0 0 85%;
+    scroll-snap-align: center;
+    background-color: var(--bg-dark);
+    border-radius: var(--border-radius-xl);
+    height: 450px;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    padding: 24px;
+    color: var(--text-light);
+    position: relative;
+    overflow: hidden;
+}
+
+.slider-card .badge {
+    position: absolute;
+    top: 24px; left: 24px;
+    font-size: 10px;
+    font-weight: bold;
+    padding: 4px 10px;
+    border-radius: var(--border-radius-pill);
+    text-transform: uppercase;
+}
+.slider-card[data-theme="nature"] .badge { background: var(--theme-nature); }
+.slider-card[data-theme="histoire"] .badge { background: var(--theme-histoire); }
+
+.btn-savoir-plus {
+    background: white;
+    color: var(--text-dark);
+    border: none;
+    padding: 10px 20px;
+    border-radius: var(--border-radius-pill);
+    font-weight: bold;
+    margin-top: 15px;
+    align-self: flex-start;
+    cursor: pointer;
+}
+
+/* Fenêtres modales (Les explications détaillées) */
+.modal-details {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    z-index: 1000;
+    background: white;
+    display: flex;
+    flex-direction: column;
+    /* Caché par défaut */
+    transform: translateY(100%);
+    transition: transform 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+.modal-details.is-open {
+    transform: translateY(0);
+}
+
+.modal-header-image {
+    height: 40%;
+    background: #333; /* Remplacé par l'image de l'article */
+    position: relative;
+}
+
+.modal-close-btn {
+    position: absolute;
+    top: 20px; right: 20px;
+    background: white;
+    border-radius: 50%;
+    width: 40px; height: 40px;
+    border: none;
+    cursor: pointer;
+}
+
+.modal-content {
+    height: 60%;
+    padding: var(--spacing-base);
+    overflow-y: auto; /* Permet de lire le long texte */
+}
+
+.modal-footer {
+    padding: 20px;
+    display: flex;
+    justify-content: space-between;
+    background: white;
+    border-top: 1px solid #eee;
+}
