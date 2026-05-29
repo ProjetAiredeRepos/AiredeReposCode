@@ -5,24 +5,53 @@ Description: Thème sur-mesure Mobile First pour les aires de repos
 Version: 1.0
 */
 
+/* --- 0. RESET ET COMPORTEMENT GLOBAL --- */
+html {
+    scroll-behavior: smooth;
+}
+
 * {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
 }
 
-/* --- POLICES GLOBALES --- */
+/* --- 1. POLICES GLOBALES --- */
 body, button, input, textarea, select {
     font-family: 'DM Sans', sans-serif;
     -webkit-font-smoothing: antialiased;
+    color: #111111;
+    background-color: #FAFAFA;
 }
 
 h1, h2, h3, h4, h5, h6 {
     font-family: 'Outfit', sans-serif;
-    font-weight: 700;
+    font-weight: 400;
 }
 
-/* --- SECTION 1 : HERO ACCUEIL --- */
+/* --- 2. EN-TÊTES DE SECTIONS (Unifiés) --- */
+.carte-header,
+.carousel-header {
+    padding: 0 24px;
+    margin-bottom: 24px;
+}
+
+.carte-header h2,
+.carousel-header h2 {
+    font-size: 1.6rem;
+    font-weight: 400;
+    color: #111111;
+    margin: 0 0 8px 0;
+    line-height: 1.2;
+}
+
+.carte-subtitle {
+    font-size: 0.95rem;
+    color: #555555;
+    margin: 0;
+}
+
+/* --- 3. SECTION 1 : HERO ACCUEIL --- */
 .hero-section {
     position: relative;
     height: 100vh;
@@ -35,24 +64,23 @@ h1, h2, h3, h4, h5, h6 {
     align-items: center;
     text-align: center;
     color: white;
-    /* On ne met plus de font-family ici, elle est héritée proprement ! */
 }
 
-/* Filtre assombri sur l'image */
+/* Filtre assombri sur l'image de fond */
 .overlay-sombre {
     position: absolute;
     top: 0; left: 0; right: 0; bottom: 0;
-    background-color: rgba(0, 0, 0, 0.4); /* Ajuste le 0.4 pour plus ou moins d'opacité */
+    background-color: rgba(0, 0, 0, 0.4);
     z-index: 1;
 }
 
-/* Assure que le texte et les boutons passent AU-DESSUS du filtre sombre */
+/* Élévation du contenu au-dessus du filtre */
 .menu-burger, .hero-content, .hero-bottom {
     position: relative;
     z-index: 2;
 }
 
-/* --- BOUTON MENU BURGER --- */
+/* Bouton Menu Burger */
 .menu-burger {
     position: absolute;
     top: 20px;
@@ -68,10 +96,10 @@ h1, h2, h3, h4, h5, h6 {
     cursor: pointer;
 }
 
-/* --- TEXTE CENTRAL --- */
+/* Texte central de l'accueil */
 .hero-content h1 {
     font-size: 2.5rem;
-    font-weight: 500;
+    font-weight: 400;
     line-height: 1.1;
     margin-bottom: 15px;
     padding: 0 15px;
@@ -83,26 +111,26 @@ h1, h2, h3, h4, h5, h6 {
     padding: 0 20px;
 }
 
-/* --- ZONE DÉCOUVRIR EN BAS --- */
+/* Zone d'appel à l'action en bas de l'écran */
 .hero-bottom {
     position: absolute;
-    bottom: 30px;
+    bottom: 40px;
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 10px;
+    gap: 12px;
 }
 
 .decouvrir-text {
-    font-size: 0.8rem;
-    letter-spacing: 2px;
+    font-size: 1rem;
+    letter-spacing: 4px;
     text-transform: uppercase;
     font-weight: 500;
 }
 
 .btn-scroll {
-    width: 40px;
-    height: 40px;
+    width: 44px;
+    height: 44px;
     border: 2px solid white;
     border-radius: 50%;
     display: flex;
@@ -112,7 +140,312 @@ h1, h2, h3, h4, h5, h6 {
     transition: transform 0.3s;
 }
 
-/* Petit effet au toucher */
 .btn-scroll:active {
     transform: translateY(5px);
+}
+
+/* --- 4. SECTION 2 : CARTE INTERACTIVE --- */
+.carte-section {
+    padding: 60px 0 20px 0;
+    background-color: #FAFAFA;
+}
+
+/* Fenêtre de défilement horizontal de la carte */
+.carte-container {
+    width: 100%;
+    overflow-x: auto;
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+    padding: 0 24px;
+    scroll-snap-type: x mandatory;
+}
+.carte-container::-webkit-scrollbar {
+    display: none;
+}
+
+/* Conteneur de l'image (plus large que l'écran pour permettre le scroll) */
+.carte-scroll-pan {
+    position: relative;
+    width: 180vw; /* Ajustable selon la largeur souhaitée de l'image paysage */
+    min-width: 600px;
+    border-radius: 24px;
+    overflow: hidden;
+    scroll-snap-align: center;
+}
+
+.carte-img-landscape {
+    width: 100%;
+    height: auto;
+    display: block;
+    object-fit: cover;
+}
+
+/* Instructions sous la carte */
+.carte-footer-text {
+    text-align: center;
+    font-size: 0.85rem;
+    color: #888888;
+    margin-top: 16px;
+    font-style: italic;
+}
+
+/* --- 5. POINTS D'INTÉRÊT SUR LA CARTE (PINS) --- */
+.pin-interet {
+    position: absolute;
+    transform: translate(-50%, -50%); /* Centre le point exactement sur la coordonnée */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    z-index: 10;
+}
+
+.pin-label {
+    font-family: 'Outfit', sans-serif;
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: white;
+    padding: 4px 10px;
+    border-radius: 12px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+}
+
+.pin-button {
+    width: 44px; /* Taille minimum pour l'accessibilité tactile */
+    height: 44px;
+    background-color: rgba(255, 255, 255, 0.9);
+    border: none;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    transition: transform 0.2s;
+}
+
+.pin-button:active {
+    transform: scale(0.9);
+}
+
+.pin-dot {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    display: block;
+}
+
+/* Couleurs dynamiques des thématiques */
+.label-decouvrir, .badge-decouvrir, .btn-decouvrir .pin-dot { background-color: #2F80ED; }
+.label-proteger, .badge-proteger, .btn-proteger .pin-dot { background-color: #27AE60; }
+.label-deguster, .badge-deguster, .btn-deguster .pin-dot { background-color: #9B51E0; }
+.label-explorer, .badge-explorer, .btn-explorer .pin-dot { background-color: #E2B93B; }
+
+/* --- 6. MODALS (BOTTOM SHEETS) --- */
+.modal-bottom-sheet {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    z-index: 999;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    pointer-events: none;
+}
+
+.modal-overlay-close {
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    opacity: 0;
+    transition: opacity 0.4s ease;
+    z-index: 1;
+}
+
+.modal-content {
+    position: relative;
+    background-color: #FFFFFF;
+    width: 100%;
+    max-height: 85vh;
+    border-radius: 32px 32px 0 0;
+    padding: 32px 24px;
+    z-index: 2;
+    overflow-y: auto;
+    transform: translateY(100%);
+    transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.modal-bottom-sheet.is-open {
+    pointer-events: auto;
+}
+.modal-bottom-sheet.is-open .modal-overlay-close {
+    opacity: 1;
+}
+.modal-bottom-sheet.is-open .modal-content {
+    transform: translateY(0);
+}
+
+.modal-close-btn {
+    position: absolute;
+    top: -60px;
+    right: 20px;
+    width: 44px;
+    height: 44px;
+    background-color: #FFFFFF;
+    border: none;
+    border-radius: 50%;
+    font-size: 24px;
+    color: #111111;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+/* Contenu typographique des modals */
+.badge {
+    display: inline-block;
+    padding: 6px 14px;
+    border-radius: 8px;
+    font-family: 'Outfit', sans-serif;
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: white;
+    margin-bottom: 16px;
+    text-transform: uppercase;
+}
+
+.modal-body h3 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin-bottom: 16px;
+}
+
+.modal-description {
+    font-size: 1rem;
+    color: #555555;
+    line-height: 1.5;
+    margin-bottom: 24px;
+}
+
+/* Boutons d'action dans les modals */
+.modal-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.btn-modal-link {
+    display: block;
+    text-align: center;
+    background-color: #111111;
+    color: #FFFFFF;
+    text-decoration: none;
+    padding: 16px;
+    border-radius: 16px;
+    font-weight: 600;
+    font-size: 1rem;
+}
+
+.btn-modal-link.btn-so {
+    background-color: #F0F0F0;
+    color: #111111;
+}
+
+/* --- 7. SECTION 3 : CARROUSEL --- */
+.carousel-section {
+    padding: 40px 0 60px 0;
+    background-color: #FAFAFA; /* Cohérence avec le fond général */
+}
+
+/* Conteneur de défilement horizontal */
+.carousel-track {
+    display: flex;
+    gap: 16px;
+    padding: 0 24px 24px 24px;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+
+.carousel-track::-webkit-scrollbar {
+    display: none;
+}
+
+/* Cartes individuelles */
+.carousel-card {
+    flex: 0 0 85%; /* 85% permet de laisser dépasser la carte suivante pour inciter au scroll */
+    max-width: 320px;
+    background: #FFFFFF;
+    border-radius: 24px;
+    scroll-snap-align: center;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.04);
+}
+
+.card-image-wrapper {
+    position: relative;
+    height: 200px;
+    width: 100%;
+}
+
+.card-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.card-badge {
+    position: absolute;
+    top: 16px;
+    left: 16px;
+    background-color: #FFFFFF;
+    color: #111111;
+    padding: 8px 16px;
+    border-radius: 100px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+}
+
+.card-content {
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+}
+
+.card-content h3 {
+    font-size: 1.3rem;
+    font-weight: 700;
+    margin: 0 0 12px 0;
+    color: #111111;
+}
+
+.card-content p {
+    font-size: 0.95rem;
+    color: #666666;
+    line-height: 1.5;
+    margin: 0 0 24px 0;
+    flex-grow: 1;
+}
+
+.card-link {
+    display: block;
+    text-align: center;
+    background-color: #111111;
+    color: #FFFFFF;
+    text-decoration: none;
+    padding: 16px;
+    border-radius: 16px;
+    font-weight: 600;
+    font-size: 1rem;
+    transition: background-color 0.3s ease;
+}
+
+.card-link:hover {
+    background-color: #333333;
 }
