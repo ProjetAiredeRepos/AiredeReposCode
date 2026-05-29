@@ -1,1 +1,118 @@
+/*
+Theme Name: Thème Cyclo
+Author: Semih Sisman
+Description: Thème sur-mesure Mobile First pour les aires de repos
+Version: 1.0
+*/
 
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+/* --- POLICES GLOBALES --- */
+body, button, input, textarea, select {
+    font-family: 'DM Sans', sans-serif;
+    -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3, h4, h5, h6 {
+    font-family: 'Outfit', sans-serif;
+    font-weight: 700;
+}
+
+/* --- SECTION 1 : HERO ACCUEIL --- */
+.hero-section {
+    position: relative;
+    height: 100vh;
+    width: 100%;
+    background-size: cover;
+    background-position: center;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    color: white;
+    /* On ne met plus de font-family ici, elle est héritée proprement ! */
+}
+
+/* Filtre assombri sur l'image */
+.overlay-sombre {
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background-color: rgba(0, 0, 0, 0.4); /* Ajuste le 0.4 pour plus ou moins d'opacité */
+    z-index: 1;
+}
+
+/* Assure que le texte et les boutons passent AU-DESSUS du filtre sombre */
+.menu-burger, .hero-content, .hero-bottom {
+    position: relative;
+    z-index: 2;
+}
+
+/* --- BOUTON MENU BURGER --- */
+.menu-burger {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    width: 45px;
+    height: 45px;
+    background-color: rgba(0, 0, 0, 0.6);
+    border: none;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+}
+
+/* --- TEXTE CENTRAL --- */
+.hero-content h1 {
+    font-size: 2.5rem;
+    font-weight: 500;
+    line-height: 1.1;
+    margin-bottom: 15px;
+    padding: 0 15px;
+}
+
+.hero-content p {
+    font-size: 1.1rem;
+    font-weight: 400;
+    padding: 0 20px;
+}
+
+/* --- ZONE DÉCOUVRIR EN BAS --- */
+.hero-bottom {
+    position: absolute;
+    bottom: 30px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+}
+
+.decouvrir-text {
+    font-size: 0.8rem;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    font-weight: 500;
+}
+
+.btn-scroll {
+    width: 40px;
+    height: 40px;
+    border: 2px solid white;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-decoration: none;
+    transition: transform 0.3s;
+}
+
+/* Petit effet au toucher */
+.btn-scroll:active {
+    transform: translateY(5px);
+}
