@@ -74,3 +74,36 @@ register_activation_hook( __FILE__, 'aire_repos_install_database_schema' );
 
 // Inclusion des routes de l'API REST
 require_once plugin_dir_path(__FILE__) . 'api-endpoints.php';
+
+// CUSTOM POST TYPE (CPT) : POINTS D'INTÉRÊT (POI)
+add_action( 'init', 'aire_repos_register_poi_cpt');
+
+function aire_repos_register_poi_cpt() {
+    $labels = array(
+        'name' => 'Points d\'Intérêt',
+        'singular_name' => 'Point d\'Intérêt',
+        'menu_name'             => 'Points d\'Intérêt',
+        'add_new'               => 'Ajouter un point',
+        'add_new_item'          => 'Ajouter un nouveau Point d\'Intérêt',
+        'edit_item'             => 'Modifier le Point d\'Intérêt',
+        'all_items'             => 'Tous les points',
+        'search_items'          => 'Rechercher un point',
+        'not_found'             => 'Aucun point d\'intérêt trouvé.',
+    );
+
+    $args = array(
+        'labels'             => $labels,
+        'public'             => true,
+        'publicly_queryable' => true,
+        'show_ui'            => true,
+        'show_in_menu'       => true,
+        'menu_position'      => 20, // S'affiche juste en dessous du menu "Pages"
+        'menu_icon'          => 'dashicons-location', // Icône de punaise (très visuel)
+        'supports'           => array( 'title', 'editor', 'thumbnail', 'excerpt' ),
+        'has_archive'        => false, // Pas besoin de page d'archive pour une application web
+        'show_in_rest'       => true, // Indispensable pour profiter de l'éditeur moderne de WordPress
+    );
+
+    register_post_type( 'poi', $args );
+
+}
