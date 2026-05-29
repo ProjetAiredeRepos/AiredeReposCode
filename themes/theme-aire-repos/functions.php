@@ -31,3 +31,12 @@ function aire_repos_enqueue_scripts() {
 
 // On accroche notre fonction à l'action native WordPress
 add_action( 'wp_enqueue_scripts', 'aire_repos_enqueue_scripts' );
+
+// Activation des fonctionnalités essentielles du thème
+function aire_repos_theme_support() {
+    // Autoriser le thème à utiliser les images mises en avant (Featured Images)
+    add_theme_support( 'post-thumbnails' );
+}
+
+// On accroche cette fonction au moment où le thème s'initialise
+add_action( 'after_setup_theme', 'aire_repos_theme_support' );
