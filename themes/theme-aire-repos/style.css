@@ -92,7 +92,7 @@ body {
     color: var(--text-light);
     text-align: center;
     /* Image de fond par défaut */
-    /* background-image: url('images/hero-chaumont.jpg'); */
+    background-image: url('images/hero-chaumont.jpg');
     background-size: cover;
     background-position: center;
 }
