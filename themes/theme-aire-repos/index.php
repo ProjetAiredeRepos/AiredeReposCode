@@ -6,9 +6,13 @@
 
 get_header(); ?>
 
-<div style="padding: 20px; text-align: center;">
-    <h1>Page par défaut</h1>
-    <p>Si vous voyez ceci, c'est que la page demandée n'a pas de design spécifique.</p>
-</div>
+    <main>
+        <?php
+        while ( have_posts() ) : the_post();
+            // C'est ici que s'affichera le contenu de l'éditeur classique si besoin
+            the_content();
+        endwhile;
+        ?>
+    </main>
 
 <?php get_footer(); ?>
