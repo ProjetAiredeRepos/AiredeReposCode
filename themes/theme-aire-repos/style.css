@@ -927,3 +927,149 @@ h1, h2, h3, h4, h5, h6 {
         z-index: 10; /* S'assure qu'elle passe au-dessus des autres */
     }
 }
+
+
+/* ==========================================================================
+   MODULE QUESTIONNAIRE (Scoped)
+   ========================================================================== */
+.questionnaire-app {
+    --q-primary: #1A5336; /* Vert Loire à vélo */
+    --q-bg: #EAEFEA; /* Gris-vert doux pour contraster avec le blanc pur des cartes */
+    --q-border: #E0E5E2;
+    --q-text: #2C3E35;
+    --q-radius: 8px;
+    background-color: var(--q-bg);
+    min-height: 100vh;
+    font-family: 'DM Sans', sans-serif;
+    color: var(--q-text);
+}
+
+.q-layout {
+    display: grid;
+    grid-template-columns: 1fr; /* Mobile first */
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+/* --- Typographie et En-tête --- */
+.q-header { padding: 2rem 1.5rem; text-align: center; }
+.q-title { font-family: 'Outfit', sans-serif; font-weight: 700; color: var(--q-primary); margin-bottom: 0.5rem; }
+.q-subtitle { font-size: 1.1rem; font-weight: 500; }
+
+/* --- Sidebar & Progression --- */
+.q-sidebar {
+    position: sticky;
+    top: 0;
+    background: #fff;
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid var(--q-border);
+    z-index: 10;
+}
+.q-progress-box { display: flex; align-items: center; gap: 1rem; }
+.q-progress-label { font-weight: 700; font-size: 0.85rem; color: #888; letter-spacing: 1px; }
+.q-progress-bar-container { flex-grow: 1; height: 8px; background: var(--q-border); border-radius: 4px; overflow: hidden; }
+.q-progress-fill { height: 100%; background: var(--q-primary); transition: width 0.3s ease; }
+.q-progress-text { font-weight: 700; color: var(--q-primary); }
+
+/* --- Formulaire & Champs --- */
+.q-content { padding: 1.5rem; }
+/* Style des cartes pour les faire ressortir */
+.q-step, .q-sub-step, .q-accordion-trigger {
+    background: #FFFFFF;
+    border: none; /* On supprime la bordure qui aplatit le design */
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04); /* Ombre douce et élégante */
+    margin-bottom: 1.5rem;
+}
+/* Le correctif de la balise Legend et du badge "Facultatif" */
+.q-step legend, .q-sub-step legend {
+    width: 100%;
+    margin-bottom: 1rem;
+}
+.legend-content {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap; /* Empêche le badge d'être coupé sur petit écran */
+    gap: 12px;
+    width: 100%;
+    line-height: 1.4;
+}
+.q-step legend span { display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; background: var(--q-primary); color: #fff; border-radius: 50%; font-size: 0.9rem; margin-right: 0.5rem; }
+
+.q-badge-facultatif {
+    display: inline-block;
+    background: #F0F4F2;
+    color: #666;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    white-space: nowrap; /* Force le mot à rester sur une seule ligne */
+}
+
+/* Cartes Radio & Checkbox Modernes */
+.q-radio-card, .q-checkbox-card {
+    display: flex; align-items: center; gap: 1rem; padding: 1rem; border: 1px solid var(--q-border); border-radius: var(--q-radius); margin-bottom: 0.5rem; cursor: pointer; transition: all 0.2s;
+}
+.q-radio-card:hover, .q-checkbox-card:hover { border-color: var(--q-primary); background: #f9fbf9; }
+.q-radio-card input, .q-checkbox-card input { transform: scale(1.2); accent-color: var(--q-primary); }
+.q-radio-card:has(input:checked), .q-checkbox-card:has(input:checked) { border-color: var(--q-primary); background: #f0f7f3; font-weight: 600; }
+
+textarea.q-input, input.q-input, select.q-select { width: 100%; padding: 1rem; border: 1px solid var(--q-border); border-radius: var(--q-radius); font-family: inherit; font-size: 1rem; margin-top: 0.5rem; }
+textarea { resize: vertical; width: 100%; border: 1px solid var(--q-border); border-radius: var(--q-radius); padding: 1rem; }
+
+/* --- Profilage & RGPD --- */
+.q-profilage-zone { background: #eef2f0; padding: 1.5rem; border-radius: var(--q-radius); margin-bottom: 1.5rem; }
+.q-accordion-trigger {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.5rem;
+    border-radius: var(--q-radius);
+    cursor: pointer;
+    text-align: left;
+    margin-bottom: 0;
+}
+.q-profilage-header h3 { color: var(--q-primary); margin-bottom: 0.2rem; display: flex; align-items: center; gap: 10px; }
+.q-profilage-header p { font-size: 0.9rem; color: #555; }
+.q-chevron { transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); color: var(--q-primary); }
+/* Rotation de l'icône quand ouvert */
+.q-accordion-trigger[aria-expanded="true"] .q-chevron {
+    transform: rotate(180deg);
+}
+/* Conteneur masqué animé */
+.q-accordion-content {
+    display: grid;
+    grid-template-rows: 0fr; /* Magie moderne CSS : Hauteur à zéro */
+    transition: grid-template-rows 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    overflow: hidden;
+}
+.q-accordion-trigger[aria-expanded="true"] + .q-accordion-content {
+    grid-template-rows: 1fr; /* S'ouvre selon le contenu interne */
+}
+.q-accordion-inner {
+    min-height: 0; /* Nécessaire pour que le grid 0fr fonctionne */
+    padding-top: 1rem; /* Espace entre le bouton et les premières questions */
+}
+.q-rgpd-zone { padding: 1.5rem; border: 2px dashed var(--q-border); border-radius: var(--q-radius); margin-bottom: 1.5rem; }
+.q-rgpd-title { font-weight: 700; font-size: 0.9rem; margin-bottom: 1rem; }
+
+/* --- Bouton & Alertes --- */
+.q-submit-btn { width: 100%; padding: 1.2rem; background: var(--q-primary); color: #fff; font-size: 1.1rem; font-weight: 700; border: none; border-radius: 50px; cursor: pointer; transition: opacity 0.2s; }
+.q-submit-btn:disabled { opacity: 0.7; cursor: not-allowed; }
+.q-alert { background: #fee2e2; color: #b91c1c; padding: 1rem; border-radius: var(--q-radius); margin-bottom: 1.5rem; text-align: center; font-weight: 500; }
+.hidden { display: none !important; }
+
+/* --- Écran de succès --- */
+#q-success-screen { text-align: center; padding: 4rem 1.5rem; background: #fff; border-radius: var(--q-radius); box-shadow: 0 4px 20px rgba(0,0,0,0.05); }
+.q-success-icon { font-size: 4rem; color: #fff; background: var(--q-primary); width: 100px; height: 100px; line-height: 100px; border-radius: 50%; margin: 0 auto 2rem; }
+#q-success-screen h2 { color: var(--q-primary); margin-bottom: 1rem; }
+
+/* --- Responsive Desktop --- */
+@media (min-width: 768px) {
+    .q-layout { grid-template-columns: 250px 1fr; gap: 2rem; align-items: start; padding: 2rem; }
+    .q-sidebar { position: sticky; top: 2rem; border-right: 1px solid var(--q-border); border-bottom: none; background: transparent; padding: 0; }
+    .q-progress-box { flex-direction: column; align-items: flex-start; gap: 0.5rem; }
+    .q-content { padding: 0; }
+    .q-header { text-align: left; padding: 0 0 2rem 0; }
+}

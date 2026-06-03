@@ -24,6 +24,13 @@ function aire_repos_register_api_endpoints() {
         'callback' => 'aire_repos_update_visit_time',
         'permission_callback' => '__return_true',
     ));
+
+    // Endpoint 3 : Soumission du questionnaire
+    register_rest_route( 'aire-repos/v1', '/submit-survey', array(
+        'methods' => WP_REST_Server::CREATABLE,
+        'callback' => 'aire_repos_submit_survey',
+        'permission_callback' => '__return_true', // Soumission publique
+    ));
 }
 
 // Logique de traitement pour l'endpoint /scan
@@ -90,4 +97,63 @@ function aire_repos_update_visit_time( WP_REST_Request $request ) {
     );
 
     return rest_ensure_response( array( 'status' => 'success' ) );
+}
+
+// Logique de traitement pour l'endpoint /submit-survey
+function aire_repos_submit_survey( WP_REST_Request $request ) {
+    global $wpdb;
+
+    // Nettoyage rigoureux des données entrantes (Sanitization)
+    $id_aire = absint( $request->get_param( 'id_aire' ) );
+    $q1 = absint( $request->get_param( 'q1_satisfaction_aire' ) );
+    $q2 = absint( $request->get_param( 'q2_satisfaction_securite' ) );
+    $q3 = absint( $request->get_param( 'q3_satisfaction_services' ) );
+
+    // Les cases à cocher renvoient un tableau, on le transforme en chaîne séparée par des virgules
+    $q4_array = (array) $request->get_param( 'q4_connaissance' );
+    $q4_clean = sanitize_text_field( implode( ',', array_map( 'sanitize_text_field', $q4_array ) ) );
+
+    $q5 = sanitize_textarea_field( $request->get_param( 'q5_suggestions' ) );
+
+    // Données de profilage (Optionnelles)
+    $origine = sanitize_text_field( $request->get_param( 'profil_origine' ) );
+    $region = sanitize_text_field( $request->get_param( 'profil_region' ) );
+    $pays = sanitize_text_field( $request->get_param( 'profil_pays' ) );
+    if ( $pays === 'autre' ) {
+        $pays = sanitize_text_field( $request->get_param( 'profil_pays_autre' ) ); // Capture le champ texte libre
+    }
+    $accompagnement = sanitize_text_field( $request->get_param( 'profil_accompagnement' ) );
+
+    // Validation métier : Les questions 1 à 4 sont obligatoires
+    if ( empty($id_aire) || empty($q1) || empty($q2) || empty($q3) || empty($q4_clean) ) {
+        return new WP_Error( 'invalid_data', 'Veuillez remplir toutes les questions obligatoires.', array( 'status' => 400 ) );
+    }
+
+    $table_name = $wpdb->prefix . 'reponse_questionnaire';
+    $inserted = $wpdb->insert(
+        $table_name,
+        array(
+            'id_aire' => $id_aire,
+            'q1_satisfaction_aire' => $q1,
+            'q2_satisfaction_securite' => $q2,
+            'q3_satisfaction_services' => $q3,
+            'q4_connaissance' => $q4_clean,
+            'q5_suggestions' => $q5,
+            'profil_origine' => $origine,
+            'profil_region' => $region,
+            'profil_pays' => $pays,
+            'profil_accompagnement' => $accompagnement,
+            'date_soumission' => current_time( 'mysql' )
+        ),
+        array( '%d', '%d', '%d', '%d', '%s', '%s', '%s', '%s', '%s', '%s', '%s' )
+    );
+
+    if ( false === $inserted ) {
+        return new WP_Error( 'db_error', 'Erreur serveur lors de l\'enregistrement.', array( 'status' => 500 ) );
+    }
+
+    return rest_ensure_response( array(
+        'status' => 'success',
+        'message' => 'Merci pour votre participation !'
+    ));
 }

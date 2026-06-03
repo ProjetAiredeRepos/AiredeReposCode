@@ -19,15 +19,26 @@ function cyclo_theme_assets() {
     // On déclare notre script de tracking
     wp_enqueue_script(
         'aire-repos-tracking', // Nom de code unique
-        get_template_directory_uri() . 'js/tracking.js', // Chemin vers le fichier
+        get_template_directory_uri() . '/tracking.js', // Chemin vers le fichier
         array(), // Pas de dépendances (comme jQuery)
         '1.0', // Version
         true // true = charger dans le footer pour ne pas bloquer l'affichage
     );
 
-
     // Charger le fichier main.js dans le footer
     wp_enqueue_script('cyclo-main-script',  get_template_directory_uri() . '/main.js', array(), '1.0', true);
+
+    // Chargement conditionnel du script du questionnaire
+    global $wp_query;
+    if ( is_singular( 'aire_repos' ) && isset( $wp_query->query_vars['questionnaire'] ) ) {
+        wp_enqueue_script(
+            'cyclo-questionnaire-script', // Nom de code unique
+            get_template_directory_uri() . '/scripts/questionnaire.js', // Chemin vers le nouveau fichier
+            array(), // Pas de dépendances
+            '1.0',
+            true // true = charger dans le footer (bonne pratique performance)
+        );
+    }
 }
 // On exécute cette fonction au moment de charger les scripts
 add_action('wp_enqueue_scripts', 'cyclo_theme_assets');

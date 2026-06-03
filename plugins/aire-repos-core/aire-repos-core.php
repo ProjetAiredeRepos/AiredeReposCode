@@ -25,6 +25,8 @@ function aire_repos_install_database_schema() {
     // Préfixage des tables pour garantir la sécurité et la compatibilité multisite
     $table_visite = $wpdb->prefix. 'visite_site';
     $table_vue    = $wpdb->prefix. 'vue_page';
+    // Définition de la Table 3 : reponse_questionnaire
+    $table_questionnaire = $wpdb->prefix . 'reponse_questionnaire';
 
     // Inclusion du fichier Core de WordPress contenant la définition de dbDelta()
     require_once( ABSPATH. 'wp-admin/includes/upgrade.php' );
@@ -64,9 +66,28 @@ function aire_repos_install_database_schema() {
 
     dbDelta( $sql_vue );
 
+    $sql_questionnaire = "CREATE TABLE $table_questionnaire (
+        id_reponse int(11) NOT NULL AUTO_INCREMENT,
+        id_aire int(11) NOT NULL,
+        q1_satisfaction_aire int(1) NOT NULL,
+        q2_satisfaction_securite int(1) NOT NULL,
+        q3_satisfaction_services int(1) NOT NULL,
+        q4_connaissance varchar(255) NOT NULL,
+        q5_suggestions text DEFAULT NULL,
+        profil_origine varchar(10) DEFAULT NULL,
+        profil_region varchar(100) DEFAULT NULL,
+        profil_pays varchar(100) DEFAULT NULL,
+        profil_accompagnement varchar(50) DEFAULT NULL,
+        date_soumission datetime NOT NULL,
+        PRIMARY KEY  (id_reponse),
+        KEY id_aire (id_aire)
+    ) $charset_collate;";
+
+    dbDelta( $sql_questionnaire );
+
     // Sauvegarde de la version de la base pour permettre des migrations
     // conditionnelles lors des futures mises à jour du plugin.
-    add_option( 'aire_repos_db_version', '1.0' );
+    add_option( 'aire_repos_db_version', '1.1' );
 }
 
 // Enregistrement du hook d'activation ciblant la fonction ci-dessus
@@ -74,6 +95,29 @@ register_activation_hook( __FILE__, 'aire_repos_install_database_schema' );
 
 // Inclusion des routes de l'API REST
 require_once plugin_dir_path(__FILE__) . 'api-endpoints.php';
+
+// Enregistrement de l'URL Endpoint pour le questionnaire
+add_action( 'init', 'aire_repos_add_questionnaire_endpoint' );
+function aire_repos_add_questionnaire_endpoint() {
+    // Crée la route /questionnaire/ à la fin des permaliens
+    add_rewrite_endpoint( 'questionnaire', EP_PERMALINK );
+}
+
+// Redirection vers le template spécifique du thème
+add_filter( 'template_include', 'aire_repos_questionnaire_template' );
+function aire_repos_questionnaire_template( $template ) {
+    global $wp_query;
+
+    // Si on est sur une page "Aire de Repos" ET que l'endpoint "questionnaire est appelé
+    if ( is_singular( 'aire_repos' ) && isset( $wp_query->query_vars['questionnaire'] ) ) {
+        // On charge un fichier de template distinct depuis le thème
+        $new_template = locate_template( array( 'single-aire_repos-questionnaire.php' ) );
+        if ( !empty( $new_template ) ) {
+            return $new_template;
+        }
+    }
+    return $template;
+}
 
 // CUSTOM POST TYPE (CPT) : POINTS D'INTÉRÊT (POI)
 add_action( 'init', 'aire_repos_register_poi_cpt');

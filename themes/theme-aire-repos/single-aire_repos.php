@@ -7,7 +7,7 @@ get_header();
 
     <?php
     // Récupère l'image de fond globale depuis l'interface ACF
-    $image_accueil = get_field('image_fond_accueil');
+    $image_accueil = get_field('image_de_fond_accueil');
     ?>
 
     <section id="accueil" class="hero-section" style="background-image: url('<?php echo esc_url($image_accueil); ?>');">
