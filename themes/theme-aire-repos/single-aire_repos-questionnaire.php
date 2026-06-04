@@ -42,74 +42,62 @@ $q_profil_q4 = get_field('q_profil_q4') ?: "Comment êtes-vous venu ?";
                 <form id="form-questionnaire" data-aire="<?php echo esc_attr($aire_id); ?>">
 
                     <!-- Q1 -->
-                    <fieldset class="q-step" data-step="1">
-                        <legend>
-                            <div class="legend-content">
-                                <div class="q-number">1</div>
-                                <div class="q-question-wrapper">
-                                    <span class="q-question-text"><?php echo esc_html($q_label_1); ?></span>
-                                    <span class="q-required">*</span>
-                                </div>
+                    <div class="q-step" role="group" aria-labelledby="q1-title">
+                        <div class="q-question-header">
+                            <div class="q-number">1</div>
+                            <div class="q-question-text" id="q1-title">
+                                <?php echo esc_html(str_replace('*', '', $q_label_1)); ?> <span class="q-required">*</span>
                             </div>
-                        </legend>
+                        </div>
                         <div class="q-options-container">
                             <label class="q-radio-card"><input type="radio" name="q1_satisfaction_aire" value="4"> Très satisfaisant</label>
                             <label class="q-radio-card"><input type="radio" name="q1_satisfaction_aire" value="3"> Satisfaisant</label>
                             <label class="q-radio-card"><input type="radio" name="q1_satisfaction_aire" value="2"> Peu satisfaisant</label>
                             <label class="q-radio-card"><input type="radio" name="q1_satisfaction_aire" value="1"> Pas du tout satisfaisant</label>
                         </div>
-                    </fieldset>
+                    </div>
 
                     <!-- Q2 -->
-                    <fieldset class="q-step" data-step="2">
-                        <legend>
-                            <div class="legend-content">
-                                <div class="q-number">2</div>
-                                <div class="q-question-wrapper">
-                                    <span class="q-question-text"><?php echo esc_html($q_label_2); ?></span>
-                                    <span class="q-required">*</span>
-                                </div>
+                    <div class="q-step" role="group" aria-labelledby="q2-title">
+                        <div class="q-question-header">
+                            <div class="q-number">2</div>
+                            <div class="q-question-text" id="q2-title">
+                                <?php echo esc_html(str_replace('*', '', $q_label_2)); ?> <span class="q-required">*</span>
                             </div>
-                        </legend>
+                        </div>
                         <div class="q-options-container">
                             <label class="q-radio-card"><input type="radio" name="q2_satisfaction_securite" value="4"> Très satisfaisant</label>
                             <label class="q-radio-card"><input type="radio" name="q2_satisfaction_securite" value="3"> Satisfaisant</label>
                             <label class="q-radio-card"><input type="radio" name="q2_satisfaction_securite" value="2"> Peu satisfaisant</label>
                             <label class="q-radio-card"><input type="radio" name="q2_satisfaction_securite" value="1"> Pas du tout satisfaisant</label>
                         </div>
-                    </fieldset>
+                    </div>
 
                     <!-- Q3 -->
-                    <fieldset class="q-step" data-step="3">
-                        <legend>
-                            <div class="legend-content">
-                                <div class="q-number">3</div>
-                                <div class="q-question-wrapper">
-                                    <span class="q-question-text"><?php echo esc_html($q_label_3); ?></span>
-                                    <span class="q-required">*</span>
-                                </div>
+                    <div class="q-step" role="group" aria-labelledby="q3-title">
+                        <div class="q-question-header">
+                            <div class="q-number">3</div>
+                            <div class="q-question-text" id="q3-title">
+                                <?php echo esc_html(str_replace('*', '', $q_label_3)); ?> <span class="q-required">*</span>
                             </div>
-                        </legend>
+                        </div>
                         <div class="q-options-container">
                             <label class="q-radio-card"><input type="radio" name="q3_satisfaction_services" value="4"> Très satisfaisant</label>
                             <label class="q-radio-card"><input type="radio" name="q3_satisfaction_services" value="3"> Satisfaisant</label>
                             <label class="q-radio-card"><input type="radio" name="q3_satisfaction_services" value="2"> Peu satisfaisant</label>
                             <label class="q-radio-card"><input type="radio" name="q3_satisfaction_services" value="1"> Pas du tout satisfaisant</label>
                         </div>
-                    </fieldset>
+                    </div>
 
                     <!-- Q4 -->
-                    <fieldset class="q-step" data-step="4">
-                        <legend>
-                            <div class="legend-content">
-                                <div class="q-number">4</div>
-                                <div class="q-question-wrapper">
-                                    <span class="q-question-text"><?php echo esc_html($q_label_4); ?></span>
-                                    <span class="q-required">*</span>
-                                    <small class="q-help-text">Plusieurs réponses possibles</small>
-                                </div>
+                    <div class="q-step" role="group" aria-labelledby="q4-title">
+                        <div class="q-question-header">
+                            <div class="q-number">4</div>
+                            <div class="q-question-text" id="q4-title">
+                                <?php echo esc_html(str_replace('*', '', $q_label_4)); ?> <span class="q-required">*</span>
+                                <div class="q-help-text">Plusieurs réponses possibles</div>
                             </div>
-                        </legend>
+                        </div>
                         <div class="q-options-container">
                             <label class="q-checkbox-card"><input type="checkbox" name="q4_connaissance[]" value="presse"> Presse écrite</label>
                             <label class="q-checkbox-card"><input type="checkbox" name="q4_connaissance[]" value="tv"> Télévision</label>
@@ -119,23 +107,20 @@ $q_profil_q4 = get_field('q_profil_q4') ?: "Comment êtes-vous venu ?";
                             <label class="q-checkbox-card"><input type="checkbox" name="q4_connaissance[]" value="recommandation"> Recommandations</label>
                             <label class="q-checkbox-card"><input type="checkbox" name="q4_connaissance[]" value="autre"> Autre</label>
                         </div>
-                    </fieldset>
+                    </div>
 
                     <!-- Q5 -->
-                    <fieldset class="q-step" data-step="5">
-                        <legend>
-                            <div class="legend-content">
-                                <div class="q-number">5</div>
-                                <div class="q-question-wrapper">
-                                    <span class="q-question-text"><?php echo esc_html($q_label_5); ?></span>
-                                    <span class="q-badge-facultatif">Facultatif</span>
-                                </div>
+                    <div class="q-step" role="group" aria-labelledby="q5-title">
+                        <div class="q-question-header">
+                            <div class="q-number">5</div>
+                            <div class="q-question-text" id="q5-title">
+                                <?php echo esc_html($q_label_5); ?> <span class="q-badge-facultatif">Facultatif</span>
                             </div>
-                        </legend>
+                        </div>
                         <div class="q-options-container">
                             <textarea name="q5_suggestions" rows="4" placeholder="Écrivez votre message ici..."></textarea>
                         </div>
-                    </fieldset>
+                    </div>
 
                     <!-- Zone Profilage Dynamique (Accordéon) -->
                     <div class="q-profilage-zone">

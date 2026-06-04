@@ -53,19 +53,29 @@
 .q-content { padding: 1.5rem; }
 /* Les Cartes (Blanches, Angles arrondis, Bordure subtile) */
 .q-step, .q-sub-step, .q-accordion-trigger {
-    background: var(--q-card-bg);
-    border: 1px solid #FFFFFF;
+    background: #FFFFFF;
+    border: none;
     border-radius: 12px;
     padding: 24px;
     margin-bottom: 24px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03); /* Légère profondeur */
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.04); /* Ombre diffuse et élégante */
 }
+
 /* L'en-tête de la question (Le correctif du chevauchement) */
 .q-step legend, .q-sub-step legend {
     width: 100%;
     margin-bottom: 1.2rem;
     padding: 0; /* Reset des styles natifs */
 }
+
+.q-question-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+    width: 100%;
+    margin-bottom: 20px; /* Espace entre la question et les réponses */
+}
+
 .legend-content {
     display: flex;
     align-items: flex-start;
@@ -86,6 +96,17 @@
     font-weight: 700;
     font-size: 0.9rem;
     margin-top: 2px; /* Ajustement optique avec le texte */
+}
+
+.q-question-text {
+    font-weight: 600;
+    font-size: 1.05rem;
+    line-height: 1.4;
+    color: #1A1A1A;
+    display: flex;
+    flex-wrap: wrap; /* Gère les retours à la ligne gracefully */
+    align-items: center;
+    gap: 6px 12px;
 }
 
 /* Le conteneur du texte qui gère les retours à la ligne */
@@ -110,6 +131,7 @@
     font-size: 0.85rem;
     color: #666;
     font-weight: 400;
+    margin-top: 4px;
 }
 
 .q-badge-facultatif {
@@ -126,18 +148,18 @@
 .q-options-container {
     display: flex;
     flex-direction: column;
-    gap: 12px; /* Espacement parfait entre les options */
+    gap: 10px; /* Espacement parfait entre les options */
 }
 
 .q-radio-card, .q-checkbox-card {
     display: flex;
     align-items: center;
     padding: 16px;
-    border: 1px solid var(--q-border-light);
+    border: 3px solid #E1E3E2;
     border-radius: 8px;
-    background: #FCFCFC;
+    background: #E1E3E2; /* Fond gris très clair pour trancher avec le blanc de la carte */
     cursor: pointer;
-    transition: border-color 0.2s ease, background 0.2s ease;
+    transition: all 0.2s ease;
     font-weight: 500;
     color: #333;
     margin: 0; /* On reset la marge car géré par le gap du parent */
@@ -156,13 +178,22 @@
 /* État sélectionné */
 .q-radio-card:has(input:checked), .q-checkbox-card:has(input:checked) {
     border-color: var(--q-primary);
-    background: #F4F8F5;
+    background: #F0F5F2; /* Vert très très clair */
     color: var(--q-primary);
     font-weight: 700;
 }
 
-textarea.q-input, input.q-input, select.q-select { width: 100%; padding: 1rem; border: 1px solid var(--q-border); border-radius: var(--q-radius); font-family: inherit; font-size: 1rem; margin-top: 0.5rem; }
-textarea { resize: vertical; width: 100%; border: 1px solid var(--q-border); border-radius: var(--q-radius); padding: 1rem; }
+textarea[name="q5_suggestions"] {
+    background: #E1E3E2;
+    border: 1px solid #E5E7EB;
+    transition: all 0.2s ease;
+}
+
+textarea[name="q5_suggestions"]:focus {
+    background: #FFFFFF;
+    border-color: var(--q-primary);
+    outline: none;
+}
 
 /* --- Profilage & RGPD --- */
 .q-profilage-zone { background: #eef2f0; padding: 1.5rem; border-radius: var(--q-radius); margin-bottom: 1.5rem; }
