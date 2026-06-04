@@ -41,50 +41,100 @@ $q_profil_q4 = get_field('q_profil_q4') ?: "Comment êtes-vous venu ?";
 
                 <form id="form-questionnaire" data-aire="<?php echo esc_attr($aire_id); ?>">
 
+                    <!-- Q1 -->
                     <fieldset class="q-step" data-step="1">
-                        <legend><span>1</span> <?php echo esc_html($q_label_1); ?></legend>
-                        <label class="q-radio-card"><input type="radio" name="q1_satisfaction_aire" value="4"> Très satisfaisant</label>
-                        <label class="q-radio-card"><input type="radio" name="q1_satisfaction_aire" value="3"> Satisfaisant</label>
-                        <label class="q-radio-card"><input type="radio" name="q1_satisfaction_aire" value="2"> Peu satisfaisant</label>
-                        <label class="q-radio-card"><input type="radio" name="q1_satisfaction_aire" value="1"> Pas du tout satisfaisant</label>
+                        <legend>
+                            <div class="legend-content">
+                                <div class="q-number">1</div>
+                                <div class="q-question-wrapper">
+                                    <span class="q-question-text"><?php echo esc_html($q_label_1); ?></span>
+                                    <span class="q-required">*</span>
+                                </div>
+                            </div>
+                        </legend>
+                        <div class="q-options-container">
+                            <label class="q-radio-card"><input type="radio" name="q1_satisfaction_aire" value="4"> Très satisfaisant</label>
+                            <label class="q-radio-card"><input type="radio" name="q1_satisfaction_aire" value="3"> Satisfaisant</label>
+                            <label class="q-radio-card"><input type="radio" name="q1_satisfaction_aire" value="2"> Peu satisfaisant</label>
+                            <label class="q-radio-card"><input type="radio" name="q1_satisfaction_aire" value="1"> Pas du tout satisfaisant</label>
+                        </div>
                     </fieldset>
 
+                    <!-- Q2 -->
                     <fieldset class="q-step" data-step="2">
-                        <legend><span>2</span> <?php echo esc_html($q_label_2); ?></legend>
-                        <label class="q-radio-card"><input type="radio" name="q2_satisfaction_securite" value="4"> Très satisfaisant</label>
-                        <label class="q-radio-card"><input type="radio" name="q2_satisfaction_securite" value="3"> Satisfaisant</label>
-                        <label class="q-radio-card"><input type="radio" name="q2_satisfaction_securite" value="2"> Peu satisfaisant</label>
-                        <label class="q-radio-card"><input type="radio" name="q2_satisfaction_securite" value="1"> Pas du tout satisfaisant</label>
+                        <legend>
+                            <div class="legend-content">
+                                <div class="q-number">2</div>
+                                <div class="q-question-wrapper">
+                                    <span class="q-question-text"><?php echo esc_html($q_label_2); ?></span>
+                                    <span class="q-required">*</span>
+                                </div>
+                            </div>
+                        </legend>
+                        <div class="q-options-container">
+                            <label class="q-radio-card"><input type="radio" name="q2_satisfaction_securite" value="4"> Très satisfaisant</label>
+                            <label class="q-radio-card"><input type="radio" name="q2_satisfaction_securite" value="3"> Satisfaisant</label>
+                            <label class="q-radio-card"><input type="radio" name="q2_satisfaction_securite" value="2"> Peu satisfaisant</label>
+                            <label class="q-radio-card"><input type="radio" name="q2_satisfaction_securite" value="1"> Pas du tout satisfaisant</label>
+                        </div>
                     </fieldset>
 
+                    <!-- Q3 -->
                     <fieldset class="q-step" data-step="3">
-                        <legend><span>3</span> <?php echo esc_html($q_label_3); ?></legend>
-                        <label class="q-radio-card"><input type="radio" name="q3_satisfaction_services" value="4"> Très satisfaisant</label>
-                        <label class="q-radio-card"><input type="radio" name="q3_satisfaction_services" value="3"> Satisfaisant</label>
-                        <label class="q-radio-card"><input type="radio" name="q3_satisfaction_services" value="2"> Peu satisfaisant</label>
-                        <label class="q-radio-card"><input type="radio" name="q3_satisfaction_services" value="1"> Pas du tout satisfaisant</label>
+                        <legend>
+                            <div class="legend-content">
+                                <div class="q-number">3</div>
+                                <div class="q-question-wrapper">
+                                    <span class="q-question-text"><?php echo esc_html($q_label_3); ?></span>
+                                    <span class="q-required">*</span>
+                                </div>
+                            </div>
+                        </legend>
+                        <div class="q-options-container">
+                            <label class="q-radio-card"><input type="radio" name="q3_satisfaction_services" value="4"> Très satisfaisant</label>
+                            <label class="q-radio-card"><input type="radio" name="q3_satisfaction_services" value="3"> Satisfaisant</label>
+                            <label class="q-radio-card"><input type="radio" name="q3_satisfaction_services" value="2"> Peu satisfaisant</label>
+                            <label class="q-radio-card"><input type="radio" name="q3_satisfaction_services" value="1"> Pas du tout satisfaisant</label>
+                        </div>
                     </fieldset>
 
+                    <!-- Q4 -->
                     <fieldset class="q-step" data-step="4">
-                        <legend><span>4</span> <?php echo esc_html($q_label_4); ?> <br><small>Plusieurs réponses possibles</small></legend>
-                        <label class="q-checkbox-card"><input type="checkbox" name="q4_connaissance[]" value="presse"> Presse écrite</label>
-                        <label class="q-checkbox-card"><input type="checkbox" name="q4_connaissance[]" value="tv"> Télévision</label>
-                        <label class="q-checkbox-card"><input type="checkbox" name="q4_connaissance[]" value="web"> Sites Internet institutionnels</label>
-                        <label class="q-checkbox-card"><input type="checkbox" name="q4_connaissance[]" value="guides"> Guides de voyage</label>
-                        <label class="q-checkbox-card"><input type="checkbox" name="q4_connaissance[]" value="reseaux"> Réseaux Sociaux</label>
-                        <label class="q-checkbox-card"><input type="checkbox" name="q4_connaissance[]" value="recommandation"> Recommandations</label>
-                        <label class="q-checkbox-card"><input type="checkbox" name="q4_connaissance[]" value="autre"> Autre</label>
+                        <legend>
+                            <div class="legend-content">
+                                <div class="q-number">4</div>
+                                <div class="q-question-wrapper">
+                                    <span class="q-question-text"><?php echo esc_html($q_label_4); ?></span>
+                                    <span class="q-required">*</span>
+                                    <small class="q-help-text">Plusieurs réponses possibles</small>
+                                </div>
+                            </div>
+                        </legend>
+                        <div class="q-options-container">
+                            <label class="q-checkbox-card"><input type="checkbox" name="q4_connaissance[]" value="presse"> Presse écrite</label>
+                            <label class="q-checkbox-card"><input type="checkbox" name="q4_connaissance[]" value="tv"> Télévision</label>
+                            <label class="q-checkbox-card"><input type="checkbox" name="q4_connaissance[]" value="web"> Sites Internet institutionnels</label>
+                            <label class="q-checkbox-card"><input type="checkbox" name="q4_connaissance[]" value="guides"> Guides de voyage</label>
+                            <label class="q-checkbox-card"><input type="checkbox" name="q4_connaissance[]" value="reseaux"> Réseaux Sociaux</label>
+                            <label class="q-checkbox-card"><input type="checkbox" name="q4_connaissance[]" value="recommandation"> Recommandations</label>
+                            <label class="q-checkbox-card"><input type="checkbox" name="q4_connaissance[]" value="autre"> Autre</label>
+                        </div>
                     </fieldset>
 
                     <!-- Q5 -->
                     <fieldset class="q-step" data-step="5">
                         <legend>
                             <div class="legend-content">
-                                <span>5</span> <?php echo esc_html($q_label_5); ?>
-                                <span class="q-badge-facultatif">Facultatif</span>
+                                <div class="q-number">5</div>
+                                <div class="q-question-wrapper">
+                                    <span class="q-question-text"><?php echo esc_html($q_label_5); ?></span>
+                                    <span class="q-badge-facultatif">Facultatif</span>
+                                </div>
                             </div>
                         </legend>
-                        <textarea name="q5_suggestions" rows="4" placeholder="Écrivez votre message ici..."></textarea>
+                        <div class="q-options-container">
+                            <textarea name="q5_suggestions" rows="4" placeholder="Écrivez votre message ici..."></textarea>
+                        </div>
                     </fieldset>
 
                     <!-- Zone Profilage Dynamique (Accordéon) -->

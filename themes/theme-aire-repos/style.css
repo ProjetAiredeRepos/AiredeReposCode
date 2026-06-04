@@ -1,9 +1,225 @@
 /*
    Theme Name: Thème Cyclo
-   Author: Semih Sisman
+   Author: Semih Sisman, Samuel Awodun
    Description: Thème sur-mesure Mobile First pour les aires de repos
    Version: 1.0
  */
+
+/* ==========================================================================
+   MODULE QUESTIONNAIRE (Scoped)
+   ========================================================================== */
+.questionnaire-app {
+    --q-primary: #1A5336; /* Vert Loire à vélo */
+    --q-bg: #DCE4DE;
+    --q-card-bg: #FFFFFF;
+    --q-border-light: #EBEBEB;
+    --q-border: #E0E5E2;
+    --q-text: #2C3E35;
+    --q-radius: 8px;
+    background-color: var(--q-bg);
+    min-height: 100vh;
+    font-family: 'DM Sans', sans-serif;
+    color: var(--q-text);
+}
+
+.q-layout {
+    display: grid;
+    grid-template-columns: 1fr; /* Mobile first */
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+/* --- Typographie et En-tête --- */
+.q-header { padding: 2rem 1.5rem; text-align: center; }
+.q-title { font-family: 'Outfit', sans-serif; font-weight: 700; color: var(--q-primary); margin-bottom: 0.5rem; }
+.q-subtitle { font-size: 1.1rem; font-weight: 500; }
+
+/* --- Sidebar & Progression --- */
+.q-sidebar {
+    position: sticky;
+    top: 0;
+    background: #fff;
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid var(--q-border);
+    z-index: 10;
+}
+.q-progress-box { display: flex; align-items: center; gap: 1rem; }
+.q-progress-label { font-weight: 700; font-size: 0.85rem; color: #888; letter-spacing: 1px; }
+.q-progress-bar-container { flex-grow: 1; height: 8px; background: var(--q-border); border-radius: 4px; overflow: hidden; }
+.q-progress-fill { height: 100%; background: var(--q-primary); transition: width 0.3s ease; }
+.q-progress-text { font-weight: 700; color: var(--q-primary); }
+
+/* --- Formulaire & Champs --- */
+.q-content { padding: 1.5rem; }
+/* Les Cartes (Blanches, Angles arrondis, Bordure subtile) */
+.q-step, .q-sub-step, .q-accordion-trigger {
+    background: var(--q-card-bg);
+    border: 1px solid #FFFFFF;
+    border-radius: 12px;
+    padding: 24px;
+    margin-bottom: 24px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03); /* Légère profondeur */
+}
+/* L'en-tête de la question (Le correctif du chevauchement) */
+.q-step legend, .q-sub-step legend {
+    width: 100%;
+    margin-bottom: 1.2rem;
+    padding: 0; /* Reset des styles natifs */
+}
+.legend-content {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+    width: 100%;
+}
+/* La pastille numérotée verte */
+.q-number {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    min-width: 28px; /* Empêche l'écrasement de la pastille sur mobile */
+    background-color: var(--q-primary);
+    color: #FFFFFF;
+    border-radius: 50%;
+    font-weight: 700;
+    font-size: 0.9rem;
+    margin-top: 2px; /* Ajustement optique avec le texte */
+}
+
+/* Le conteneur du texte qui gère les retours à la ligne */
+.q-question-wrapper {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap; /* SECRET UI : Autorise le badge à passer à la ligne sans chevaucher ! */
+    gap: 8px 12px; /* Espace entre le texte et le badge */
+    line-height: 1.5;
+    font-weight: 600;
+    font-size: 1rem;
+    color: #1A1A1A;
+}
+
+.q-required {
+    color: #D32F2F; /* Rouge pour l'astérisque */
+    font-weight: 700;
+}
+
+.q-help-text {
+    width: 100%; /* Force le texte d'aide à passer en dessous */
+    font-size: 0.85rem;
+    color: #666;
+    font-weight: 400;
+}
+
+.q-badge-facultatif {
+    background: #F2F5F3;
+    color: var(--q-primary);
+    padding: 4px 10px;
+    border-radius: 16px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    white-space: nowrap; /* Empêche le mot d'être coupé en deux */
+}
+
+/* Les boutons radio et cases à cocher */
+.q-options-container {
+    display: flex;
+    flex-direction: column;
+    gap: 12px; /* Espacement parfait entre les options */
+}
+
+.q-radio-card, .q-checkbox-card {
+    display: flex;
+    align-items: center;
+    padding: 16px;
+    border: 1px solid var(--q-border-light);
+    border-radius: 8px;
+    background: #FCFCFC;
+    cursor: pointer;
+    transition: border-color 0.2s ease, background 0.2s ease;
+    font-weight: 500;
+    color: #333;
+    margin: 0; /* On reset la marge car géré par le gap du parent */
+}
+
+.q-radio-card:hover, .q-checkbox-card:hover {
+    border-color: #C0CFC5;
+    background: #FFFFFF;
+}
+.q-radio-card input, .q-checkbox-card input {
+    margin-right: 16px;
+    transform: scale(1.3); /* Agrandit nativement le bouton radio */
+    accent-color: var(--q-primary);
+    cursor: pointer;
+}
+/* État sélectionné */
+.q-radio-card:has(input:checked), .q-checkbox-card:has(input:checked) {
+    border-color: var(--q-primary);
+    background: #F4F8F5;
+    color: var(--q-primary);
+    font-weight: 700;
+}
+
+textarea.q-input, input.q-input, select.q-select { width: 100%; padding: 1rem; border: 1px solid var(--q-border); border-radius: var(--q-radius); font-family: inherit; font-size: 1rem; margin-top: 0.5rem; }
+textarea { resize: vertical; width: 100%; border: 1px solid var(--q-border); border-radius: var(--q-radius); padding: 1rem; }
+
+/* --- Profilage & RGPD --- */
+.q-profilage-zone { background: #eef2f0; padding: 1.5rem; border-radius: var(--q-radius); margin-bottom: 1.5rem; }
+.q-accordion-trigger {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.5rem;
+    border-radius: var(--q-radius);
+    cursor: pointer;
+    text-align: left;
+    margin-bottom: 0;
+}
+.q-profilage-header h3 { color: var(--q-primary); margin-bottom: 0.2rem; display: flex; align-items: center; gap: 10px; }
+.q-profilage-header p { font-size: 0.9rem; color: #555; }
+.q-chevron { transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); color: var(--q-primary); }
+/* Rotation de l'icône quand ouvert */
+.q-accordion-trigger[aria-expanded="true"] .q-chevron {
+    transform: rotate(180deg);
+}
+/* Conteneur masqué animé */
+.q-accordion-content {
+    display: grid;
+    grid-template-rows: 0fr; /* Magie moderne CSS : Hauteur à zéro */
+    transition: grid-template-rows 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    overflow: hidden;
+}
+.q-accordion-trigger[aria-expanded="true"] + .q-accordion-content {
+    grid-template-rows: 1fr; /* S'ouvre selon le contenu interne */
+}
+.q-accordion-inner {
+    min-height: 0; /* Nécessaire pour que le grid 0fr fonctionne */
+    padding-top: 1rem; /* Espace entre le bouton et les premières questions */
+}
+.q-rgpd-zone { padding: 1.5rem; border: 2px dashed var(--q-border); border-radius: var(--q-radius); margin-bottom: 1.5rem; }
+.q-rgpd-title { font-weight: 700; font-size: 0.9rem; margin-bottom: 1rem; }
+
+/* --- Bouton & Alertes --- */
+.q-submit-btn { width: 100%; padding: 1.2rem; background: var(--q-primary); color: #fff; font-size: 1.1rem; font-weight: 700; border: none; border-radius: 50px; cursor: pointer; transition: opacity 0.2s; }
+.q-submit-btn:disabled { opacity: 0.7; cursor: not-allowed; }
+.q-alert { background: #fee2e2; color: #b91c1c; padding: 1rem; border-radius: var(--q-radius); margin-bottom: 1.5rem; text-align: center; font-weight: 500; }
+.hidden { display: none !important; }
+
+/* --- Écran de succès --- */
+#q-success-screen { text-align: center; padding: 4rem 1.5rem; background: #fff; border-radius: var(--q-radius); box-shadow: 0 4px 20px rgba(0,0,0,0.05); }
+.q-success-icon { font-size: 4rem; color: #fff; background: var(--q-primary); width: 100px; height: 100px; line-height: 100px; border-radius: 50%; margin: 0 auto 2rem; }
+#q-success-screen h2 { color: var(--q-primary); margin-bottom: 1rem; }
+
+/* --- Responsive Desktop --- */
+@media (min-width: 768px) {
+    .q-layout { grid-template-columns: 250px 1fr; gap: 2rem; align-items: start; padding: 2rem; }
+    .q-sidebar { position: sticky; top: 2rem; border-right: 1px solid var(--q-border); border-bottom: none; background: transparent; padding: 0; }
+    .q-progress-box { flex-direction: column; align-items: flex-start; gap: 0.5rem; }
+    .q-content { padding: 0; }
+    .q-header { text-align: left; padding: 0 0 2rem 0; }
+}
 
 /* --- 0. RESET ET COMPORTEMENT GLOBAL --- */
 html {
@@ -14,6 +230,13 @@ html {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
+}
+
+/* --- 0.5. VARIABLES GLOBALES DU THÈME --- */
+:root {
+    /* Couleurs par défaut pour éviter les erreurs de l'éditeur */
+    --nav-active-color: #1A3D22;   /* Vert foncé par défaut pour le carrousel */
+    --modal-theme-color: #333333;  /* Gris sombre par défaut pour les modales */
 }
 
 /* --- 1. POLICES GLOBALES --- */
@@ -245,6 +468,7 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .modal-bottom-sheet {
+    padding: 20px;
     position: fixed;
     top: 0; left: 0; right: 0; bottom: 0;
     z-index: 999;
@@ -260,14 +484,14 @@ h1, h2, h3, h4, h5, h6 {
     background-color: #FFFFFF;
     width: 100%;
     max-width: 375px;
-    margin: 0 auto;
+    margin: 0 auto; /* Cette ligne fait déjà le travail */
     max-height: 85vh;
-    border-radius: 32px 32px 0 0;
+    border-radius: 45px !important;
     z-index: 2;
     overflow-y: auto;
     overflow-x: hidden;
     padding: 0;
-    transform: translateY(100%);
+    transform: translateY(150%);
     transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
@@ -330,34 +554,91 @@ h1, h2, h3, h4, h5, h6 {
     gap: 12px;
 }
 
+/* --- LE BOUTON LUXE & ÉLÉGANT --- */
 .btn-modal-link {
-    display: block;
-    text-align: center;
-    background-color: #111111;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    min-height: 54px;
+    padding: 14px 28px;
+    box-sizing: border-box;
+
+    /* Couleurs & Fond Premium */
+    background-color: #111111; /* Un noir profond et mat */
     color: #FFFFFF;
-    text-decoration: none;
-    padding: 16px;
-    border-radius: 16px;
+    border: 1px solid rgba(255, 255, 255, 0.1); /* Fine bordure pour la structure */
+    border-radius: 16px; /* Arrondi moderne, pas trop "cartoon" */
+
+    /* Typographie Haute Couture */
+    font-family: 'Outfit', sans-serif;
+    font-size: 15px;
     font-weight: 600;
-    font-size: 1rem;
+    text-transform: uppercase; /* Donne un côté institutionnel/mode */
+    letter-spacing: 2px; /* On espace les lettres pour respirer */
+    text-decoration: none;
+
+    /* Ombre lissée (Multi-layered shadow) */
+    box-shadow:
+            0 4px 6px -1px rgba(0, 0, 0, 0.08),
+            0 10px 15px -3px rgba(17, 17, 17, 0.12),
+            inset 0 1px 0 rgba(255, 255, 255, 0.2); /* Micro-lumière interne en haut */
+
+    /* Transition Cinématique (Cubic-Bezier) */
+    transition:
+            background-color 0.3s ease,
+            transform 0.4s cubic-bezier(0.16, 1, 0.3, 1),
+            box-shadow 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
 }
 
-.btn-modal-link.btn-so {
-    background-color: #F0F0F0;
-    color: #111111;
+/* --- EFFET AU SURVOL (Desktop) --- */
+@media (hover: hover) {
+    .btn-modal-link:hover {
+        background-color: #1a1a1a;
+        transform: translateY(-3px); /* Le bouton s'élève légèrement */
+
+        /* L'ombre s'agrandit pour accentuer l'effet de lévitation */
+        box-shadow:
+                0 10px 20px -5px rgba(17, 17, 17, 0.15),
+                0 20px 25px -5px rgba(17, 17, 17, 0.1),
+                inset 0 1px 0 rgba(255, 255, 255, 0.3);
+    }
+}
+
+/* --- EFFET AU CLIC (Mobile & Desktop) --- */
+.btn-modal-link:active {
+    transform: translateY(0) scale(0.97); /* Effet mécanique de bouton physique */
+    box-shadow:
+            0 2px 4px rgba(0, 0, 0, 0.1),
+            inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    background-color: #000000;
+}
+
+/* --- LE PETIT PLUS ÉLÉGANT : La flèche discrète --- */
+.btn-modal-link::after {
+    content: '→';
+    margin-left: 10px;
+    font-size: 18px;
+    line-height: 1;
+    transform: translateX(0);
+    transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@media (hover: hover) {
+    .btn-modal-link:hover::after {
+        transform: translateX(4px); /* La petite flèche glisse vers la droite au survol */
+    }
 }
 
 /* --- MODAL AVEC IMAGE (Style Maquette) --- */
 
-.modal-content {
-    padding: 0; /* On enlève le padding global pour que l'image colle aux bords */
-    overflow-x: hidden;
-}
-
 .modal-header-image {
     position: relative;
     width: 100%;
-    height: 250px; /* Hauteur de l'image en haut de modal */
+    height: 250px;
     background-color: #EEE;
 }
 
@@ -367,7 +648,6 @@ h1, h2, h3, h4, h5, h6 {
     object-fit: cover;
 }
 
-/* Dégradé léger sur l'image pour l'esthétique */
 .modal-image-gradient {
     position: absolute;
     bottom: 0; left: 0; right: 0;
@@ -375,23 +655,13 @@ h1, h2, h3, h4, h5, h6 {
     background: linear-gradient(to top, rgba(155,155,155,1) 0%, rgba(155,155,155,0) 100%);
 }
 
-.modal-body {
-    padding: 24px; /* On remet le padding uniquement pour le texte */
-    position: relative;
-    margin-top: -20px; /* Fait remonter légèrement le texte sur l'image */
-    background: white;
-    border-radius: 24px 24px 0 0;
-}
-
-/* Ajustement du bouton fermer pour qu'il soit au-dessus de l'image */
 .modal-close-btn {
-    top: 20px; /* Positionné à l'intérieur de l'image en haut à droite */
+    top: 20px;
     right: 20px;
     z-index: 10;
     background-color: rgba(255, 255, 255, 0.9);
 }
 
-/* Style pour les badges dans la modal */
 .modal-body .badge {
     text-transform: uppercase;
     font-weight: 800;
@@ -437,7 +707,6 @@ h1, h2, h3, h4, h5, h6 {
 
 .carousel-header h2 {
     color: #FFFFFF;
-
 }
 
 .carousel-container {
@@ -445,11 +714,8 @@ h1, h2, h3, h4, h5, h6 {
     overflow-x: auto;
     scrollbar-width: none;
     -ms-overflow-style: none;
-    scroll-snap-type: x mandatory; /* Déplacé ici pour activer l'aimant de centrage */
-    /* Dit au navigateur de ne pas toucher à l'historique lors du swipe ici */
-    /* ... ton code existant ... */
+    scroll-snap-type: x mandatory;
     scroll-snap-align: center;
-    /* force l'aimant à bloquer la carte au lieu de la survoler */
     scroll-snap-stop: always;
     overscroll-behavior-x: contain;
 }
@@ -460,12 +726,10 @@ h1, h2, h3, h4, h5, h6 {
 .carousel-track {
     display: flex;
     gap: 20px;
-    padding: 0 35px 30px 35px; /* Conservé exactement à 35px comme demandé */
+    padding: 0 35px 30px 35px;
 }
-/* Crée un espace vide invisible après la dernière carte pour permettre son centrage */
 .carousel-track::after {
     content: "";
-    /* La formule magique : 50% de la largeur de l'écran, moins la moitié de ta carte (environ 150px) */
     flex: 0 0 calc(50vw - 150px);
     display: block;
 }
@@ -476,22 +740,21 @@ h1, h2, h3, h4, h5, h6 {
     max-width: 300px;
     height: 420px;
     border-radius: 28px;
-    scroll-snap-align: center; /* Aligne la carte au centre de l'écran */
+    scroll-snap-align: center;
     overflow: hidden;
     box-shadow: 0 8px 24px rgba(0,0,0,0.2);
-    transform: scale(0.88); /* Taille d'origine conservée */
+    transform: scale(0.88);
     opacity: 0.4;
     transition: transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.5s ease, box-shadow 0.5s ease;
 }
 
 .carousel-card-immersive.is-active {
-    transform: scale(1); /* Taille d'origine active conservée */
+    transform: scale(1);
     opacity: 1;
     box-shadow: 0 20px 40px rgba(0,0,0,0.4);
 }
 
 .card-bg-image {
-    position: absolute;
     position: absolute;
     top: 0; left: 0; width: 100%; height: 100%;
     object-fit: cover;
@@ -518,7 +781,7 @@ h1, h2, h3, h4, h5, h6 {
     font-family: 'Outfit', sans-serif;
     font-size: 0.75rem;
     font-weight: 600;
-    letter-spacing: 2.5px;
+    letter-spacing: 2px;
     text-transform: uppercase;
     margin-bottom: 8px;
     display: block;
@@ -617,17 +880,173 @@ h1, h2, h3, h4, h5, h6 {
     transition: all 0.4s ease;
 }
 
+/* --- PIED DE MODALE SOMBRE (Section Nettoyée et Unifiée) --- */
+.modal-body {
+    display: flex;
+    flex-direction: column;
+    padding: 0;
+}
+
+.modal-content-area {
+    padding: 24px;
+    flex-grow: 1;
+    overflow-y: auto;
+}
+
+/* --- PIED DE MODALE SOMBRE (Effet Verre Dépoli Premium) --- */
+.modal-footer-wrapper {
+    position: relative;
+    /* Fond sombre translucide */
+    background: rgba(15, 15, 15, 0.85);
+
+    /* Effet de flou (Glassmorphism) sur ce qui passe derrière */
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+
+    padding: 24px 24px 32px 24px; /* Un peu plus de place en bas pour les téléphones */
+    margin-top: auto;
+
+    /* Fine ligne lumineuse de séparation en haut */
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+
+    /* Ombre douce projetée vers le haut de la modale */
+    box-shadow: 0 -15px 40px rgba(0, 0, 0, 0.2);
+}
+
+/* On s'assure que les flèches ressortent bien au-dessus du fond */
+.modal-footer-wrapper > * {
+    position: relative;
+    z-index: 2;
+}
+
+.modal-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+/* --- NAVIGATION MODALE (Boutons Ronds Typés Carrousel) --- */
+.modal-navigation {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+}
+
+.modal-arrow {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    cursor: pointer;
+    transition: transform 0.2s ease, opacity 0.2s ease, background-color 0.2s ease;
+}
+
+.modal-arrow:active {
+    transform: scale(0.9);
+}
+
+.modal-arrow:hover {
+    opacity: 0.9;
+}
+
+/* Flèche Droite (Suivant) : Fond couleur thème, Chevron blanc forcé */
+.modal-arrow.next {
+
+    background-color: var(--modal-theme-color, #333333) !important;
+    color: #FAFAFA !important;
+}
+
+.modal-arrow.next svg,
+.modal-arrow.next svg * {
+    stroke: #FAFAFA !important;
+    fill: none !important;
+}
+
+/* Flèche Gauche (Précédent) : Fond clair, Chevron couleur thème forcé */
+.modal-arrow.prev {
+    background-color: #FAFAFA !important;
+    color: var(--modal-theme-color, #333333) !important;
+}
+
+.modal-arrow.prev svg,
+.modal-arrow.prev svg * {
+    stroke: var(--modal-theme-color, #333333) !important;
+    fill: none !important;
+}
+
+/* Points de navigation (Dots) */
+.modal-dots {
+    padding-left:50px;
+    padding-right:50px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.modal-dots .dot {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background-color: rgba(255, 255, 255, 0.2); /* Inactif discret sur fond noir */
+    transition: background-color 0.3s ease;
+}
+
+.modal-dots .dot.active {
+    background-color: var(--modal-theme-color, #ffffff) !important;
+}
+
+/* --- PIED DE MODALE ACTIVITÉS SOMBRE (Effet Verre Dépoli Premium) --- */
+
+/* On force l'application UNIQUEMENT dans la modale d'activité */
+.modal-bottom-sheet .modal-footer-wrapper {
+    position: relative;
+    background: rgba(15, 15, 15, 0.85); /* Fond sombre translucide */
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    padding: 24px 24px 32px 24px;
+    margin-top: auto;
+    border-top: 1px solid rgba(255, 255, 255, 0.08); /* Ligne lumineuse */
+    box-shadow: 0 -15px 40px rgba(0, 0, 0, 0.2);
+}
+
+/* Le halo de couleur dynamique (vert, jaune, bleu ou violet) */
+.modal-bottom-sheet .modal-footer-wrapper::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 1px;
+    background: var(--modal-theme-color, transparent);
+    box-shadow: 0 0 15px var(--modal-theme-color, transparent);
+    opacity: 0.5;
+}
+
+/* Pour que les flèches ressortent bien par-dessus le fond flouté */
+.modal-bottom-sheet .modal-footer-wrapper > * {
+    position: relative;
+    z-index: 2;
+}
+
+/* --- 8. ARCHITECTURE DU MENU BURGER --- */
+
 .menu-full-screen {
     position: fixed;
     top: 0;
     left: 0;
     width: 100%;
     height: 100vh;
-    background-color: #6c7876;
+    background-color: rgba(20, 22, 28, 0.55);
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
     z-index: 2000;
     opacity: 0;
     pointer-events: none;
-    transition: opacity 0.4s ease;
+    transform: translateY(-30px) scale(1.05);
+    transition: opacity 0.4s ease, transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
     overflow-y: auto;
     padding: 40px 24px;
 }
@@ -651,77 +1070,37 @@ h1, h2, h3, h4, h5, h6 {
     align-items: flex-start;
     margin-bottom: 40px;
 }
-/* 1. Le fond du menu : Effet Glassmorphism et "Drop In" */
-.menu-full-screen {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100vh;
-    background-color: rgb(195 188 148 / 0.85); /* Légèrement transparent */
-    backdrop-filter: blur(15px); /* Le fameux flou d'arrière-plan */
-    -webkit-backdrop-filter: blur(15px); /* Pour Safari */
-    z-index: 2000;
-    opacity: 0;
-    pointer-events: none;
 
-    /* Le menu démarre un peu plus haut et légèrement agrandi */
-    transform: translateY(-30px) scale(1.05);
-    transition: opacity 0.4s ease, transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
-
-    overflow-y: auto;
-    padding: 40px 24px;
-}
-
-/* L'état actif du fond */
 .menu-full-screen.is-open {
     opacity: 1;
     pointer-events: auto;
     transform: translateY(0) scale(1);
 }
 
-.menu-inner {
-    display: flex;
-    flex-direction: column;
-    height: 100%;
-    max-width: 400px;
-    margin: 0 auto;
-}
-
-/* 2. Préparation des éléments internes pour l'effet Cascade */
 .menu-full-screen .menu-header,
 .menu-full-screen .menu-activities-list,
 .menu-full-screen .menu-footer {
     opacity: 0;
-    transform: translateY(40px); /* Ils démarrent plus bas */
+    transform: translateY(40px);
     transition: opacity 0.5s ease, transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-/* 3. L'apparition en Cascade (Stagger effect) avec des délais */
 .menu-full-screen.is-open .menu-header {
     opacity: 1;
     transform: translateY(0);
-    transition-delay: 0.1s; /* L'en-tête arrive en premier */
+    transition-delay: 0.1s;
 }
 
 .menu-full-screen.is-open .menu-activities-list {
     opacity: 1;
     transform: translateY(0);
-    transition-delay: 0.2s; /* La liste arrive juste après */
+    transition-delay: 0.2s;
 }
 
 .menu-full-screen.is-open .menu-footer {
     opacity: 1;
     transform: translateY(0);
-    transition-delay: 0.3s; /* Le footer ferme la marche */
-}
-
-/* Le design de l'en-tête (tu peux garder ton code existant à partir d'ici) */
-.menu-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    margin-bottom: 40px;
+    transition-delay: 0.3s;
 }
 
 .menu-subtitle {
@@ -735,7 +1114,6 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .menu-header h2 {
-
     font-family: 'Outfit', sans-serif;
     font-size: 2.2rem;
     color: #ffffff;
@@ -743,11 +1121,10 @@ h1, h2, h3, h4, h5, h6 {
     line-height: 1.1;
 }
 
-/* L'état normal du bouton */
 .menu-close-btn {
     width: 44px;
     height: 44px;
-    background-color: rgb(255 30 30 / 0.67); /* Un rouge légèrement translucide et moderne */
+    background-color: rgb(255 30 30 / 0.67);
     border: 1px solid rgba(255, 255, 255, 0.3);
     border-radius: 50%;
     color: #FFFFFF;
@@ -756,11 +1133,7 @@ h1, h2, h3, h4, h5, h6 {
     justify-content: center;
     align-items: center;
     cursor: pointer;
-
-    /* Une légère ombre rouge pour un effet "Glow" */
     box-shadow: 0 4px 15px rgba(255, 0, 0, 0.3);
-
-    /* Une transition magique avec un effet d'élasticité (rebond) */
     transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
@@ -769,11 +1142,9 @@ h1, h2, h3, h4, h5, h6 {
     flex-direction: column;
     gap: 16px;
     flex-grow: 1;
-
 }
 
 .menu-activity-item {
-
     position: relative;
     background-color: rgb(255 255 255);
     border-radius: 20px;
@@ -863,10 +1234,8 @@ h1, h2, h3, h4, h5, h6 {
     opacity: 0.8;
 }
 
-/* --- 8. RESPONSIVE TABLETTE & DESKTOP (Écrans >= 768px) --- */
+/* --- 9. RESPONSIVE TABLETTE & DESKTOP (Écrans >= 768px) --- */
 @media screen and (min-width: 768px) {
-
-    /* 1. Centrage des titres et sous-titres */
     .carte-header,
     .carousel-header {
         text-align: center;
@@ -874,21 +1243,18 @@ h1, h2, h3, h4, h5, h6 {
         margin: 0 auto 40px auto;
     }
 
-    /* 2. Annule les restrictions de scroll du mobile */
     .carousel-container {
         overflow: visible;
         scroll-snap-type: none;
     }
 
-    /* 3. La piste devient une Grille élastique parfaite */
     .carousel-track {
         display: grid;
-        /* La formule magique : les colonnes font au minimum 250px et s'étirent si besoin */
         grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
         justify-content: center;
         gap: 30px;
         padding: 0 24px;
-        max-width: 1300px; /* On a agrandi le conteneur pour que 4 cartes rentrent à l'aise */
+        max-width: 1300px;
         margin: 0 auto;
     }
 
@@ -896,180 +1262,187 @@ h1, h2, h3, h4, h5, h6 {
         display: none;
     }
 
-    /* 4. Les cartes s'insèrent parfaitement dans les cases de la grille */
     .carousel-card-immersive {
-        width: 100%; /* S'adapte à la colonne Grid (300px) */
+        width: 100%;
         max-width: none;
         opacity: 1 !important;
         transform: scale(1) !important;
         scroll-snap-align: none;
-        margin-bottom: 0; /* Plus besoin, le 'gap' de la grille gère l'espace */
+        margin-bottom: 0;
     }
 
-    /* 5. Masquer complètement la navigation (flèches et points) devenus inutiles */
     .carousel-navigation {
         display: none;
     }
 }
 
-/* 5. Effet de HOVER (Uniquement sur les appareils avec une vraie souris) */
 @media (hover: hover) {
     .carousel-card-immersive {
-        /* On s'assure que l'animation est fluide */
         transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.4s ease !important;
     }
 
     .carousel-card-immersive:hover {
-        /* Soulève la carte vers le haut et l'agrandit très légèrement */
         transform: translateY(-12px) scale(1.02) !important;
-        /* Intensifie l'ombre pour donner l'impression qu'elle décolle de l'écran */
         box-shadow: 0 25px 50px rgba(0,0,0,0.4) !important;
-        z-index: 10; /* S'assure qu'elle passe au-dessus des autres */
+        z-index: 10;
     }
 }
 
+/* --- TRANSITIONS FLUIDES ENTRE MODALES --- */
+
+/* 1. Force le fond noir à rester visible pendant le changement */
+.modal-bottom-sheet.is-switching-out .modal-overlay-close {
+    opacity: 1 !important;
+    visibility: visible !important;
+}
+
+/* 2. L'ancienne modale glisse vers la gauche en s'effaçant */
+.modal-bottom-sheet.is-switching-out .modal-content {
+    transform: translateX(-50px) !important;
+    opacity: 0 !important;
+    transition: transform 0.3s ease, opacity 0.3s ease;
+}
+
+/* 3. La nouvelle modale arrive par la droite (Effet iOS) */
+.modal-bottom-sheet.is-switching-in .modal-content {
+    transform: translateX(50px);
+    opacity: 0;
+    animation: slideInLateral 0.4s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+}
+
+@keyframes slideInLateral {
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
 
 /* ==========================================================================
-   MODULE QUESTIONNAIRE (Scoped)
+   9. RESPONSIVE TABLETTE & DESKTOP (Écrans >= 768px)
    ========================================================================== */
-.questionnaire-app {
-    --q-primary: #1A5336; /* Vert Loire à vélo */
-    --q-bg: #EAEFEA; /* Gris-vert doux pour contraster avec le blanc pur des cartes */
-    --q-border: #E0E5E2;
-    --q-text: #2C3E35;
-    --q-radius: 8px;
-    background-color: var(--q-bg);
-    min-height: 100vh;
-    font-family: 'DM Sans', sans-serif;
-    color: var(--q-text);
+
+@media screen and (min-width: 768px) {
+
+    /* --- EN-TÊTES & ALIGNEMENTS --- */
+    .carte-header,
+    .carousel-header {
+        text-align: center;
+        max-width: 800px;
+        margin: 0 auto 40px auto;
+    }
+
+    /* --- 1. SECTION HERO (Plus impactant sur Desktop) --- */
+    .hero-content h1 {
+        font-size: 4rem; /* Un titre beaucoup plus grand pour remplir l'écran */
+        max-width: 900px;
+        margin: 0 auto 24px auto;
+    }
+
+    .hero-content p {
+        font-size: 1.3rem;
+        max-width: 600px;
+        margin: 0 auto;
+    }
+
+    /* Effet lévitation au survol sur Desktop */
+    @media (hover: hover) {
+        .carousel-card-immersive {
+            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.4s ease !important;
+        }
+
+        .carousel-card-immersive:hover {
+            transform: translateY(-12px) scale(1.02) !important;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.4) !important;
+            z-index: 10;
+        }
+    }
+
+    /* --- 3. MODALES ACTIVITÉS (Image à gauche, texte à droite) --- */
+
+    /* Le fond de la modale centre le contenu au lieu de le coller en bas */
+    .modal-bottom-sheet {
+        justify-content: center !important;
+        align-items: center;
+        padding: 40px;
+    }
+
+    /* La boîte de la modale s'élargit et se coupe en deux */
+    .modal-content {
+        display: flex;
+        flex-direction: row; /* Magie : image à gauche, contenu à droite */
+        max-width: 900px; /* Beaucoup plus large qu'en mobile */
+        height: 600px; /* Fixe la hauteur pour un rendu "carte" */
+        max-height: 85vh;
+        border-radius: 24px !important;
+        overflow: hidden;
+
+        /* On change l'animation d'arrivée (Pop au lieu de glisser du bas) */
+        transform: scale(0.95);
+        opacity: 0;
+        transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.4s ease;
+    }
+
+    .modal-bottom-sheet.is-open .modal-content {
+        transform: scale(1);
+        opacity: 1;
+    }
+
+    /* Moitié Gauche : L'image */
+    .modal-header-image {
+        width: 45%;
+        height: 100%;
+        min-height: unset;
+    }
+
+    .modal-header-image img {
+        height: 100%;
+        object-fit: cover;
+    }
+
+    /* Moitié Droite : Le contenu et les boutons */
+    .modal-body {
+        width: 55%;
+        height: 100%;
+        position: relative; /* Pour garder le footer accroché en bas */
+    }
+
+    /* La croix pour fermer : on la place DANS la zone de contenu (à droite) */
+    .modal-close-btn {
+        top: 20px;
+        right: 20px;
+        background-color: #FAFAFA;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+    }
+
+    /* Les animations latérales (Swipe entre modales) pour Desktop */
+    .modal-bottom-sheet.is-switching-out .modal-content {
+        transform: translateX(-50px) scale(0.95) !important;
+    }
+
+    .modal-bottom-sheet.is-switching-in .modal-content {
+        animation: slideInLateralDesktop 0.4s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+    }
+
+    @keyframes slideInLateralDesktop {
+        from { transform: translateX(50px) scale(0.95); opacity: 0; }
+        to { transform: translateX(0) scale(1); opacity: 1; }
+    }
+
+    /* --- 4. MENU BURGER FULL SCREEN (Grille sur Desktop) --- */
+    .menu-inner {
+        max-width: 900px; /* On l'élargit */
+        justify-content: center;
+    }
+
+    .menu-activities-list {
+        display: grid;
+        grid-template-columns: 1fr 1fr; /* 2 colonnes au lieu d'une liste */
+        gap: 24px;
+        flex-grow: 0;
+    }
+
+    .menu-activity-item {
+        padding: 20px 24px; /* Un peu plus aéré */
+    }
 }
 
-.q-layout {
-    display: grid;
-    grid-template-columns: 1fr; /* Mobile first */
-    max-width: 1200px;
-    margin: 0 auto;
-}
-
-/* --- Typographie et En-tête --- */
-.q-header { padding: 2rem 1.5rem; text-align: center; }
-.q-title { font-family: 'Outfit', sans-serif; font-weight: 700; color: var(--q-primary); margin-bottom: 0.5rem; }
-.q-subtitle { font-size: 1.1rem; font-weight: 500; }
-
-/* --- Sidebar & Progression --- */
-.q-sidebar {
-    position: sticky;
-    top: 0;
-    background: #fff;
-    padding: 1rem 1.5rem;
-    border-bottom: 1px solid var(--q-border);
-    z-index: 10;
-}
-.q-progress-box { display: flex; align-items: center; gap: 1rem; }
-.q-progress-label { font-weight: 700; font-size: 0.85rem; color: #888; letter-spacing: 1px; }
-.q-progress-bar-container { flex-grow: 1; height: 8px; background: var(--q-border); border-radius: 4px; overflow: hidden; }
-.q-progress-fill { height: 100%; background: var(--q-primary); transition: width 0.3s ease; }
-.q-progress-text { font-weight: 700; color: var(--q-primary); }
-
-/* --- Formulaire & Champs --- */
-.q-content { padding: 1.5rem; }
-/* Style des cartes pour les faire ressortir */
-.q-step, .q-sub-step, .q-accordion-trigger {
-    background: #FFFFFF;
-    border: none; /* On supprime la bordure qui aplatit le design */
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04); /* Ombre douce et élégante */
-    margin-bottom: 1.5rem;
-}
-/* Le correctif de la balise Legend et du badge "Facultatif" */
-.q-step legend, .q-sub-step legend {
-    width: 100%;
-    margin-bottom: 1rem;
-}
-.legend-content {
-    display: flex;
-    align-items: center;
-    flex-wrap: wrap; /* Empêche le badge d'être coupé sur petit écran */
-    gap: 12px;
-    width: 100%;
-    line-height: 1.4;
-}
-.q-step legend span { display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; background: var(--q-primary); color: #fff; border-radius: 50%; font-size: 0.9rem; margin-right: 0.5rem; }
-
-.q-badge-facultatif {
-    display: inline-block;
-    background: #F0F4F2;
-    color: #666;
-    padding: 4px 12px;
-    border-radius: 20px;
-    font-size: 0.75rem;
-    font-weight: 500;
-    white-space: nowrap; /* Force le mot à rester sur une seule ligne */
-}
-
-/* Cartes Radio & Checkbox Modernes */
-.q-radio-card, .q-checkbox-card {
-    display: flex; align-items: center; gap: 1rem; padding: 1rem; border: 1px solid var(--q-border); border-radius: var(--q-radius); margin-bottom: 0.5rem; cursor: pointer; transition: all 0.2s;
-}
-.q-radio-card:hover, .q-checkbox-card:hover { border-color: var(--q-primary); background: #f9fbf9; }
-.q-radio-card input, .q-checkbox-card input { transform: scale(1.2); accent-color: var(--q-primary); }
-.q-radio-card:has(input:checked), .q-checkbox-card:has(input:checked) { border-color: var(--q-primary); background: #f0f7f3; font-weight: 600; }
-
-textarea.q-input, input.q-input, select.q-select { width: 100%; padding: 1rem; border: 1px solid var(--q-border); border-radius: var(--q-radius); font-family: inherit; font-size: 1rem; margin-top: 0.5rem; }
-textarea { resize: vertical; width: 100%; border: 1px solid var(--q-border); border-radius: var(--q-radius); padding: 1rem; }
-
-/* --- Profilage & RGPD --- */
-.q-profilage-zone { background: #eef2f0; padding: 1.5rem; border-radius: var(--q-radius); margin-bottom: 1.5rem; }
-.q-accordion-trigger {
-    width: 100%;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 1.5rem;
-    border-radius: var(--q-radius);
-    cursor: pointer;
-    text-align: left;
-    margin-bottom: 0;
-}
-.q-profilage-header h3 { color: var(--q-primary); margin-bottom: 0.2rem; display: flex; align-items: center; gap: 10px; }
-.q-profilage-header p { font-size: 0.9rem; color: #555; }
-.q-chevron { transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); color: var(--q-primary); }
-/* Rotation de l'icône quand ouvert */
-.q-accordion-trigger[aria-expanded="true"] .q-chevron {
-    transform: rotate(180deg);
-}
-/* Conteneur masqué animé */
-.q-accordion-content {
-    display: grid;
-    grid-template-rows: 0fr; /* Magie moderne CSS : Hauteur à zéro */
-    transition: grid-template-rows 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    overflow: hidden;
-}
-.q-accordion-trigger[aria-expanded="true"] + .q-accordion-content {
-    grid-template-rows: 1fr; /* S'ouvre selon le contenu interne */
-}
-.q-accordion-inner {
-    min-height: 0; /* Nécessaire pour que le grid 0fr fonctionne */
-    padding-top: 1rem; /* Espace entre le bouton et les premières questions */
-}
-.q-rgpd-zone { padding: 1.5rem; border: 2px dashed var(--q-border); border-radius: var(--q-radius); margin-bottom: 1.5rem; }
-.q-rgpd-title { font-weight: 700; font-size: 0.9rem; margin-bottom: 1rem; }
-
-/* --- Bouton & Alertes --- */
-.q-submit-btn { width: 100%; padding: 1.2rem; background: var(--q-primary); color: #fff; font-size: 1.1rem; font-weight: 700; border: none; border-radius: 50px; cursor: pointer; transition: opacity 0.2s; }
-.q-submit-btn:disabled { opacity: 0.7; cursor: not-allowed; }
-.q-alert { background: #fee2e2; color: #b91c1c; padding: 1rem; border-radius: var(--q-radius); margin-bottom: 1.5rem; text-align: center; font-weight: 500; }
-.hidden { display: none !important; }
-
-/* --- Écran de succès --- */
-#q-success-screen { text-align: center; padding: 4rem 1.5rem; background: #fff; border-radius: var(--q-radius); box-shadow: 0 4px 20px rgba(0,0,0,0.05); }
-.q-success-icon { font-size: 4rem; color: #fff; background: var(--q-primary); width: 100px; height: 100px; line-height: 100px; border-radius: 50%; margin: 0 auto 2rem; }
-#q-success-screen h2 { color: var(--q-primary); margin-bottom: 1rem; }
-
-/* --- Responsive Desktop --- */
-@media (min-width: 768px) {
-    .q-layout { grid-template-columns: 250px 1fr; gap: 2rem; align-items: start; padding: 2rem; }
-    .q-sidebar { position: sticky; top: 2rem; border-right: 1px solid var(--q-border); border-bottom: none; background: transparent; padding: 0; }
-    .q-progress-box { flex-direction: column; align-items: flex-start; gap: 0.5rem; }
-    .q-content { padding: 0; }
-    .q-header { text-align: left; padding: 0 0 2rem 0; }
-}
