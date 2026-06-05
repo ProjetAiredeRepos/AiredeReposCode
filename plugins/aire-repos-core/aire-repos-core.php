@@ -85,6 +85,34 @@ function aire_repos_install_database_schema() {
 
     dbDelta( $sql_questionnaire );
 
+    // GESTION DES RÔLES CYCLO-DATA
+    // On nettoie les rôles s'ils existent déjà pour pouvoir les mettre à jour
+    remove_role( 'cyclo_admin');
+    remove_role( 'cyclo_editeur');
+    remove_role('cyclo_user');
+
+    // Rôle : Administrateur (Accès total)
+    add_role( 'cyclo_admin', 'Admin Cyclo-Data', array(
+        'read' => true,
+        'manage_cyclo_users' => true,
+        'view_all_stats' => true,
+        'manage_settings' => true
+    ));
+
+    // Rôle : Éditeur (Accès statistiques globales + getion formulaires)
+    add_role( 'cyclo_editeur', 'Éditeur Cyclo-Data', array(
+        'read' => true,
+        'view_all_stats' => true,
+        'manage_forms' => true
+    ));
+
+    // Rôle : Utilisateur (Accès restreint à ses propres aires)
+    add_role( 'cyclo_user', 'Utilisateur Cyclo-Data', array(
+        'read' => true,
+        'view_restricted_stats' => true
+    ));
+
+
     // Sauvegarde de la version de la base pour permettre des migrations
     // conditionnelles lors des futures mises à jour du plugin.
     add_option( 'aire_repos_db_version', '1.1' );
