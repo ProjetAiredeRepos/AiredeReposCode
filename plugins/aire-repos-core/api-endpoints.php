@@ -173,23 +173,44 @@ function aire_repos_submit_survey( WP_REST_Request $request ) {
 function cyclo_get_discovery_overview( WP_REST_Request $request ) {
     global $wpdb;
 
-    // Exemple d'agrégation SQL ultra-rapide (Total des consultations)
+    // 1. Validation temporelle stricte via REGEX (YYYY-MM-DD)
+    $start_date = sanitize_text_field( $request->get_param('start_date') ?: date('Y-01-01') );
+    $end_date   = sanitize_text_field( $request->get_param('end_date') ?: date('Y-12-31') );
+
+    if ( ! preg_match('/^\d{4}-\d{2}-\d{2}$/', $start_date) || ! preg_match('/^\d{4}-\d{2}-\d{2}$/', $end_date) ) {
+        return new WP_Error( 'invalid_date', 'Format de date invalide.', array( 'status' => 400 ) );
+    }
+
     $table_visite = $wpdb->prefix . 'visite_site';
 
-    // On utilise $wpdb->get_var pour une requête qui ne retourne qu'une seule valeur
-    $total_visits = $wpdb->get_var("SELECT COUNT(id_visite) FROM $table_visite");
+    // 2. Requête Préparée : Protection absolue contre l'injection SQL
+    // On utilise %s pour les chaînes (dates) et %d pour les entiers
+    $query_total = $wpdb->prepare(
+        "SELECT COUNT(id_visite) FROM {$table_visite} WHERE date_visite >= %s AND date_visite <= %s",
+        $start_date . ' 00:00:00',
+        $end_date . ' 23:59:59'
+    );
 
-    // Pour les graphiques (ex: évolution mensuelle sur l'année en cours)
-    $monthly_stats = $wpdb->get_results("
-        SELECT MONTH(date_visite) as mois, COUNT(id_visite) as total 
-        FROM $table_visite 
-        WHERE YEAR(date_visite) = YEAR(CURDATE()) 
-        GROUP BY MONTH(date_visite)
-        ORDER BY mois ASC
-    ");
+    $total_visits = $wpdb->get_var( $query_total );
+
+    // Requête préparée pour le graphique d'évolution mensuelle
+    $query_monthly = $wpdb->prepare(
+        "SELECT MONTH(date_visite) as mois, COUNT(id_visite) as total 
+         FROM {$table_visite} 
+         WHERE date_visite >= %s AND date_visite <= %s 
+         GROUP BY MONTH(date_visite) 
+         ORDER BY mois ASC",
+        $start_date . ' 00:00:00',
+        $end_date . ' 23:59:59'
+    );
+
+    $monthly_stats = $wpdb->get_results( $query_monthly );
 
     return rest_ensure_response( array(
-        'total_consultations' => (int) $total_visits,
-        'monthly_evolution' => $monthly_stats
+        'status' => 'success',
+        'data' => array(
+            'total_consultations' => (int) $total_visits,
+            'monthly_evolution'   => $monthly_stats
+        )
     ));
 }
