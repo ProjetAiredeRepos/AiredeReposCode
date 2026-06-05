@@ -93,6 +93,26 @@ document.addEventListener('DOMContentLoaded', () => {
                 <div class="kpi-value">3 min 42 s</div>
                 <div class="kpi-trend positive">+8% vs année précédente</div>
             </div>
+            
+            <div class="dash-card card-half">
+                <div class="card-header">
+                    <h3>Origine géographique</h3>
+                    <p>Répartition par nationalité des visiteurs (Navigateur)</p>
+                </div>
+                <div class="chart-container" style="height: 250px;">
+                    <canvas id="chart-geo"></canvas>
+                </div>
+            </div>
+
+            <div class="dash-card card-half">
+                <div class="card-header">
+                    <h3>Répartition par tranche horaire</h3>
+                    <p>Volume de consultations selon l'heure de la journée</p>
+                </div>
+                <div class="chart-container" style="height: 250px;">
+                    <canvas id="chart-hourly"></canvas>
+                </div>
+            </div>
         `;
 
         initCharts(data);
@@ -163,6 +183,70 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             }
         });
+
+        // --- GRAPHIQUE 2 : ORIGINE GÉOGRAPHIQUE (DONUT) ---
+        const ctxGeo = document.getElementById('chart-geo');
+        if (ctxGeo && data.geo_stats) {
+            const geoLabels = data.geo_stats.map(item => item.code_langue.toUpperCase());
+            const geoValues = data.geo_stats.map(item => parseInt(item.total, 10));
+            // Couleurs dégradées de vert selon ta maquette
+            const geoColors = ['#1A9E66', '#2CB17A', '#41C48F', '#62D8A8', '#8EEABF'];
+
+            new Chart(ctxGeo, {
+                type: 'doughnut',
+                data: {
+                    labels: geoLabels,
+                    datasets: [{
+                        data: geoValues,
+                        backgroundColor: geoColors,
+                        borderWidth: 2,
+                        borderColor: '#ffffff'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    cutout: '65%', // Taille du trou au centre
+                    plugins: {
+                        legend: { position: 'right', labels: { font: { family: 'DM Sans' }, usePointStyle: true, boxWidth: 8 } }
+                    }
+                }
+            });
+        }
+
+        // --- GRAPHIQUE 3 : TRANCHES HORAIRES (BARRES) ---
+        const ctxHourly = document.getElementById('chart-hourly');
+        if (ctxHourly && data.hourly_stats) {
+            // Création d'un tableau de 0h à 23h
+            const hourLabels = Array.from({length: 24}, (_, i) => `${i}h`);
+            const hourValues = new Array(24).fill(0);
+
+            data.hourly_stats.forEach(row => {
+                hourValues[parseInt(row.heure, 10)] = parseInt(row.total, 10);
+            });
+
+            new Chart(ctxHourly, {
+                type: 'bar',
+                data: {
+                    labels: hourLabels,
+                    datasets: [{
+                        label: 'Consultations',
+                        data: hourValues,
+                        backgroundColor: THEME.primary,
+                        borderRadius: 4 // Bords arrondis des barres
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        x: { grid: { display: false }, ticks: { font: { family: 'DM Sans', size: 10 } } },
+                        y: { grid: { color: THEME.gridLine, drawBorder: false }, ticks: { display: false } } // Masque les chiffres Y pour épuré
+                    }
+                }
+            });
+        }
     }
 
     // --- 4. BOOTSTRAP DE L'APP ---

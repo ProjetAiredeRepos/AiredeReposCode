@@ -211,11 +211,38 @@ function cyclo_get_discovery_overview( WP_REST_Request $request ) {
 
     $monthly_stats = $wpdb->get_results( $query_monthly );
 
+    // --- 3. Requête : Répartition par tranche horaire ---
+    $query_hourly = $wpdb->prepare(
+        "SELECT HOUR(date_visite) as heure, COUNT(id_visite) as total 
+         FROM {$table_visite} 
+         WHERE date_visite >= %s AND date_visite <= %s 
+         GROUP BY HOUR(date_visite) 
+         ORDER BY heure ASC",
+        $start_date . ' 00:00:00',
+        $end_date . ' 23:59:59'
+    );
+    $hourly_stats = $wpdb->get_results( $query_hourly );
+
+    // --- 4. Requête : Origine géographique (basée sur le code_langue) ---
+    $query_geo = $wpdb->prepare(
+        "SELECT code_langue, COUNT(id_visite) as total 
+         FROM {$table_visite} 
+         WHERE date_visite >= %s AND date_visite <= %s 
+         GROUP BY code_langue 
+         ORDER BY total DESC 
+         LIMIT 5", // On prend le Top 5 pour le graphique Donut
+        $start_date . ' 00:00:00',
+        $end_date . ' 23:59:59'
+    );
+    $geo_stats = $wpdb->get_results( $query_geo );
+
     return rest_ensure_response( array(
         'status' => 'success',
         'data' => array(
             'total_consultations' => (int) $total_visits,
-            'monthly_evolution'   => $monthly_stats
+            'monthly_evolution'   => $monthly_stats,
+            'hourly_stats'        => $hourly_stats,
+            'geo_stats'           => $geo_stats
         )
     ));
 }
