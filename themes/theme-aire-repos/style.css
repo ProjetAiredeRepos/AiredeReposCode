@@ -349,6 +349,168 @@ textarea[name="q5_suggestions"]:focus {
 .btn-primary-login:hover { background: #137C4F; }
 .link-forgot { color: var(--dash-text-muted); font-size: 0.9rem; text-decoration: none; }
 
+
+/* ==========================================================================
+   DASHBOARD : COMPOSANTS (Cartes, KPIs, Graphiques)
+   ========================================================================== */
+
+/* La grille principale (12 colonnes) */
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: repeat(12, 1fr);
+    gap: 1.5rem;
+    align-items: start;
+}
+
+/* Le conteneur générique des cartes */
+.dash-card {
+    background: var(--dash-surface);
+    border: 1px solid var(--dash-border);
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.02); /* Ombre Figma très subtile */
+    display: flex;
+    flex-direction: column;
+}
+
+/* Tailles des cartes dans la grille */
+.card-full { grid-column: span 12; }
+.card-half { grid-column: span 6; }
+.card-third { grid-column: span 4; }
+
+/* En-têtes des cartes */
+.card-header {
+    margin-bottom: 1.5rem;
+}
+.card-header h3 {
+    font-size: 1.1rem;
+    color: var(--dash-text-main);
+    margin-bottom: 0.25rem;
+}
+.card-header p {
+    font-size: 0.85rem;
+    color: var(--dash-text-muted);
+}
+
+/* Typographie des Chiffres Clés (KPIs) */
+.kpi-value {
+    font-family: 'Outfit', sans-serif;
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: var(--dash-text-main);
+    line-height: 1;
+    margin-bottom: 0.5rem;
+}
+.kpi-trend {
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+.kpi-trend.positive { color: var(--dash-primary); }
+.kpi-trend.negative { color: #E53E3E; }
+
+/* Conteneur pour Chart.js */
+.chart-container {
+    position: relative;
+    width: 100%;
+}
+.main-chart {
+    height: 350px; /* Fixe la hauteur de la grande courbe */
+}
+
+/* Boutons d'action du Header */
+.header-actions { display: flex; gap: 1rem; align-items: center; }
+.btn-action {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 8px 16px; border-radius: 6px; font-weight: 500; font-size: 0.9rem; cursor: pointer;
+    font-family: 'DM Sans', sans-serif;
+}
+.btn-action.outline { background: white; border: 1px solid var(--dash-border); color: var(--dash-text-main); }
+.btn-icon { background: white; border: 1px solid var(--dash-border); padding: 8px; border-radius: 6px; cursor: pointer; color: var(--dash-text-muted); display: flex; align-items: center; justify-content: center;}
+
+/* États de chargement et erreurs */
+.loading-state, .error-state {
+    grid-column: span 12;
+    text-align: center;
+    padding: 3rem;
+    color: var(--dash-text-muted);
+    background: white;
+    border-radius: 12px;
+    border: 1px dashed var(--dash-border);
+}
+.error-state { color: #E53E3E; border-color: #FEB2B2; background: #FFF5F5; }
+
+/* ==========================================================================
+   DASHBOARD : RESPONSIVE (Mobile & Tablette)
+   ========================================================================== */
+
+/* Masquer les éléments purement mobile sur desktop */
+.mobile-nav-toggle { display: none; }
+
+@media (max-width: 1024px) {
+    /* 1. On libère le layout */
+    .cyclo-app-layout {
+        position: relative;
+    }
+
+    /* 2. La Sidebar passe en "Off-Canvas" (cachée sur la gauche) */
+    .cyclo-sidebar {
+        position: absolute;
+        left: -100%;
+        top: 0;
+        bottom: 0;
+        z-index: 1000;
+        transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        box-shadow: 4px 0 24px rgba(0,0,0,0.1);
+    }
+
+    /* Classe qui sera ajoutée en JS pour ouvrir le menu */
+    .cyclo-sidebar.is-open {
+        left: 0;
+    }
+
+    /* 3. Le contenu principal prend 100% de la largeur */
+    .cyclo-main-content {
+        padding: 1.5rem;
+        width: 100%;
+    }
+
+    /* 4. Le bouton burger devient visible */
+    .mobile-nav-toggle {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: white;
+        border: 1px solid var(--dash-border);
+        border-radius: 6px;
+        padding: 8px;
+        margin-right: 1rem;
+        cursor: pointer;
+        color: var(--dash-text-main);
+    }
+
+    .content-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+    }
+
+    .header-actions {
+        width: 100%;
+        flex-wrap: wrap; /* Les boutons passent à la ligne */
+    }
+    .date-filters {
+        width: 100%;
+        justify-content: space-between;
+    }
+
+    /* 5. La Grille : Tout passe sur 1 seule colonne (12/12) */
+    .card-half, .card-third {
+        grid-column: span 12;
+    }
+}
+
+
+
 /* --- 0. RESET ET COMPORTEMENT GLOBAL --- */
 html {
     scroll-behavior: smooth;

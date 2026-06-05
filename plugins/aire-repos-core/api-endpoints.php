@@ -39,7 +39,12 @@ function aire_repos_register_api_endpoints() {
         'permission_callback' => function () {
             // SÉCURITÉ : Vérifie i l'utilisateur est connecté et possède un de nos rôles
             $user = wp_get_current_user();
-            return array_intersect( ['cyclo_admin', 'cyclo_editeur', 'cyclo_user'], (array) $user->roles ) ? true :false;
+
+            // On définit la liste stricte des rôles autorisés (ajout de 'administrator')
+            $allowed_roles = ['administrator', 'cyclo_admin', 'cyclo_editeur', 'cyclo_user'];
+
+            // Vérification de l'intersection entre les rôles de l'utilisateur et les rôles autorisés
+            return array_intersect( $allowed_roles, (array) $user->roles ) ? true : false;
         }
     ));
 }
