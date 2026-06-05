@@ -31,6 +31,17 @@ function aire_repos_register_api_endpoints() {
         'callback' => 'aire_repos_submit_survey',
         'permission_callback' => '__return_true', // Soumission publique
     ));
+
+    // Endpoint Dashboard : Vue d'ensemble Découverte
+    register_rest_route( 'cyclo-data/v1', '/discovery-overview', array(
+        'methods' => WP_REST_Server::READABLE,  //GET
+        'callback' => 'cyclo_get_discovery_overview',
+        'permission_callback' => function () {
+            // SÉCURITÉ : Vérifie i l'utilisateur est connecté et possède un de nos rôles
+            $user = wp_get_current_user();
+            return array_intersect( ['cyclo_admin', 'cyclo_editeur', 'cyclo_user'], (array) $user->roles ) ? true :false;
+        }
+    ));
 }
 
 // Logique de traitement pour l'endpoint /scan
@@ -155,5 +166,30 @@ function aire_repos_submit_survey( WP_REST_Request $request ) {
     return rest_ensure_response( array(
         'status' => 'success',
         'message' => 'Merci pour votre participation !'
+    ));
+}
+
+// Logique récupération des données, Endpoint Dashboard
+function cyclo_get_discovery_overview( WP_REST_Request $request ) {
+    global $wpdb;
+
+    // Exemple d'agrégation SQL ultra-rapide (Total des consultations)
+    $table_visite = $wpdb->prefix . 'visite_site';
+
+    // On utilise $wpdb->get_var pour une requête qui ne retourne qu'une seule valeur
+    $total_visits = $wpdb->get_var("SELECT COUNT(id_visite) FROM $table_visite");
+
+    // Pour les graphiques (ex: évolution mensuelle sur l'année en cours)
+    $monthly_stats = $wpdb->get_results("
+        SELECT MONTH(date_visite) as mois, COUNT(id_visite) as total 
+        FROM $table_visite 
+        WHERE YEAR(date_visite) = YEAR(CURDATE()) 
+        GROUP BY MONTH(date_visite)
+        ORDER BY mois ASC
+    ");
+
+    return rest_ensure_response( array(
+        'total_consultations' => (int) $total_visits,
+        'monthly_evolution' => $monthly_stats
     ));
 }
