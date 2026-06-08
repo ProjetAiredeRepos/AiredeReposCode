@@ -188,63 +188,43 @@ function aire_repos_submit_survey( WP_REST_Request $request ) {
 function cyclo_get_discovery_overview( WP_REST_Request $request ) {
     global $wpdb;
 
-    // 1. Validation temporelle stricte via REGEX (YYYY-MM-DD)
+    // 1. Récupération des filtres envoyés par le JS
     $start_date = sanitize_text_field( $request->get_param('start_date') ?: date('Y-01-01') );
     $end_date   = sanitize_text_field( $request->get_param('end_date') ?: date('Y-12-31') );
-
-    if ( ! preg_match('/^\d{4}-\d{2}-\d{2}$/', $start_date) || ! preg_match('/^\d{4}-\d{2}-\d{2}$/', $end_date) ) {
-        return new WP_Error( 'invalid_date', 'Format de date invalide.', array( 'status' => 400 ) );
-    }
+    $level      = sanitize_text_field( $request->get_param('level') ?: 'global' );
+    $id         = sanitize_text_field( $request->get_param('id') ?: 'all' );
 
     $table_visite = $wpdb->prefix . 'visite_site';
 
-    // 2. Requête Préparée : Protection absolue contre l'injection SQL
-    // On utilise %s pour les chaînes (dates) et %d pour les entiers
-    $query_total = $wpdb->prepare(
-        "SELECT COUNT(id_visite) FROM {$table_visite} WHERE date_visite >= %s AND date_visite <= %s",
-        $start_date . ' 00:00:00',
-        $end_date . ' 23:59:59'
-    );
+    // 2. Construction dynamique et sécurisée de la requête SQL
+    $where = "WHERE date_visite >= %s AND date_visite <= %s";
+    $params = [ $start_date . ' 00:00:00', $end_date . ' 23:59:59' ];
 
-    $total_visits = $wpdb->get_var( $query_total );
+    // Si on clique sur une Aire spécifique
+    if ( $level === 'aire' && $id !== 'all' ) {
+        $where .= " AND id_aire = %d";
+        $params[] = intval($id);
+    }
+    // Si on clique sur un Itinéraire (la catégorie parente)
+    elseif ( $level === 'route' && is_numeric($id) ) {
+        $aires = get_posts(array(
+            'post_type' => 'aire_repos', 'numberposts' => -1, 'fields' => 'ids',
+            'tax_query' => array( array('taxonomy' => 'itineraire', 'field' => 'term_id', 'terms' => intval($id)) )
+        ));
+        if (!empty($aires)) {
+            $placeholders = implode(',', array_fill(0, count($aires), '%d'));
+            $where .= " AND id_aire IN ($placeholders)";
+            $params = array_merge($params, $aires);
+        } else {
+            $where .= " AND id_aire = 0"; // Force 0 si l'itinéraire est vide
+        }
+    }
 
-    // Requête préparée pour le graphique d'évolution mensuelle
-    $query_monthly = $wpdb->prepare(
-        "SELECT MONTH(date_visite) as mois, COUNT(id_visite) as total 
-         FROM {$table_visite} 
-         WHERE date_visite >= %s AND date_visite <= %s 
-         GROUP BY MONTH(date_visite) 
-         ORDER BY mois ASC",
-        $start_date . ' 00:00:00',
-        $end_date . ' 23:59:59'
-    );
-
-    $monthly_stats = $wpdb->get_results( $query_monthly );
-
-    // --- 3. Requête : Répartition par tranche horaire ---
-    $query_hourly = $wpdb->prepare(
-        "SELECT HOUR(date_visite) as heure, COUNT(id_visite) as total 
-         FROM {$table_visite} 
-         WHERE date_visite >= %s AND date_visite <= %s 
-         GROUP BY HOUR(date_visite) 
-         ORDER BY heure ASC",
-        $start_date . ' 00:00:00',
-        $end_date . ' 23:59:59'
-    );
-    $hourly_stats = $wpdb->get_results( $query_hourly );
-
-    // --- 4. Requête : Origine géographique (basée sur le code_langue) ---
-    $query_geo = $wpdb->prepare(
-        "SELECT code_langue, COUNT(id_visite) as total 
-         FROM {$table_visite} 
-         WHERE date_visite >= %s AND date_visite <= %s 
-         GROUP BY code_langue 
-         ORDER BY total DESC 
-         LIMIT 5", // On prend le Top 5 pour le graphique Donut
-        $start_date . ' 00:00:00',
-        $end_date . ' 23:59:59'
-    );
-    $geo_stats = $wpdb->get_results( $query_geo );
+    // 3. Exécution des requêtes avec les filtres appliqués
+    $total_visits = $wpdb->get_var( $wpdb->prepare("SELECT COUNT(id_visite) FROM {$table_visite} {$where}", $params) );
+    $monthly_stats = $wpdb->get_results( $wpdb->prepare("SELECT MONTH(date_visite) as mois, COUNT(id_visite) as total FROM {$table_visite} {$where} GROUP BY MONTH(date_visite) ORDER BY mois ASC", $params) );
+    $hourly_stats = $wpdb->get_results( $wpdb->prepare("SELECT HOUR(date_visite) as heure, COUNT(id_visite) as total FROM {$table_visite} {$where} GROUP BY HOUR(date_visite) ORDER BY heure ASC", $params) );
+    $geo_stats = $wpdb->get_results( $wpdb->prepare("SELECT code_langue, COUNT(id_visite) as total FROM {$table_visite} {$where} GROUP BY code_langue ORDER BY total DESC LIMIT 5", $params) );
 
     return rest_ensure_response( array(
         'status' => 'success',
@@ -261,54 +241,67 @@ function cyclo_get_discovery_overview( WP_REST_Request $request ) {
 function cyclo_get_survey_overview( WP_REST_Request $request ) {
     global $wpdb;
 
+    // 1. Récupération des filtres
     $start_date = sanitize_text_field( $request->get_param('start_date') ?: date('Y-01-01') );
-    $end_date = sanitize_text_field( $request->get_param('end_date') ?: date('Y-12-31') );
+    $end_date   = sanitize_text_field( $request->get_param('end_date') ?: date('Y-12-31') );
+    $level      = sanitize_text_field( $request->get_param('level') ?: 'global' );
+    $id         = sanitize_text_field( $request->get_param('id') ?: 'all' );
 
-    $table_survey = $wpdb->prefix . 'response_questionnaire';
+    $table_survey = $wpdb->prefix . 'reponse_questionnaire';
 
-    // 1. KPIs (Key Performance Indicator) globaux (Total et Moyenne pondérée)
-    $query_kpi = $wpdb->prepare(
-        "SELECT COUNT(id_response) as total,
-                       AVG(q1_satisfaction_aire) as avg_aire,
-                       AVG(q2_satisfaction_securite) as avg_securite,
-                       AVG(q3_satisfaction_services) as avg_services
-               FROM {table_survey}
-               WHERE date_soumission >= %s AND date_soumission <= %s",
-        $start_date . '00:00:00',
-        $end_date . '23:59:59'
-    );
-    $kpi_data = $wpdb->get_row( $query_kpi );
+    $where = "WHERE date_soumission >= %s AND date_soumission <= %s";
+    $params = [ $start_date . ' 00:00:00', $end_date . ' 23:59:59' ];
 
-    // Calcul de l'indice de satisfaction global (Moyenne des 3 moyennes, ramenée sur 5)
-    // Nos notes sont sur 4 (Très satisfaisant = 4, etc.). On ramène sur 5 pour l'affichage maquette.
-    $avg_aire_5 = ($kpi_data->avg_aire / 4) * 5;
-    $avg_sec_5 = ($kpi_data->avg_securite / 4) * 5;
-    $avg_srv_5 = ($kpi_data->avg_services / 4) * 5;
+    if ( $level === 'aire' && $id !== 'all' ) {
+        $where .= " AND id_aire = %d";
+        $params[] = intval($id);
+    } elseif ( $level === 'route' && is_numeric($id) ) {
+        $aires = get_posts(array(
+            'post_type' => 'aire_repos', 'numberposts' => -1, 'fields' => 'ids',
+            'tax_query' => array( array('taxonomy' => 'itineraire', 'field' => 'term_id', 'terms' => intval($id)) )
+        ));
+        if (!empty($aires)) {
+            $placeholders = implode(',', array_fill(0, count($aires), '%d'));
+            $where .= " AND id_aire IN ($placeholders)";
+            $params = array_merge($params, $aires);
+        } else {
+            $where .= " AND id_aire = 0";
+        }
+    }
 
-    $indice_global = ($avg_aire_5 + $avg_sec_5 + $avg_srv_5) / 3;
+    // 2. Requêtes
+    $kpi_data = $wpdb->get_row( $wpdb->prepare(
+        "SELECT COUNT(id_reponse) as total, AVG(q1_satisfaction_aire) as avg_aire, AVG(q2_satisfaction_securite) as avg_securite, AVG(q3_satisfaction_services) as avg_services FROM {$table_survey} {$where}", $params
+    ));
 
-    // 2. Évolution mensuelle des réponses
-    $query_monthly = $wpdb->prepare(
-        "SELECT MONTH(date_soumission) as mois, COUNT(id_response) as total
-        FROM {table_survey}
-        WHERE date_soumission >= %s AND date_soumission <= %s
-        GROUP BY MONTH(date_soumission)
-        ORDER BY mois ASC",
-        $start_date . '00:00:00',
-        $end_date . '23:59:59'
-    );
-    $monthly_stats = $wpdb->get_results( $query_monthly );
+    $monthly_stats = $wpdb->get_results( $wpdb->prepare(
+        "SELECT MONTH(date_soumission) as mois, COUNT(id_reponse) as total FROM {$table_survey} {$where} GROUP BY MONTH(date_soumission) ORDER BY mois ASC", $params
+    ));
+
+    // 3. Calculs Sécurisés (Anti division par 0)
+    $total = isset($kpi_data->total) ? (int) $kpi_data->total : 0;
+    $radar = [0, 0, 0];
+    $indice_global = 0;
+
+    if ($total > 0) {
+        $avg_aire_5 = ($kpi_data->avg_aire / 4) * 5;
+        $avg_sec_5 = ($kpi_data->avg_securite / 4) * 5;
+        $avg_srv_5 = ($kpi_data->avg_services / 4) * 5;
+        $indice_global = ($avg_aire_5 + $avg_sec_5 + $avg_srv_5) / 3;
+
+        $radar = [
+            round(($kpi_data->avg_aire / 4) * 100),
+            round(($kpi_data->avg_securite / 4) * 100),
+            round(($kpi_data->avg_services / 4) * 100)
+        ];
+    }
 
     return rest_ensure_response( array(
         'status' => 'success',
         'data' => array(
-            'total_responses' => (int) $kpi_data->total,
+            'total_reponses' => $total,
             'indice_satisfaction' => round($indice_global, 1),
-            'radar_scores' => [
-                round(($kpi_data->avg_aire /4) * 100), // Score sur 100%
-                round(($kpi_data->avg_securite /4) * 100),
-                round(($kpi_data->avg_services /4) *100)
-            ],
+            'radar_scores' => $radar,
             'monthly_evolution' => $monthly_stats
         )
     ));
