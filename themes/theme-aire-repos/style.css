@@ -293,6 +293,8 @@ textarea[name="q5_suggestions"]:focus {
 .nav-item { display: flex; align-items: center; gap: 10px; width: 100%; padding: 10px 12px; border: none; background: transparent; text-align: left; cursor: pointer; border-radius: 6px; color: var(--dash-text-main); font-weight: 500; transition: all 0.2s; }
 .nav-item:hover { background: #F7FAFC; }
 .nav-item.active { background: var(--dash-primary-light); color: var(--dash-primary); }
+.nav-item.sub-item .dot { display: inline-block; width: 6px; height: 6px; background-color: currentColor; border-radius: 50%; opacity: 0.5; margin-right: 4px; }
+.nav-item.sub-item { font-size: 0.85rem; padding: 8px 12px; }
 
 .sidebar-footer { margin-top: auto; border-top: 1px solid var(--dash-border); padding-top: 1rem; }
 .user-profile { display: flex; align-items: center; gap: 10px; margin-top: 1rem; }

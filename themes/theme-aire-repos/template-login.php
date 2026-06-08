@@ -54,16 +54,22 @@ if ( $_SERVER['REQUEST_METHOD'] === 'POST' && isset( $_POST['cyclo_login_nonce']
     }
 }
 
+// Données dynamiques pour l'affichage
+$site_name = get_bloginfo('name') ?: 'Cyclo-Data 41';
+$site_desc = get_bloginfo('description') ?: "Plateforme d'administration des statistiques d'usage.";
+// Récupère l'image mise en avant de la page, sinon image par défaut
+$bg_image_url = get_the_post_thumbnail_url(get_the_ID(), 'full') ?: get_template_directory_uri() . '/assets/images/loire-cover.jpg';
+
 get_header('dashboard');  // On utilise un header allégé
 ?>
 
 <div class="cyclo-login-layout">
-    <div class="login-cover-image" style="background-image: url('<?php echo get_template_directory_uri(); ?>/assets/images/loire-cover.jpg');">
+    <div class="login-cover-image" style="background-image: url('<?php echo esc_url($bg_image_url); ?>');">
         <div class="cover-overlay">
             <div class="cover-brand">
-                <span class="brand-tag">Loir-et-Cher Cyclotourisme</span>
-                <h1>Cyclo-Data 41</h1>
-                <p>Plateforme d'administration des statistiques d'usage des itinéraires cyclables du département.</p>
+                <span class="brand-tag">Administration Sécurisée</span>
+                <h1><?php echo esc_html($site_name); ?></h1>
+                <p><?php echo esc_html($site_desc); ?></p>
             </div>
         </div>
     </div>
@@ -76,7 +82,7 @@ get_header('dashboard');  // On utilise un header allégé
             </div>
 
             <?php if ( $login_error ) : ?>
-                <div class="login-alert error"><?php echo esc_html( wp_strip_all_tags( $login_error ) ); ?></div>
+                <div class="login-alert error"><?php echo esc_html( $login_error ); ?></div>
             <?php endif; ?>
 
             <form method="post" action="" class="cyclo-form">
@@ -94,7 +100,7 @@ get_header('dashboard');  // On utilise un header allégé
 
                 <div class="form-actions">
                     <button type="submit" class="btn-primary-login">Connexion</button>
-                    <a href="<?php echo wp_lostpassword_url(); ?>" class="link-forgot">Mot de passe oublié ?</a>
+                    <a href="<?php echo esc_url(wp_lostpassword_url()); ?>" class="link-forgot">Mot de passe oublié ?</a>
                 </div>
             </form>
         </div>

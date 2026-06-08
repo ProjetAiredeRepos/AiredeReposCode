@@ -6,8 +6,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const apiNonce = appLayout.getAttribute('data-nonce');
     const root = document.getElementById('dashboard-root');
+    const breadcrumbs = document.querySelector('.breadcrumbs');
 
-    // Couleurs issues de tes maquettes Figma
+    // --- 1. THÈME ET VARIABLES ---
     const THEME = {
         primary: '#1A9E66',
         primaryLight: 'rgba(26, 158, 102, 0.1)',
@@ -16,60 +17,77 @@ document.addEventListener('DOMContentLoaded', () => {
         gridLine: '#F0F4F8'
     };
 
-    // --- GESTION DU MENU MOBILE ---
-    const mobileBtn = document.getElementById('mobile-menu-btn');
-    const sidebar = document.querySelector('.cyclo-sidebar');
+    // --- 2. GESTION DE L'ÉTAT (State Machine) ---
+    let appState = {
+        module: 'discovery', // 'discovery' | 'survey'
+        level: 'global',     // 'global' | 'aire'
+        entityId: 'all',
+        dateStart: '2026-01-01',
+        dateEnd: '2026-12-31'
+    };
 
-    if (mobileBtn && sidebar) {
-        mobileBtn.addEventListener('click', () => {
-            sidebar.classList.toggle('is-open');
+    // --- 3. MOTEUR API SÉCURISÉ ---
+    async function fetchApiData() {
+        const endpoint = appState.module === 'discovery' ? 'discovery-overview' : 'survey-overview';
+
+        const params = new URLSearchParams({
+            level: appState.level,
+            id: appState.entityId,
+            start_date: appState.dateStart,
+            end_date: appState.dateEnd
         });
 
-        // Ferme le menu si on clique sur un lien (pratique sur mobile)
-        const navItems = sidebar.querySelectorAll('.nav-item');
-        navItems.forEach(item => {
-            item.addEventListener('click', () => {
-                if(window.innerWidth <= 1024) {
-                    sidebar.classList.remove('is-open');
-                }
-            });
-        });
-    }
+        root.innerHTML = '<div class="loading-state">Analyse des données en cours...</div>';
 
-    // --- 1. MOTEUR DE REQUÊTES SÉCURISÉ ---
-    async function fetchApi(endpoint) {
         try {
-            const response = await fetch(`/wp-json/cyclo-data/v1/${endpoint}`, {
+            const response = await fetch(`/wp-json/cyclo-data/v1/${endpoint}?${params.toString()}`, {
                 method: 'GET',
                 headers: {
-                    'X-WP-Nonce': apiNonce, // Authentification stricte
+                    'X-WP-Nonce': apiNonce,
                     'Content-Type': 'application/json'
                 }
             });
 
+            // SÉCURITÉ : Vérifie si WordPress renvoie une erreur PHP (HTML) au lieu du JSON
+            const contentType = response.headers.get("content-type");
+            if (!contentType || !contentType.includes("application/json")) {
+                const textError = await response.text();
+                console.error("Erreur Serveur (Non-JSON) :", textError);
+                throw new Error("Erreur serveur : L'API a renvoyé du HTML au lieu de JSON. Vérifiez vos routes PHP.");
+            }
+
             const result = await response.json();
-            if (!response.ok) throw new Error(result.message || 'Erreur réseau');
-            return result.data;
+
+            if (!response.ok) {
+                throw new Error(result.message || 'Erreur lors de la récupération des données.');
+            }
+
+            // Aiguillage vers la bonne vue de rendu (en passant les données)
+            if (appState.module === 'discovery') {
+                renderDiscoveryOverview(result.data);
+            } else if (appState.module === 'survey') {
+                renderSurveyOverview(result.data);
+            }
+
         } catch (error) {
-            console.error('API Error:', error);
-            root.innerHTML = `<div class="error-state">Erreur lors du chargement des données : ${error.message}</div>`;
-            throw error;
+            console.error('API Fetch Error:', error);
+            root.innerHTML = `<div class="error-state">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-bottom:10px;"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg><br>
+                ${error.message}
+            </div>`;
         }
     }
 
-    // --- 2. CONSTRUCTION DE LA VUE (DÉCOUVERTE) ---
-    async function renderDiscoveryOverview() {
-        root.innerHTML = '<div class="loading-state">Analyse des données en cours...</div>';
+    // --- 4. VUES DE RENDU (N'appellent plus fetchApi, elles reçoivent 'data') ---
+    function renderDiscoveryOverview(data) {
+        // Mise à jour du fil d'ariane
+        if(breadcrumbs) breadcrumbs.innerHTML = `Administration <span class="sep">></span> Outils de découverte <span class="sep">></span> <strong>Vue d'ensemble</strong>`;
 
-        // Appel API
-        const data = await fetchApi('discovery-overview');
-
-        // Injection de la grille CSS (Figma Handoff)
         root.innerHTML = `
             <div class="dash-card card-full">
                 <div class="card-header">
                     <h3>Évolution des consultations</h3>
-                    <p>Consultations mensuelles - 2026</p>
+                    <p>Consultations mensuelles</p>
                 </div>
                 <div class="chart-container main-chart">
                     <canvas id="chart-evolution"></canvas>
@@ -79,309 +97,147 @@ document.addEventListener('DOMContentLoaded', () => {
             <div class="dash-card card-half">
                 <div class="card-header">
                     <h3>Consultations totales</h3>
-                    <p>Sur l'année 2026</p>
+                    <p>Sur la période sélectionnée</p>
                 </div>
-                <div class="kpi-value">${data.total_consultations.toLocaleString('fr-FR')}</div>
-                <div class="kpi-trend positive">+12% vs année précédente</div>
+                <div class="kpi-value">${data.total_consultations ? data.total_consultations.toLocaleString('fr-FR') : 0}</div>
             </div>
 
             <div class="dash-card card-half">
                 <div class="card-header">
-                    <h3>Temps moyen passé</h3>
-                    <p>Par session</p>
-                </div>
-                <div class="kpi-value">3 min 42 s</div>
-                <div class="kpi-trend positive">+8% vs année précédente</div>
-            </div>
-            
-            <div class="dash-card card-half">
-                <div class="card-header">
                     <h3>Origine géographique</h3>
-                    <p>Répartition par nationalité des visiteurs (Navigateur)</p>
+                    <p>Répartition par nationalité des visiteurs</p>
                 </div>
                 <div class="chart-container" style="height: 250px;">
                     <canvas id="chart-geo"></canvas>
                 </div>
             </div>
+        `;
+        initDiscoveryCharts(data);
+    }
+
+    function renderSurveyOverview(data) {
+        // Mise à jour du fil d'ariane
+        if(breadcrumbs) breadcrumbs.innerHTML = `Administration <span class="sep">></span> Questionnaires <span class="sep">></span> <strong>Vue d'ensemble</strong>`;
+
+        root.innerHTML = `
+            <div class="dash-card card-half">
+                <div class="card-header">
+                    <h3>Réponses totales</h3>
+                    <p>Sur la période sélectionnée</p>
+                </div>
+                <div class="kpi-value">${data.total_reponses || 0}</div>
+            </div>
 
             <div class="dash-card card-half">
                 <div class="card-header">
-                    <h3>Répartition par tranche horaire</h3>
-                    <p>Volume de consultations selon l'heure de la journée</p>
+                    <h3>Indice de satisfaction</h3>
+                    <p>Moyenne pondérée</p>
                 </div>
-                <div class="chart-container" style="height: 250px;">
-                    <canvas id="chart-hourly"></canvas>
+                <div class="kpi-value">${data.indice_satisfaction || 0}/5</div>
+            </div>
+
+            <div class="dash-card card-half">
+                <div class="card-header">
+                    <h3>Évolution du nombre de réponses</h3>
+                </div>
+                <div class="chart-container" style="height: 300px;">
+                    <canvas id="chart-survey-evolution"></canvas>
+                </div>
+            </div>
+
+            <div class="dash-card card-half">
+                <div class="card-header">
+                    <h3>Score global par thème</h3>
+                    <p>Analyse radar (sur 100)</p>
+                </div>
+                <div class="chart-container" style="height: 300px;">
+                    <canvas id="chart-radar"></canvas>
                 </div>
             </div>
         `;
-
-        initCharts(data);
+        initSurveyCharts(data);
     }
 
-    // --- 3. INITIALISATION DES GRAPHIQUES (Chart.js) ---
-    function initCharts(data) {
-        const ctxEvolution = document.getElementById('chart-evolution');
-        if (!ctxEvolution) return;
+    // --- 5. INITIALISATION DES GRAPHIQUES ---
+    function initDiscoveryCharts(data) {
+        // Courbe
+        const ctxEvol = document.getElementById('chart-evolution');
+        if (ctxEvol && data.monthly_evolution) {
+            const labels = ['Jan.', 'Fév.', 'Mars', 'Avr.', 'Mai', 'Juin', 'Juil.', 'Août', 'Sep.', 'Oct.', 'Nov.', 'Déc.'];
+            const chartData = new Array(12).fill(0);
+            data.monthly_evolution.forEach(row => { chartData[row.mois - 1] = parseInt(row.total, 10); });
 
-        // Préparation des données pour le graphique depuis l'API
-        const labels = ['Jan.', 'Fév.', 'Mars', 'Avr.', 'Mai', 'Juin', 'Juil.', 'Août', 'Sep.', 'Oct.', 'Nov.', 'Déc.'];
-        const chartData = new Array(12).fill(0); // Tableau de 12 zéros par défaut
-
-        // On remplit avec les vraies données
-        if(data.monthly_evolution) {
-            data.monthly_evolution.forEach(row => {
-                // row.mois va de 1 à 12, on ajuste l'index (0 à 11)
-                chartData[row.mois - 1] = parseInt(row.total, 10);
+            new Chart(ctxEvol, {
+                type: 'line',
+                data: { labels: labels, datasets: [{ data: chartData, borderColor: THEME.primary, backgroundColor: THEME.primaryLight, fill: true, tension: 0.4 }] },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
             });
         }
 
-        // Configuration du graphique "Évolution des consultations"
-        new Chart(ctxEvolution, {
-            type: 'line',
-            data: {
-                labels: labels,
-                datasets: [{
-                    label: 'Consultations',
-                    data: chartData,
-                    borderColor: THEME.primary,
-                    backgroundColor: THEME.primaryLight,
-                    borderWidth: 3,
-                    pointBackgroundColor: '#fff',
-                    pointBorderColor: THEME.primary,
-                    pointBorderWidth: 2,
-                    pointRadius: 4,
-                    pointHoverRadius: 6,
-                    fill: true, // Remplit sous la courbe (comme ta maquette)
-                    tension: 0.4 // Courbe lissée
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: { display: false },
-                    tooltip: {
-                        backgroundColor: '#1A202C',
-                        padding: 12,
-                        titleFont: { family: 'DM Sans', size: 13 },
-                        bodyFont: { family: 'DM Sans', size: 14, weight: 'bold' },
-                        displayColors: false,
-                        callbacks: {
-                            label: function(context) { return context.parsed.y + ' visites'; }
-                        }
-                    }
-                },
-                scales: {
-                    x: {
-                        grid: { display: false },
-                        ticks: { color: THEME.textMuted, font: { family: 'DM Sans' } }
-                    },
-                    y: {
-                        grid: { color: THEME.gridLine, drawBorder: false },
-                        ticks: { color: THEME.textMuted, font: { family: 'DM Sans' }, maxTicksLimit: 5 }
-                    }
-                }
-            }
-        });
-
-        // --- GRAPHIQUE 2 : ORIGINE GÉOGRAPHIQUE (DONUT) ---
+        // Donut
         const ctxGeo = document.getElementById('chart-geo');
         if (ctxGeo && data.geo_stats) {
             const geoLabels = data.geo_stats.map(item => item.code_langue.toUpperCase());
             const geoValues = data.geo_stats.map(item => parseInt(item.total, 10));
-            // Couleurs dégradées de vert selon ta maquette
-            const geoColors = ['#1A9E66', '#2CB17A', '#41C48F', '#62D8A8', '#8EEABF'];
-
             new Chart(ctxGeo, {
                 type: 'doughnut',
-                data: {
-                    labels: geoLabels,
-                    datasets: [{
-                        data: geoValues,
-                        backgroundColor: geoColors,
-                        borderWidth: 2,
-                        borderColor: '#ffffff'
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    cutout: '65%', // Taille du trou au centre
-                    plugins: {
-                        legend: { position: 'right', labels: { font: { family: 'DM Sans' }, usePointStyle: true, boxWidth: 8 } }
-                    }
-                }
-            });
-        }
-
-        // --- GRAPHIQUE 3 : TRANCHES HORAIRES (BARRES) ---
-        const ctxHourly = document.getElementById('chart-hourly');
-        if (ctxHourly && data.hourly_stats) {
-            // Création d'un tableau de 0h à 23h
-            const hourLabels = Array.from({length: 24}, (_, i) => `${i}h`);
-            const hourValues = new Array(24).fill(0);
-
-            data.hourly_stats.forEach(row => {
-                hourValues[parseInt(row.heure, 10)] = parseInt(row.total, 10);
-            });
-
-            new Chart(ctxHourly, {
-                type: 'bar',
-                data: {
-                    labels: hourLabels,
-                    datasets: [{
-                        label: 'Consultations',
-                        data: hourValues,
-                        backgroundColor: THEME.primary,
-                        borderRadius: 4 // Bords arrondis des barres
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: { legend: { display: false } },
-                    scales: {
-                        x: { grid: { display: false }, ticks: { font: { family: 'DM Sans', size: 10 } } },
-                        y: { grid: { color: THEME.gridLine, drawBorder: false }, ticks: { display: false } } // Masque les chiffres Y pour épuré
-                    }
-                }
+                data: { labels: geoLabels, datasets: [{ data: geoValues, backgroundColor: ['#1A9E66', '#41C48F', '#8EEABF'] }] },
+                options: { responsive: true, maintainAspectRatio: false, cutout: '65%' }
             });
         }
     }
 
-    // --- 4. BOOTSTRAP DE L'APP ---
-    renderDiscoveryOverview();
-
-    // --- GESTION DU ROUTAGE (Navigation)
-    const navButtons = document.querySelectorAll('.nav-item[data-view]');
-
-    navButtons.forEach(btn => {
-        btn.addEventListener('click', (e) => {
-            // Mise à jour de l'état actif du menu
-            navButtons.forEach(b => b.classList.remove('active'));
-            e.currentTarget.classList.add('active');
-
-            // Chargement de la vue demandée
-            const view = e.currentTarget.getAttribute('data-view');
-            if (view === 'discovery-overview') {
-                renderDiscoveryOverview();
-            } else if (view === 'survey-overview') {
-                renderSurveyOverview();
-            }
-        });
-    });
-
-    // CONSTRUCTION DE LA VUE (QUESTIONNAIRES)
-    async function renderSurveyOverview() {
-        root.innerHTML = '<div class="loading-state">Analyse des réponses en cours...</div>';
-
-        // Mise à jour du fil d'ariane
-        document.querySelector('.breadcrumbs').innerHTML = `Administration <span class="sep">></span> Questionnaires <span class="sep">></span> <strong>Vue d'ensemble</strong>`;
-
-        try {
-            const data = await fetchApi('survey-overview');
-            root.innerHTML = `
-                <div class="dash-card card-third">
-                    <div class="card-header">
-                        <h3>Réponses totales</h3>
-                        <p>Sur l'année en cours</p>
-                    </div>
-                    <div class="kpi-value">${data.total_reponses}</div>    
-                </div>
-                
-                <div class="dash-card card-third">
-                    <div class="card-header">
-                        <h3>Indice de satisfaction</h3>
-                        <p>Moyenne pondérée</p>
-                    </div>
-                    <div class="kpi-value">${data.indice_satisfaction}/5</div>
-                </div>
-
-                <div class="dash-card" style="grid-column: span 8;">
-                    <div class="card-header">
-                        <h3>Évolution du nombre de réponses</h3>
-                    </div>
-                    <div class="chart-container" style="height: 300px;">
-                        <canvas id="chart-survey-evolution"></canvas>
-                    </div>
-                </div>
-
-                <div class="dash-card" style="grid-column: span 4;">
-                    <div class="card-header">
-                        <h3>Score global par thème</h3>
-                        <p>Analyse radar (sur 100)</p>
-                    </div>
-                    <div class="chart-container" style="height: 300px;">
-                        <canvas id="chart-radar"></canvas>
-                    </div>
-                </div>
-            `;
-
-            initSurveyCharts(data);
-        } catch (error) {
-            // L'erreur est déjà gérée visuellement par fetchApi()
-        }
-    }
-
-    // INITIALISATION DES GRAPHIQUES QUESTIONNAIRES
     function initSurveyCharts(data) {
-        // 1. Bar Chart : Évolution
-        const ctxEvol = document.getElementById('chart-survey-evolution');
-        if (ctxEvol && data.monthly_evolution) {
-            const labels = ['Jan.', 'Fév.', 'Mars', 'Avr.', 'Mai', 'Juin', 'Juil.', 'Août', 'Sep.', 'Oct.', 'Nov.', 'Déc.'];
-            const chartData = new Array(12).fill(0);
-
-            data.monthly_evolution.forEach(row => {
-                chartData[row.mois - 1] = parseInt(row.total, 10);
-            });
-
-            new Chart(ctxEvol, {
-                type: 'bar',
-                data: {
-                    labels: labels,
-                    datasets: [{
-                        data: chartData,
-                        backgroundColor: THEME.primary,
-                        borderRadius: 4
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRadio: false,
-                    plugins: { legend: { display: false } }
-                }
-            });
-        }
-
-        // 2. Radar Chart : Scores par thème
         const ctxRadar = document.getElementById('chart-radar');
         if (ctxRadar && data.radar_scores) {
             new Chart(ctxRadar, {
                 type: 'radar',
-                data: {
-                    labels: ['Aire de repos', 'Sécurité', 'Services'],  // Les 3 vraies datas
-                    datasets: [{
-                        data: data.radar_scores,
-                        backgroundColor: THEME.primaryLight,
-                        borderColor: THEME.primary,
-                        borderWidth: 2,
-                        pointBackgroundColor: THEME.primary
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    scales: {
-                        r: {
-                            min: 0,
-                            max: 100,
-                            ticks: { display: false } // Masque les chiffres de la toile
-                        }
-                    },
-                    plugins: { legend: { display: false } }
-                }
+                data: { labels: ['Aire de repos', 'Sécurité', 'Services'], datasets: [{ data: data.radar_scores, backgroundColor: THEME.primaryLight, borderColor: THEME.primary }] },
+                options: { responsive: true, maintainAspectRatio: false, scales: { r: { min: 0, max: 100 } }, plugins: { legend: { display: false } } }
             });
         }
     }
 
+    // --- 6. ÉCOUTEURS D'ÉVÉNEMENTS (Routage et Filtres) ---
+
+    // Menu principal dynamique
+    document.querySelectorAll('.nav-item[data-action="route"]').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
+            e.currentTarget.classList.add('active');
+
+            appState.module = e.currentTarget.getAttribute('data-module');
+            appState.level = e.currentTarget.getAttribute('data-level');
+            appState.entityId = e.currentTarget.getAttribute('data-id');
+
+            // Sur mobile, ferme la sidebar après un clic
+            if(window.innerWidth <= 1024) document.querySelector('.cyclo-sidebar').classList.remove('is-open');
+
+            fetchApiData();
+        });
+    });
+
+    // Accordéons du menu
+    document.querySelectorAll('.nav-item[data-action="toggle-submenu"]').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            const targetId = e.currentTarget.getAttribute('data-target');
+            const submenu = document.getElementById(targetId);
+            if (submenu) {
+                const isHidden = submenu.style.display === 'none';
+                submenu.style.display = isHidden ? 'block' : 'none';
+                const chevron = e.currentTarget.querySelector('.chevron');
+                if(chevron) chevron.style.transform = isHidden ? 'rotate(180deg)' : 'rotate(0deg)';
+            }
+        });
+    });
+
+    // Bouton Mobile
+    const mobileBtn = document.getElementById('mobile-menu-btn');
+    const sidebar = document.querySelector('.cyclo-sidebar');
+    if (mobileBtn && sidebar) {
+        mobileBtn.addEventListener('click', () => { sidebar.classList.toggle('is-open'); });
+    }
+
+    // --- 7. LANCEMENT ---
+    fetchApiData();
 });
