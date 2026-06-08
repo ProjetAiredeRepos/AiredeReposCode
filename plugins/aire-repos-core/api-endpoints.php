@@ -47,6 +47,16 @@ function aire_repos_register_api_endpoints() {
             return array_intersect( $allowed_roles, (array) $user->roles ) ? true : false;
         }
     ));
+
+    // Endpoint Dashboard : Vue d'ensemble Questionnaires
+    register_rest_route( 'cyclo-data/v1', '/survey-overview', array(
+        'methods' => WP_REST_Server::READABLE,
+        'callback' => 'cyclo_get_survey_overview',
+        'permission_callback' => function () {
+            $user = wp_get_current_user();
+            return array_intersect(['administrator', 'cyclo_admin', 'cyclo_editeur'], (array) $user->roles) ? true : false;
+        }
+    ));
 }
 
 // Logique de traitement pour l'endpoint /scan
@@ -174,7 +184,7 @@ function aire_repos_submit_survey( WP_REST_Request $request ) {
     ));
 }
 
-// Logique récupération des données, Endpoint Dashboard
+// Logique récupération des données, Endpoint Dashboard (Outil de découverte)
 function cyclo_get_discovery_overview( WP_REST_Request $request ) {
     global $wpdb;
 
@@ -243,6 +253,63 @@ function cyclo_get_discovery_overview( WP_REST_Request $request ) {
             'monthly_evolution'   => $monthly_stats,
             'hourly_stats'        => $hourly_stats,
             'geo_stats'           => $geo_stats
+        )
+    ));
+}
+
+// Fonction de traitement avec requêtes préparées (OWASP) pour calcul des moyennes : Endpoint Dashboard (questionnaires)
+function cyclo_get_survey_overview( WP_REST_Request $request ) {
+    global $wpdb;
+
+    $start_date = sanitize_text_field( $request->get_param('start_date') ?: date('Y-01-01') );
+    $end_date = sanitize_text_field( $request->get_param('end_date') ?: date('Y-12-31') );
+
+    $table_survey = $wpdb->prefix . 'response_questionnaire';
+
+    // 1. KPIs (Key Performance Indicator) globaux (Total et Moyenne pondérée)
+    $query_kpi = $wpdb->prepare(
+        "SELECT COUNT(id_response) as total,
+                       AVG(q1_satisfaction_aire) as avg_aire,
+                       AVG(q2_satisfaction_securite) as avg_securite,
+                       AVG(q3_satisfaction_services) as avg_services
+               FROM {table_survey}
+               WHERE date_soumission >= %s AND date_soumission <= %s",
+        $start_date . '00:00:00',
+        $end_date . '23:59:59'
+    );
+    $kpi_data = $wpdb->get_row( $query_kpi );
+
+    // Calcul de l'indice de satisfaction global (Moyenne des 3 moyennes, ramenée sur 5)
+    // Nos notes sont sur 4 (Très satisfaisant = 4, etc.). On ramène sur 5 pour l'affichage maquette.
+    $avg_aire_5 = ($kpi_data->avg_aire / 4) * 5;
+    $avg_sec_5 = ($kpi_data->avg_securite / 4) * 5;
+    $avg_srv_5 = ($kpi_data->avg_services / 4) * 5;
+
+    $indice_global = ($avg_aire_5 + $avg_sec_5 + $avg_srv_5) / 3;
+
+    // 2. Évolution mensuelle des réponses
+    $query_monthly = $wpdb->prepare(
+        "SELECT MONTH(date_soumission) as mois, COUNT(id_response) as total
+        FROM {table_survey}
+        WHERE date_soumission >= %s AND date_soumission <= %s
+        GROUP BY MONTH(date_soumission)
+        ORDER BY mois ASC",
+        $start_date . '00:00:00',
+        $end_date . '23:59:59'
+    );
+    $monthly_stats = $wpdb->get_results( $query_monthly );
+
+    return rest_ensure_response( array(
+        'status' => 'success',
+        'data' => array(
+            'total_responses' => (int) $kpi_data->total,
+            'indice_satisfaction' => round($indice_global, 1),
+            'radar_scores' => [
+                round(($kpi_data->avg_aire /4) * 100), // Score sur 100%
+                round(($kpi_data->avg_securite /4) * 100),
+                round(($kpi_data->avg_services /4) *100)
+            ],
+            'monthly_evolution' => $monthly_stats
         )
     ));
 }
