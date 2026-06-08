@@ -252,4 +252,136 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- 4. BOOTSTRAP DE L'APP ---
     renderDiscoveryOverview();
 
+    // --- GESTION DU ROUTAGE (Navigation)
+    const navButtons = document.querySelectorAll('.nav-item[data-view]');
+
+    navButtons.forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            // Mise à jour de l'état actif du menu
+            navButtons.forEach(b => b.classList.remove('active'));
+            e.currentTarget.classList.add('active');
+
+            // Chargement de la vue demandée
+            const view = e.currentTarget.getAttribute('data-view');
+            if (view === 'discovery-overview') {
+                renderDiscoveryOverview();
+            } else if (view === 'survey-overview') {
+                renderSurveyOverview();
+            }
+        });
+    });
+
+    // CONSTRUCTION DE LA VUE (QUESTIONNAIRES)
+    async function renderSurveyOverview() {
+        root.innerHTML = '<div class="loading-state">Analyse des réponses en cours...</div>';
+
+        // Mise à jour du fil d'ariane
+        document.querySelector('.breadcrumbs').innerHTML = `Administration <span class="sep">></span> Questionnaires <span class="sep">></span> <strong>Vue d'ensemble</strong>`;
+
+        try {
+            const data = await fetchApi('survey-overview');
+            root.innerHTML = `
+                <div class="dash-card card-third">
+                    <div class="card-header">
+                        <h3>Réponses totales</h3>
+                        <p>Sur l'année en cours</p>
+                    </div>
+                    <div class="kpi-value">${data.total_reponses}</div>    
+                </div>
+                
+                <div class="dash-card card-third">
+                    <div class="card-header">
+                        <h3>Indice de satisfaction</h3>
+                        <p>Moyenne pondérée</p>
+                    </div>
+                    <div class="kpi-value">${data.indice_satisfaction}/5</div>
+                </div>
+
+                <div class="dash-card" style="grid-column: span 8;">
+                    <div class="card-header">
+                        <h3>Évolution du nombre de réponses</h3>
+                    </div>
+                    <div class="chart-container" style="height: 300px;">
+                        <canvas id="chart-survey-evolution"></canvas>
+                    </div>
+                </div>
+
+                <div class="dash-card" style="grid-column: span 4;">
+                    <div class="card-header">
+                        <h3>Score global par thème</h3>
+                        <p>Analyse radar (sur 100)</p>
+                    </div>
+                    <div class="chart-container" style="height: 300px;">
+                        <canvas id="chart-radar"></canvas>
+                    </div>
+                </div>
+            `;
+
+            initSurveyCharts(data);
+        } catch (error) {
+            // L'erreur est déjà gérée visuellement par fetchApi()
+        }
+    }
+
+    // INITIALISATION DES GRAPHIQUES QUESTIONNAIRES
+    function initSurveyCharts(data) {
+        // 1. Bar Chart : Évolution
+        const ctxEvol = document.getElementById('chart-survey-evolution');
+        if (ctxEvol && data.monthly_evolution) {
+            const labels = ['Jan.', 'Fév.', 'Mars', 'Avr.', 'Mai', 'Juin', 'Juil.', 'Août', 'Sep.', 'Oct.', 'Nov.', 'Déc.'];
+            const chartData = new Array(12).fill(0);
+
+            data.monthly_evolution.forEach(row => {
+                chartData[row.mois - 1] = parseInt(row.total, 10);
+            });
+
+            new Chart(ctxEvol, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        data: chartData,
+                        backgroundColor: THEME.primary,
+                        borderRadius: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRadio: false,
+                    plugins: { legend: { display: false } }
+                }
+            });
+        }
+
+        // 2. Radar Chart : Scores par thème
+        const ctxRadar = document.getElementById('chart-radar');
+        if (ctxRadar && data.radar_scores) {
+            new Chart(ctxRadar, {
+                type: 'radar',
+                data: {
+                    labels: ['Aire de repos', 'Sécurité', 'Services'],  // Les 3 vraies datas
+                    datasets: [{
+                        data: data.radar_scores,
+                        backgroundColor: THEME.primaryLight,
+                        borderColor: THEME.primary,
+                        borderWidth: 2,
+                        pointBackgroundColor: THEME.primary
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        r: {
+                            min: 0,
+                            max: 100,
+                            ticks: { display: false } // Masque les chiffres de la toile
+                        }
+                    },
+                    plugins: { legend: { display: false } }
+                }
+            });
+        }
+    }
+
 });
