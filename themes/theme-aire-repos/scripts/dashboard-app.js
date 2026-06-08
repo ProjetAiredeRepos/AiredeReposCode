@@ -200,8 +200,42 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- 6. ÉCOUTEURS D'ÉVÉNEMENTS (Routage et Filtres) ---
 
+    // Filtres
+    document.querySelectorAll('.filter-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+            e.currentTarget.classList.add('active');
+
+            const filterValue = e.currentTarget.innerText.toLowerCase();
+            const today = new Date();
+
+            if (filterValue.includes('jour')) {
+                // Aujourd'hui
+                appState.dateStart = today.toISOString().split('T')[0];
+                appState.dateEnd = appState.dateStart;
+            } else if (filterValue.includes('semaine')) {
+                // Semaine en cours (Lundi à Dimanche)
+                const firstDay = new Date(today);
+                const day = firstDay.getDay() || 7; // Dimanche devient 7
+                if(day !== 1) firstDay.setHours(-24 * (day - 1)); // On recule jusqu'au lundi
+                appState.dateStart = firstDay.toISOString().split('T')[0];
+                appState.dateEnd = today.toISOString().split('T')[0];
+            } else if (filterValue.includes('mois')) {
+                // Mois en cours (du 1er à aujourd'hui)
+                appState.dateStart = new Date(today.getFullYear(), today.getMonth(), 1).toISOString().split('T')[0];
+                appState.dateEnd = today.toISOString().split('T')[0];
+            } else {
+                // Année entière
+                appState.dateStart = `${today.getFullYear()}-01-01`;
+                appState.dateEnd = `${today.getFullYear()}-12-31`;
+            }
+
+            fetchApiData(); // L'état est à jour, on relance le cerveau !
+        });
+    });
+
     // Menu principal dynamique
-    document.querySelectorAll('.nav-item[data-action="route"]').forEach(btn => {
+    document.querySelectorAll('.nav-item[data-action="route"], .nav-item[data-action="route-and-toggle"]').forEach(btn => {
         btn.addEventListener('click', (e) => {
             document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
             e.currentTarget.classList.add('active');
