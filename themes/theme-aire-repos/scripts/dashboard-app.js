@@ -234,34 +234,34 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    // Menu principal dynamique
+    // Menu principal et Accordéons (Fusionnés)
     document.querySelectorAll('.nav-item[data-action="route"], .nav-item[data-action="route-and-toggle"]').forEach(btn => {
         btn.addEventListener('click', (e) => {
+            // Mise à jour visuelle (menu actif)
             document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
             e.currentTarget.classList.add('active');
 
+            // Mise à jour de l'état (Cerveau)
             appState.module = e.currentTarget.getAttribute('data-module');
             appState.level = e.currentTarget.getAttribute('data-level');
             appState.entityId = e.currentTarget.getAttribute('data-id');
+
+            // Ouverture/Fermeture du sous-menu si c'est un bouton "route-and-toggle"
+            if (e.currentTarget.getAttribute('data-action') === 'route-and-toggle') {
+                const targetId = e.currentTarget.getAttribute('data-target');
+                const submenu = document.getElementById(targetId);
+                if (submenu) {
+                    const isHidden = submenu.style.display === 'none';
+                    submenu.style.display = isHidden ? 'block' : 'none';
+                    const chevron = e.currentTarget.querySelector('.chevron');
+                    if(chevron) chevron.style.transform = isHidden ? 'rotate(180deg)' : 'rotate(0deg)';
+                }
+            }
 
             // Sur mobile, ferme la sidebar après un clic
             if(window.innerWidth <= 1024) document.querySelector('.cyclo-sidebar').classList.remove('is-open');
 
             fetchApiData();
-        });
-    });
-
-    // Accordéons du menu
-    document.querySelectorAll('.nav-item[data-action="toggle-submenu"]').forEach(btn => {
-        btn.addEventListener('click', (e) => {
-            const targetId = e.currentTarget.getAttribute('data-target');
-            const submenu = document.getElementById(targetId);
-            if (submenu) {
-                const isHidden = submenu.style.display === 'none';
-                submenu.style.display = isHidden ? 'block' : 'none';
-                const chevron = e.currentTarget.querySelector('.chevron');
-                if(chevron) chevron.style.transform = isHidden ? 'rotate(180deg)' : 'rotate(0deg)';
-            }
         });
     });
 
