@@ -147,35 +147,35 @@ function aire_repos_questionnaire_template( $template ) {
     return $template;
 }
 
-// CUSTOM POST TYPE (CPT) : POINTS D'INTÉRÊT (POI)
-add_action( 'init', 'aire_repos_register_poi_cpt');
 
-function aire_repos_register_poi_cpt() {
+add_action( 'init', 'cyclo_register_itineraire_taxonomy' );
+
+function cyclo_register_itineraire_taxonomy() {
     $labels = array(
-        'name' => 'Points d\'Intérêt',
-        'singular_name' => 'Point d\'Intérêt',
-        'menu_name'             => 'Points d\'Intérêt',
-        'add_new'               => 'Ajouter un point',
-        'add_new_item'          => 'Ajouter un nouveau Point d\'Intérêt',
-        'edit_item'             => 'Modifier le Point d\'Intérêt',
-        'all_items'             => 'Tous les points',
-        'search_items'          => 'Rechercher un point',
-        'not_found'             => 'Aucun point d\'intérêt trouvé.',
+        'name'              => 'Itinéraires',
+        'singular_name'     => 'Itinéraire',
+        'search_items'      => 'Rechercher un itinéraire',
+        'all_items'         => 'Tous les itinéraires',
+        'parent_item'       => 'Itinéraire parent',
+        'parent_item_colon' => 'Itinéraire parent :',
+        'edit_item'         => 'Modifier l\'itinéraire',
+        'update_item'       => 'Mettre à jour l\'itinéraire',
+        'add_new_item'      => 'Ajouter un nouvel itinéraire',
+        'new_item_name'     => 'Nom du nouvel itinéraire',
+        'menu_name'         => 'Itinéraires',
     );
 
     $args = array(
-        'labels'             => $labels,
-        'public'             => true,
-        'publicly_queryable' => true,
-        'show_ui'            => true,
-        'show_in_menu'       => true,
-        'menu_position'      => 20, // S'affiche juste en dessous du menu "Pages"
-        'menu_icon'          => 'dashicons-location', // Icône de punaise (très visuel)
-        'supports'           => array( 'title', 'editor', 'thumbnail', 'excerpt' ),
-        'has_archive'        => false, // Pas besoin de page d'archive pour une application web
-        'show_in_rest'       => true, // Indispensable pour profiter de l'éditeur moderne de WordPress
+        'hierarchical'      => true, // true = se comporte comme des catégories (avec cases à cocher)
+        'labels'            => $labels,
+        'show_ui'           => true,
+        'show_admin_column' => true, // Affiche la colonne dans la liste des aires de repos
+        'query_var'         => true,
+        'show_in_rest'      => true, // Indispensable pour l'éditeur Gutenberg et notre API REST
+        'rewrite'           => array( 'slug' => 'itineraire' ),
     );
 
-    register_post_type( 'poi', $args );
-
+    // On attache cette taxonomie au CPT 'aire_repos'
+    register_taxonomy( 'itineraire', array( 'aire_repos' ), $args );
 }
+
