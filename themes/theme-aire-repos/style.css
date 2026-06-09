@@ -448,35 +448,98 @@ textarea[name="q5_suggestions"]:focus {
 /* Masquer les éléments purement mobile sur desktop */
 .mobile-nav-toggle { display: none; }
 
+/* ==========================================================================
+   EN-TÊTE DU DASHBOARD
+   ========================================================================== */
+.content-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start; /* Aligne le contenu vers le haut, plus de centrage forcé */
+    margin-bottom: 2rem;
+}
+
+.header-titles {
+    display: flex;
+    flex-direction: column;
+    gap: 8px; /* Espace net entre le fil d'Ariane et le H1 */
+}
+
+.breadcrumbs-container {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.dash-main-title {
+    font-family: 'Outfit', sans-serif;
+    font-size: 2rem;
+    color: var(--dash-text-main);
+    margin: 0;
+    line-height: 1.2;
+}
+
+/* L'overlay sombre sur mobile (masqué par défaut) */
+.sidebar-overlay {
+    display: none;
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0, 0, 0, 0.4);
+    z-index: 9998; /* Juste en dessous de la sidebar (9999) */
+    backdrop-filter: blur(2px);
+}
+
+.sidebar-overlay.is-active {
+    display: block;
+}
+
 @media (max-width: 1024px) {
-    /* 1. On libère le layout */
+    /* 1. On libère le layout pour éviter que le overflow cache le menu */
     .cyclo-app-layout {
         position: relative;
+        overflow: visible;
     }
 
-    /* 2. La Sidebar passe en "Off-Canvas" (cachée sur la gauche) */
+    /* 2. FIX Menu Burger : Off-Canvas en Position Fixed absolue par-dessus l'écran */
     .cyclo-sidebar {
-        position: absolute;
+        position: fixed; /* Reste collé à l'écran même en scrollant */
         left: -100%;
         top: 0;
         bottom: 0;
-        z-index: 1000;
+        height: 100vh;
+        z-index: 9999; /* Force le menu au tout premier plan */
+        background: var(--dash-surface);
         transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        box-shadow: 4px 0 24px rgba(0,0,0,0.1);
+        box-shadow: 4px 0 24px rgba(0,0,0,0.15);
+        max-width: 85vw; /* Ne prend pas tout l'écran sur mobile */
     }
 
-    /* Classe qui sera ajoutée en JS pour ouvrir le menu */
     .cyclo-sidebar.is-open {
         left: 0;
     }
 
-    /* 3. Le contenu principal prend 100% de la largeur */
     .cyclo-main-content {
-        padding: 1.5rem;
+        padding: 1rem; /* Marges réduites sur mobile */
         width: 100%;
     }
 
-    /* 4. Le bouton burger devient visible */
+    /* 3. FIX Typographie : Réduction du H1 et des Breadcrumbs */
+    .dash-main-title {
+        font-size: 1.5rem !important; /* Taille contrôlée sur mobile */
+    }
+
+    .breadcrumbs {
+        font-size: 0.8rem;
+        line-height: 1.4;
+        display: block;
+        width: 100%;
+    }
+
+    .content-header {
+        flex-direction: column;
+        gap: 1.5rem;
+    }
+
+    /* Bouton d'ouverture du menu */
     .mobile-nav-toggle {
         display: flex;
         align-items: center;
@@ -490,25 +553,32 @@ textarea[name="q5_suggestions"]:focus {
         color: var(--dash-text-main);
     }
 
-    .content-header {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 1rem;
-    }
-
+    /* Agencement des boutons d'action (Filtres, Export) */
     .header-actions {
         width: 100%;
-        flex-wrap: wrap; /* Les boutons passent à la ligne */
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
     }
+
     .date-filters {
         width: 100%;
         justify-content: space-between;
+        margin-bottom: 0.5rem;
     }
 
-    /* 5. La Grille : Tout passe sur 1 seule colonne (12/12) */
+    /* Les cartes s'empilent */
     .card-half, .card-third {
         grid-column: span 12;
     }
+}
+
+/* Ajout de la classe générique pour le titre (Desktop) */
+.dash-main-title {
+    margin-top: 10px;
+    font-size: 2rem;
+    color: var(--dash-text-main);
+    font-family: 'Outfit', sans-serif;
 }
 
 

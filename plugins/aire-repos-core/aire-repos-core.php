@@ -27,6 +27,8 @@ function aire_repos_install_database_schema() {
     $table_vue    = $wpdb->prefix. 'vue_page';
     // Définition de la Table 3 : reponse_questionnaire
     $table_questionnaire = $wpdb->prefix . 'reponse_questionnaire';
+    // Définition de la table 4
+    $table_clics = $wpdb->prefix . 'clic_lien';
 
     // Inclusion du fichier Core de WordPress contenant la définition de dbDelta()
     require_once( ABSPATH. 'wp-admin/includes/upgrade.php' );
@@ -84,6 +86,20 @@ function aire_repos_install_database_schema() {
     ) $charset_collate;";
 
     dbDelta( $sql_questionnaire );
+
+    // Table 4 : Tracking des clics sur les liens sortants
+    $sql_clics = "CREATE TABLE $table_clics (
+        id_clic int(11) NOT NULL AUTO_INCREMENT,
+        id_aire int(11) NOT NULL,
+        id_visite int(11) DEFAULT NULL,
+        texte_lien varchar(255) NOT NULL,
+        url_lien text NOT NULL,
+        date_clic datetime NOT NULL,
+        PRIMARY KEY  (id_clic),
+        KEY id_aire (id_aire)
+    ) $charset_collate;";
+
+    dbDelta( $sql_clics );
 
     // GESTION DES RÔLES CYCLO-DATA
     // On nettoie les rôles s'ils existent déjà pour pouvoir les mettre à jour
