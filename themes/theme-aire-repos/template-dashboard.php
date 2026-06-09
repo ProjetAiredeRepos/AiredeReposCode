@@ -40,7 +40,8 @@ function render_dynamic_sidebar_menu($itineraires, $module_name) {
 
         // Affichage du bouton Itinéraire parent
         echo '<div class="nav-group">';
-        echo '<button class="nav-item has-submenu" data-action="route-and-toggle" data-module="' . esc_attr($module_name) . '" data-level="route" data-id="' . esc_attr($term_id) . '" data-target="' . esc_attr($unique_target) . '">';
+        // Bouton Itinéraire (Ajout de data-name)
+        echo '<button class="nav-item has-submenu" data-action="route-and-toggle" data-module="' . esc_attr($module_name) . '" data-level="route" data-id="' . esc_attr($term_id) . '" data-name="' . esc_attr($itineraire->name) . '" data-target="' . esc_attr($unique_target) . '">';
         echo '<svg class="icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s-8-4.5-8-11.8A8 8 0 0 1 12 2a8 8 0 0 1 8 8.2c0 7.3-8 11.8-8 11.8z"></path><circle cx="12" cy="10" r="3"></circle></svg>';
         echo esc_html($itineraire->name);
         if (!empty($aires)) {
@@ -52,7 +53,8 @@ function render_dynamic_sidebar_menu($itineraires, $module_name) {
         if (!empty($aires)) {
             echo '<div class="submenu" id="' . esc_attr($unique_target) . '" style="display: none; padding-left: 1.5rem;">';
             foreach ($aires as $aire) {
-                echo '<button class="nav-item sub-item" data-action="route" data-module="' . esc_attr($module_name) . '" data-level="aire" data-id="' . esc_attr($aire->ID) . '">';
+                // Bouton Aire de repos (Ajout de data-name)
+                echo '<button class="nav-item sub-item" data-action="route" data-module="' . esc_attr($module_name) . '" data-level="aire" data-id="' . esc_attr($aire->ID) . '" data-name="' . esc_attr($aire->post_title) . '">';
                 echo '<span class="dot"></span> ' . esc_html($aire->post_title);
                 echo '</button>';
             }
@@ -137,12 +139,18 @@ get_header('dashboard');
 
         <main class="cyclo-main-content">
             <header class="content-header">
-                <div style="display: flex; align-items: center;">
-                    <button id="mobile-menu-btn" class="mobile-nav-toggle" aria-label="Ouvrir le menu">
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
-                    </button>
-                    <div class="breadcrumbs">Administration <span class="sep">></span> Chargement...</div>
+                <!-- NOUVELLE STRUCTURE : Flex-direction Column pour forcer le titre en dessous -->
+                <div class="header-titles">
+                    <div class="breadcrumbs-container">
+                        <button id="mobile-menu-btn" class="mobile-nav-toggle" aria-label="Ouvrir le menu">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+                        </button>
+                        <div class="breadcrumbs">Administration <span class="sep">></span> Chargement...</div>
+                    </div>
+                    <!-- Le titre est maintenant en dur, le JS changera juste son texte -->
+                    <h1 id="dash-main-title" class="dash-main-title">Chargement...</h1>
                 </div>
+
                 <div class="header-actions">
                     <div class="date-filters">
                         <button class="filter-btn">Jour</button>
@@ -150,6 +158,7 @@ get_header('dashboard');
                         <button class="filter-btn">Mois</button>
                         <button class="filter-btn active">Année</button>
                     </div>
+
                     <button class="btn-action outline" id="export-csv-btn" title="Télécharger les données brutes pour Excel">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
                         Données CSV
@@ -161,6 +170,9 @@ get_header('dashboard');
                     </button>
                 </div>
             </header>
+
+            <!-- L'overlay sombre pour fermer le menu sur mobile (UX propre) -->
+            <div id="sidebar-overlay" class="sidebar-overlay"></div>
 
             <div id="dashboard-root" class="dashboard-grid">
             </div>

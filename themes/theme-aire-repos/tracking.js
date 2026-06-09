@@ -57,4 +57,17 @@ document.addEventListener('DOMContentLoaded', async () => {
             navigator.sendBeacon('/wp-json/aire-repos/v1/update-time', blob);
         }
     });
+
+    // --- TRACKING DES LIENS SORTANTS ---
+    document.querySelectorAll('a').forEach(link => {
+        link.addEventListener('click', function(e) {
+            const url = this.getAttribute('href');
+            if (url && url.startsWith('http')) {
+                const text = this.innerText.trim() || 'Lien externe';
+                // Envoi silencieux sans bloquer la navigation
+                const payload = new URLSearchParams({ id_aire: aireId, texte_lien: text, url_lien: url });
+                navigator.sendBeacon('/wp-json/aire-repos/v1/log-click', payload);
+            }
+        });
+    });
 });
