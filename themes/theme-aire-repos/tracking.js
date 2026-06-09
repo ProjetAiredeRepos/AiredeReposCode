@@ -2,10 +2,8 @@
 // Script autonome gérant le cycle de vie du tracking comportemental
 
 document.addEventListener('DOMContentLoaded', async () => {
-    // 1. Extraction des paramètres depuis l'URL (ex : ?aire=12)
-    const urlParams = new URLSearchParams(window.location.search);
-    const aireId = urlParams.get('aire');
-
+    // 1. Lecture de l'ID injecté par WordPress (Zéro paramètre URL nécessaire)
+    const aireId = typeof cycloData !== 'undefined' ? cycloData.aire_id : null;
     // Détection de la langue du navigateur (ex: retourne 'fr' depuis 'fr-FR')
     const userLang = navigator.language.slice(0,2);
 

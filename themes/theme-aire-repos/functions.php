@@ -27,6 +27,13 @@ function cyclo_theme_assets() {
         true // true = charger dans le footer pour ne pas bloquer l'affichage
     );
 
+    // AJOUT : Injection sécurisée de l'ID de l'aire pour le tracking
+    if ( is_singular('aire_repos') ) {
+        wp_localize_script('aire-repos-tracking', 'cycloData', array(
+            'aire_id' => get_the_ID()
+        ));
+    }
+
     // Charger le fichier main.js dans le footer
     wp_enqueue_script('cyclo-main-script',  get_template_directory_uri() . '/main.js', array(), '1.0', true);
 
