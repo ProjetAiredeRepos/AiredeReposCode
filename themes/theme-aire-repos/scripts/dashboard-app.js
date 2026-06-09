@@ -272,6 +272,53 @@ document.addEventListener('DOMContentLoaded', () => {
         mobileBtn.addEventListener('click', () => { sidebar.classList.toggle('is-open'); });
     }
 
-    // --- 7. LANCEMENT ---
+    // --- 7. EXPORTS DE DONNÉES (CSV & PDF) ---
+
+    // A. EXPORT CSV (Données brutes via API)
+    const btnCsv = document.getElementById('export-csv-btn');
+    if (btnCsv) {
+        btnCsv.addEventListener('click', () => {
+            // Construit l'URL avec les filtres actuels et le Nonce de sécurité WP
+            const params = new URLSearchParams({
+                module: appState.module,
+                level: appState.level,
+                id: appState.entityId,
+                start_date: appState.dateStart,
+                end_date: appState.dateEnd,
+                _wpnonce: apiNonce // Indispensable pour passer le mur de sécurité via une URL directe
+            });
+
+            // Ouvre l'URL, cequi déclenche le téléchargement du fichier par le navigateur
+            window.location.href = `/wp-json/cyclo-data/v1/export-csv?${params.toString()}`;
+        });
+    }
+
+    // B. EXPORT PDF (Rapport Graphique WYSIWYG)
+    const btnPdf = document.getElementById('export-pdf-btn');
+    if (btnPdf) {
+        btnPdf.addEventListener('click', () => {
+            const element = document.getElementById('dashboard-root'); // La zone contenant les graphiques
+            const opt = {
+                margin: 10,
+                filename: `Rapport_CycloData_${appState.module}_${appState.dateStart}.pdf`,
+                image: { type: 'jpeg', quality: 0.98},
+                html2canvas: { scale: 2, useCORS: true }, //scale: 2 pour du HD
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' }
+            };
+
+            // Optionnel : Changer le texte du bouton pendant la génération
+            const originalText = btnPdf.innerHTML;
+            btnPdf.innerHtml = "Génération...";
+            btnPdf.disabled = true;
+
+            // html2pdf est chargé via le CDN dans le template
+            html2pdf().set(opt).from(element).save().then(() => {
+                btnPdf.innerHTML = originalText;
+                btnPdf.disabled = false;
+            });
+        });
+    }
+
+    // --- 8. LANCEMENT ---
     fetchApiData();
 });
