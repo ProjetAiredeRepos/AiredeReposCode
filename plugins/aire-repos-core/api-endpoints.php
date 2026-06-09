@@ -57,6 +57,16 @@ function aire_repos_register_api_endpoints() {
             return array_intersect(['administrator', 'cyclo_admin', 'cyclo_editeur'], (array) $user->roles) ? true : false;
         }
     ));
+
+    // ROUTE POUR L'EXPORT CSV
+    register_rest_route( 'cyclo-data/v1', '/export-csv', array(
+        'methods' => WP_REST_Server::READABLE,
+        'callback' => 'cyclo_export_csv_data',
+        'permission_callback' => function () {
+            $user = wp_get_current_user();
+            return array_intersect(['administrator', 'cyclo_admin', 'cyclo_editeur'], (array) $user->roles) ? true : false;
+        }
+    ));
 }
 
 // Logique de traitement pour l'endpoint /scan
@@ -305,4 +315,74 @@ function cyclo_get_survey_overview( WP_REST_Request $request ) {
             'monthly_evolution' => $monthly_stats
         )
     ));
+}
+
+// Logique d'export de données en CSV, Endpoint route pour l'export CSV
+function cyclo_export_csv_data( WP_REST_Request $request ) {
+    global $wpdb;
+
+    // 1. Récupération des filtres
+    $module = sanitize_text_field( $request->get_param('module') ?: 'discovery');
+    $start_date = sanitize_text_field( $request->get_param('start_date') ?: date('Y-01-01') );
+    $end_date = sanitize_text_field( $request->get_param('end_date') ?: date('Y-12-31') );
+    $level = sanitize_text_field( $request->get_param('level') ?: 'global' );
+    $id = sanitize_text_field( $request->get_param('id') ?: 'all' );
+
+    // 2. Construction de la condition WHERE (comme pour l'API Dashboard)
+    $where = "WHERE date >= %s AND date <= %s";
+    $params = [ $start_date . '00:00:00', $end_date . '23:59:59' ];
+
+    if ( $level === 'aire' && $id !== 'all' ) {
+        $where .= " AND id_aire = %d";
+        $params[] = intval($id);
+    } elseif ( $level === 'route' && is_numeric($id) ) {
+        $aires = get_posts(array(
+            'post_type' => 'aire_repos', 'numberposts' => -1, 'fields' => 'ids',
+            'tax_query' => array( array('taxonomy' => 'itineraire', 'field' => 'term_id', 'terms' => intval($id)) )
+        ));
+        if (!empty($aires)) {
+            $placeholders = implode(',', array_fill(0, count($aires), '%d'));
+            $where .= " AND id_aire IN ($placeholders)";
+            $params = array_merge($params, $aires);
+        } else {
+            $where .= " AND id_aire = 0";
+        }
+    }
+
+    // 3. Configuration des Headers pour forcer le téléchargement du CSV
+    $filename = "export_{$module}_" . date('Ymd') . ".csv";
+    header('Content-Type: text/csv; charset=utf-8');
+    header('Content-Disposition: attachment; filename="' . $filename . '"');
+
+    // Ouvre le flux de sortie PHP
+    $output = fopen('php://output', 'w');
+    // Ajoute le BOM UTF-8 pour qu'Excel lise correctement les accents (très important !)
+    fputs($output, $bom =(chr(0xEF) . chr(0xBB) . chr(0xBF)));
+
+    // 4. Extraction et formatage selon le module
+    if ( $module === 'discovery' ) {
+        $table = $wpdb->prefix . 'visit_site';
+        // Modification dynamique du WHERE pour matcher les noms de colonnes de cette table
+        $where_disco = str_replace('date', 'date_visite', $where);
+
+        fputcsv($output, ['ID Visite', 'Date', 'ID Aire', 'Langue', 'Temps passé (s)'], ';');
+
+        $results = $wpdb->get_results( $wpdb->prepare("SELECT * FROM {$table} {$where_disco} ORDER BY date_visite DESC", $params), ARRAY_A );
+        foreach ( $results as $row ) {
+            fputcsv($output, [$row['id_visite'], $row['date_visite'], $row['id_aire'], strtoupper($row['code_langue']), $row['temps_total']], ';');
+        }
+    } else {
+        $table = $wpdb->prefix . 'response_questionnaire';
+        $where_survey = str_replace('date', 'date_soumission', $where);
+
+        fputcsv($output, ['ID Response', 'Date', 'ID Aire', 'Note Aire', 'Note Securite', 'Note Services', 'Origine', 'Pays'], ';');
+
+        $results = $wpdb->get_results( $wpdb->prepare("SELECT * FROM {$table} {$where_survey} ORDER BY date_soumission DESC", $params), ARRAY_A );
+        foreach ( $results as $row ) {
+            fputcsv($output, [$row['id_response'], $row['date_soumission'], $row['q1_satisfaction_aire'], $row['q2_satisfaction_securite'], $row['q3_satisfaction_services'], $row['profil_origine'], $row['profil_pays']], ';');
+        }
+    }
+
+    fclose($output);
+    exit; // Coupe l'exécution de WP pour envoyer un fichier pur, sans HTML autour.
 }
