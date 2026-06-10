@@ -6,6 +6,13 @@ function cyclo_theme_setup() {
     add_theme_support( 'title-tag' );
     // Active le support des images à la une
     add_theme_support('post-thumbnails');
+    // Active le changement de logo depuis l'administration
+    add_theme_support('custom-logo', array(
+        'height' => 80,
+        'width' => 250,
+        'flex-height' => true,
+        'flex-width' => true,
+    ));
 }
 // On exécute cette fonction au moment de l'initialisation du thème
 add_action( 'after_setup_theme', 'cyclo_theme_setup' );
@@ -70,3 +77,93 @@ add_image_size('format-mini', 150, 150, true);
 // Par défaut, WordPress compresse à 82%. On baisse à 70% pour diviser le poids par deux sans perte visible sur mobile.
 add_filter('jpeg_quality', function($quality) { return 70; });
 add_filter('wp_editor_set_quality', function($quality) { return 70; });
+
+// --- 5. OPTION LOGO DU FOOTER ---
+function cyclo_customizer_settings( $wp_customize ) {
+    // Crée la case dans la base de données pour stocker le logo du footer
+    $wp_customize->add_setting( 'footer_logo', array(
+        'default'           => '',
+        'sanitize_callback' => 'esc_url_raw',
+    ) );
+
+    // Ajoute le bouton d'envoi d'image dans l'onglet "Identité du site" de l'admin
+    $wp_customize->add_control( new WP_Customize_Image_Control( $wp_customize, 'footer_logo', array(
+        'label'       => 'Logo du Footer (Optionnel)',
+        'description' => 'Importez une version alternative de votre logo pour le pied de page.',
+        'section'     => 'title_tagline',
+        'settings'    => 'footer_logo',
+    ) ) );
+}
+// Enregistre l'option dans l'outil de personnalisation WordPress
+add_action( 'customize_register', 'cyclo_customizer_settings' );
+
+
+// --- 6. FONCTIONS OUTILS POUR LES IMAGES ACF ---
+
+/**
+ * Récupère l'adresse URL d'une image, peu importe son format dans ACF (ID, Tableau ou Lien direct)
+ */
+function cyclo_get_image_url($field_value, $size = 'large') {
+    if (empty($field_value)) return '';
+
+    // Cas 1 : Le champ ACF renvoie un ID numérique
+    if (is_numeric($field_value)) {
+        $url = wp_get_attachment_image_url($field_value, $size);
+        return $url ? $url : wp_get_attachment_url($field_value);
+    }
+    // Cas 2 : Le champ ACF renvoie un Tableau complet (Array)
+    if (is_array($field_value)) {
+        return isset($field_value['sizes'][$size]) ? $field_value['sizes'][$size] : $field_value['url'];
+    }
+    // Cas 3 : Le champ ACF renvoie déjà une URL brute (String)
+    if (is_string($field_value)) {
+        return $field_value;
+    }
+    return '';
+}
+
+/**
+ * Génère la balise HTML <img> optimisée ou utilise un lien classique en secours
+ */
+function cyclo_get_image_tag($field_value, $size = 'large', $classes = '') {
+    if (empty($field_value)) return '';
+
+    // Si la valeur est un ID, on utilise le générateur automatique de WordPress (gère le srcset pour mobile)
+    if (is_numeric($field_value)) {
+        $html = wp_get_attachment_image($field_value, $size, false, array('class' => $classes, 'alt' => ''));
+        if (!empty($html)) return $html;
+    }
+
+    // Si ce n'est pas un ID, on crée une balise img classique avec l'URL de secours
+    $url = cyclo_get_image_url($field_value, $size);
+    if (!empty($url)) {
+        return '<img src="' . esc_url($url) . '" class="' . esc_attr($classes) . '" alt="">';
+    }
+    return '';
+}
+
+// --- 7. SAUVEGARDE AUTOMATIQUE DES CHAMPS ACF (JSON) ---
+
+/**
+ * Configure un point de sauvegarde automatique pour ACF.
+ * Dès que l'on enregistre un groupe de champs dans le tableau de bord,
+ * un fichier JSON est créé ou mis à jour dans le dossier /acf-json/ de votre thème.
+ */
+add_filter('acf/settings/save_json', function( $path ) {
+    // On indique le chemin vers notre dossier personnalisé
+    $path = get_template_directory() . '/acf-json';
+    return $path;
+});
+
+/**
+ * Configure un point de lecture automatique pour ACF.
+ * Si on change de serveur, WordPress lira ce dossier pour recréer
+ * instantanément les formulaires dans l'administration.
+ */
+add_filter('acf/settings/load_json', function( $paths ) {
+    // On retire le chemin par défaut pour éviter les conflits
+    unset($paths[0]);
+    // On ajoute notre dossier de thème
+    $paths[] = get_template_directory() . '/acf-json';
+    return $paths;
+});
