@@ -626,6 +626,8 @@ textarea[name="q5_suggestions"]:focus {
 
 
 
+/* Site Découverte */
+
 /* --- 0. RESET ET COMPORTEMENT GLOBAL --- */
 html {
     scroll-behavior: smooth;
@@ -639,9 +641,8 @@ html {
 
 /* --- 0.5. VARIABLES GLOBALES DU THÈME --- */
 :root {
-    /* Couleurs par défaut pour éviter les erreurs de l'éditeur */
-    --nav-active-color: #1A3D22;   /* Vert foncé par défaut pour le carrousel */
-    --modal-theme-color: #333333;  /* Gris sombre par défaut pour les modales */
+    --nav-active-color: #1A3D22;
+    --modal-theme-color: #333333;
 }
 
 /* --- 1. POLICES GLOBALES --- */
@@ -657,7 +658,7 @@ h1, h2, h3, h4, h5, h6 {
     font-weight: 400;
 }
 
-/* --- 2. EN-TÊTES DE SECTIONS (Unifiés) --- */
+/* --- 2. EN-TÊTES DE SECTIONS --- */
 .carte-header,
 .carousel-header {
     padding: 0 24px;
@@ -809,7 +810,7 @@ h1, h2, h3, h4, h5, h6 {
     font-style: italic;
 }
 
-/* --- 5. POINTS D'INTÉRÊT SUR LA CARTE (PINS) --- */
+/* --- 5. POINTS D'INTÉRÊT SUR LA CARTE --- */
 .pin-interet {
     position: absolute;
     transform: translate(-50%, -50%);
@@ -822,58 +823,69 @@ h1, h2, h3, h4, h5, h6 {
 
 .pin-label {
     font-family: 'Outfit', sans-serif;
-    font-size: 0.75rem;
-    font-weight: 700;
-    color: white;
-    padding: 4px 10px;
+    font-size: 0.5rem;
+    font-weight: 500;
+    color: #FFFFFF;
+    padding: 3px 8px;
     border-radius: 12px;
-    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    border: 1px solid rgba(255, 255, 255, 0.25);
 }
 
 .pin-button {
-    width: 44px;
-    height: 44px;
-    background-color: rgba(255, 255, 255, 0.9);
-    border: none;
+    width: 30px;
+    height: 30px;
+    background-color: rgba(255, 255, 255, 0.25);
+    -webkit-backdrop-filter: blur(6px);
+    border: 1px solid rgba(255, 255, 255, 0.6);
     border-radius: 50%;
     display: flex;
     justify-content: center;
     align-items: center;
     cursor: pointer;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-    transition: transform 0.2s;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    animation: pulseRadar 2.5s infinite cubic-bezier(0.25, 0.8, 0.25, 1);
 }
 
 .pin-button:active {
-    transform: scale(0.9);
+    transform: scale(0.85);
 }
 
 .pin-dot {
-    width: 14px;
-    height: 14px;
+    width: 12px;
+    height: 12px;
     border-radius: 50%;
     display: block;
+    border: 2px solid #FFFFFF;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.3);
 }
 
-/* Couleurs dynamiques */
-.label-decouvrir, .badge-decouvrir, .btn-decouvrir .pin-dot { background-color: #2F80ED; }
-.label-proteger, .badge-proteger, .btn-proteger .pin-dot { background-color: #27AE60; }
-.label-deguster, .badge-deguster, .btn-deguster .pin-dot { background-color: #9B51E0; }
-.label-explorer, .badge-explorer, .btn-explorer .pin-dot { background-color: #E2B93B; }
+@keyframes pulseRadar {
+    0% { box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.7); }
+    70% { box-shadow: 0 0 0 15px rgba(255, 255, 255, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(255, 255, 255, 0); }
+}
+
+.label-decouvrir, .btn-decouvrir .pin-dot { background-color: #2F80ED; }
+.label-proteger, .btn-proteger .pin-dot { background-color: #27AE60; }
+.label-deguster, .btn-deguster .pin-dot { background-color: #9B51E0; }
+.label-explorer, .btn-explorer .pin-dot { background-color: #E2B93B; }
 
 /* --- 6. MODALS DE LA CARTE --- */
-
 .modal-overlay-close {
     position: absolute;
     top: 0; left: 0; right: 0; bottom: 0;
     background-color: rgba(0, 0, 0, 0.5);
     opacity: 0;
-    transition: opacity 0.4s ease;
+    transition: opacity 0.5s ease;
     z-index: 1;
 }
 
 .modal-bottom-sheet {
-    padding: 20px;
+    padding: 20px 20px 50px 20px;
     position: fixed;
     top: 0; left: 0; right: 0; bottom: 0;
     z-index: 999;
@@ -889,15 +901,18 @@ h1, h2, h3, h4, h5, h6 {
     background-color: #FFFFFF;
     width: 100%;
     max-width: 375px;
-    margin: 0 auto; /* Cette ligne fait déjà le travail */
+    margin: 0 auto;
     max-height: 85vh;
     border-radius: 45px !important;
     z-index: 2;
     overflow-y: auto;
     overflow-x: hidden;
     padding: 0;
-    transform: translateY(150%);
-    transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+
+    /* Animation premium d'ouverture : translation + opacité */
+    transform: translateY(100%);
+    opacity: 0;
+    transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s ease;
 }
 
 .modal-bottom-sheet.is-open {
@@ -908,6 +923,7 @@ h1, h2, h3, h4, h5, h6 {
 }
 .modal-bottom-sheet.is-open .modal-content {
     transform: translateY(0);
+    opacity: 1;
 }
 
 .modal-close-btn {
@@ -930,19 +946,17 @@ h1, h2, h3, h4, h5, h6 {
 
 .badge {
     display: inline-block;
-    padding: 6px 14px;
     border-radius: 8px;
     font-family: 'Outfit', sans-serif;
-    font-size: 0.8rem;
-    font-weight: 700;
-    color: white;
+    font-size: 1rem;
+    color: #090909;
     margin-bottom: 16px;
     text-transform: uppercase;
 }
 
 .modal-body h3 {
     font-size: 1.5rem;
-    font-weight: 700;
+    font-weight: 500;
     margin-bottom: 16px;
 }
 
@@ -959,70 +973,44 @@ h1, h2, h3, h4, h5, h6 {
     gap: 12px;
 }
 
-/* --- LE BOUTON LUXE & ÉLÉGANT --- */
+/* --- LE BOUTON --- */
 .btn-modal-link {
+    scale: 1.0;
     display: inline-flex;
     align-items: center;
     justify-content: center;
     width: 100%;
     min-height: 54px;
     padding: 14px 28px;
-    box-sizing: border-box;
-
-    /* Couleurs & Fond Premium */
-    background-color: #111111; /* Un noir profond et mat */
     color: #FFFFFF;
-    border: 1px solid rgba(255, 255, 255, 0.1); /* Fine bordure pour la structure */
-    border-radius: 16px; /* Arrondi moderne, pas trop "cartoon" */
-
-    /* Typographie Haute Couture */
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 30px;
     font-family: 'Outfit', sans-serif;
-    font-size: 15px;
-    font-weight: 600;
-    text-transform: uppercase; /* Donne un côté institutionnel/mode */
-    letter-spacing: 2px; /* On espace les lettres pour respirer */
+    font-size: 14px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 1px;
     text-decoration: none;
-
-    /* Ombre lissée (Multi-layered shadow) */
     box-shadow:
             0 4px 6px -1px rgba(0, 0, 0, 0.08),
             0 10px 15px -3px rgba(17, 17, 17, 0.12),
-            inset 0 1px 0 rgba(255, 255, 255, 0.2); /* Micro-lumière interne en haut */
-
-    /* Transition Cinématique (Cubic-Bezier) */
+            inset 0 1px 0 rgba(255, 255, 255, 0.2);
     transition:
             background-color 0.3s ease,
             transform 0.4s cubic-bezier(0.16, 1, 0.3, 1),
             box-shadow 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-
     cursor: pointer;
     -webkit-tap-highlight-color: transparent;
 }
 
-/* --- EFFET AU SURVOL (Desktop) --- */
-@media (hover: hover) {
-    .btn-modal-link:hover {
-        background-color: #1a1a1a;
-        transform: translateY(-3px); /* Le bouton s'élève légèrement */
-
-        /* L'ombre s'agrandit pour accentuer l'effet de lévitation */
-        box-shadow:
-                0 10px 20px -5px rgba(17, 17, 17, 0.15),
-                0 20px 25px -5px rgba(17, 17, 17, 0.1),
-                inset 0 1px 0 rgba(255, 255, 255, 0.3);
-    }
-}
-
-/* --- EFFET AU CLIC (Mobile & Desktop) --- */
 .btn-modal-link:active {
-    transform: translateY(0) scale(0.97); /* Effet mécanique de bouton physique */
+    transform: translateY(0) scale(0.97);
     box-shadow:
             0 2px 4px rgba(0, 0, 0, 0.1),
             inset 0 1px 0 rgba(255, 255, 255, 0.1);
     background-color: #000000;
 }
 
-/* --- LE PETIT PLUS ÉLÉGANT : La flèche discrète --- */
 .btn-modal-link::after {
     content: '→';
     margin-left: 10px;
@@ -1031,14 +1019,6 @@ h1, h2, h3, h4, h5, h6 {
     transform: translateX(0);
     transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
-
-@media (hover: hover) {
-    .btn-modal-link:hover::after {
-        transform: translateX(4px); /* La petite flèche glisse vers la droite au survol */
-    }
-}
-
-/* --- MODAL AVEC IMAGE (Style Maquette) --- */
 
 .modal-header-image {
     position: relative;
@@ -1069,12 +1049,12 @@ h1, h2, h3, h4, h5, h6 {
 
 .modal-body .badge {
     text-transform: uppercase;
-    font-weight: 800;
+    font-weight: 400;
     letter-spacing: 1px;
     margin-bottom: 12px;
 }
 
-/* --- 7. CARROUSEL DYNAMIQUE IMMERSIF (Activités) --- */
+/* --- 7. CARROUSEL DYNAMIQUE IMMERSIF --- */
 .carousel-section {
     position: relative;
     padding: 60px 0 60px 0;
@@ -1120,10 +1100,9 @@ h1, h2, h3, h4, h5, h6 {
     scrollbar-width: none;
     -ms-overflow-style: none;
     scroll-snap-type: x mandatory;
-    scroll-snap-align: center;
-    scroll-snap-stop: always;
-    overscroll-behavior-x: contain;
+    /* La ligne buggée a été supprimée ici pour le JS ! */
 }
+
 .carousel-container::-webkit-scrollbar {
     display: none;
 }
@@ -1141,20 +1120,23 @@ h1, h2, h3, h4, h5, h6 {
 
 .carousel-card-immersive {
     position: relative;
-    flex: 0 0 80%;
+    flex: 0 0 auto;
+    width: 80vw;
     max-width: 300px;
     height: 420px;
     border-radius: 28px;
     scroll-snap-align: center;
     overflow: hidden;
     box-shadow: 0 8px 24px rgba(0,0,0,0.2);
-    transform: scale(0.88);
     opacity: 0.4;
-    transition: transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.5s ease, box-shadow 0.5s ease;
+    transition: transform 0.6s cubic-bezier(0.25, 1, 0.5, 1), opacity 0.6s ease-in-out, box-shadow 0.6s ease;
+    -webkit-font-smoothing: antialiased; /* Lisse la police */
+    backface-visibility: hidden; /* Force l'accélération matérielle */
+    transform: translateZ(0) scale(0.85);
 }
 
 .carousel-card-immersive.is-active {
-    transform: scale(1);
+    transform: translateZ(0) scale(1);
     opacity: 1;
     box-shadow: 0 20px 40px rgba(0,0,0,0.4);
 }
@@ -1285,7 +1267,7 @@ h1, h2, h3, h4, h5, h6 {
     transition: all 0.4s ease;
 }
 
-/* --- PIED DE MODALE SOMBRE (Section Nettoyée et Unifiée) --- */
+/* --- PIED DE MODALE SOMBRE --- */
 .modal-body {
     display: flex;
     flex-direction: column;
@@ -1298,27 +1280,17 @@ h1, h2, h3, h4, h5, h6 {
     overflow-y: auto;
 }
 
-/* --- PIED DE MODALE SOMBRE (Effet Verre Dépoli Premium) --- */
 .modal-footer-wrapper {
     position: relative;
-    /* Fond sombre translucide */
     background: rgba(15, 15, 15, 0.85);
-
-    /* Effet de flou (Glassmorphism) sur ce qui passe derrière */
     backdrop-filter: blur(16px);
     -webkit-backdrop-filter: blur(16px);
-
-    padding: 24px 24px 32px 24px; /* Un peu plus de place en bas pour les téléphones */
+    padding: 24px 24px 32px 24px;
     margin-top: auto;
-
-    /* Fine ligne lumineuse de séparation en haut */
     border-top: 1px solid rgba(255, 255, 255, 0.08);
-
-    /* Ombre douce projetée vers le haut de la modale */
     box-shadow: 0 -15px 40px rgba(0, 0, 0, 0.2);
 }
 
-/* On s'assure que les flèches ressortent bien au-dessus du fond */
 .modal-footer-wrapper > * {
     position: relative;
     z-index: 2;
@@ -1330,7 +1302,6 @@ h1, h2, h3, h4, h5, h6 {
     align-items: center;
 }
 
-/* --- NAVIGATION MODALE (Boutons Ronds Typés Carrousel) --- */
 .modal-navigation {
     display: flex;
     align-items: center;
@@ -1358,9 +1329,7 @@ h1, h2, h3, h4, h5, h6 {
     opacity: 0.9;
 }
 
-/* Flèche Droite (Suivant) : Fond couleur thème, Chevron blanc forcé */
 .modal-arrow.next {
-
     background-color: var(--modal-theme-color, #333333) !important;
     color: #FAFAFA !important;
 }
@@ -1371,9 +1340,8 @@ h1, h2, h3, h4, h5, h6 {
     fill: none !important;
 }
 
-/* Flèche Gauche (Précédent) : Fond clair, Chevron couleur thème forcé */
 .modal-arrow.prev {
-    background-color: #FAFAFA !important;
+    background-color: rgba(44, 42, 38, 0.2);
     color: var(--modal-theme-color, #333333) !important;
 }
 
@@ -1383,13 +1351,12 @@ h1, h2, h3, h4, h5, h6 {
     fill: none !important;
 }
 
-/* Points de navigation (Dots) */
 .modal-dots {
-    padding-left:50px;
-    padding-right:50px;
+    padding-left: 24px;
+    padding-right: 24px;
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 10px;
 }
 
 .modal-dots .dot {
@@ -1397,47 +1364,32 @@ h1, h2, h3, h4, h5, h6 {
     width: 8px;
     height: 8px;
     border-radius: 50%;
-    background-color: rgba(255, 255, 255, 0.2); /* Inactif discret sur fond noir */
-    transition: background-color 0.3s ease;
+    background-color: rgba(44, 42, 38, 0.2);
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .modal-dots .dot.active {
-    background-color: var(--modal-theme-color, #ffffff) !important;
+    background-color: var(--modal-theme-color, #FFFFFF) !important;
+    transform: scale(1.4);
 }
 
-/* --- PIED DE MODALE ACTIVITÉS SOMBRE (Effet Verre Dépoli Premium) --- */
-
-/* On force l'application UNIQUEMENT dans la modale d'activité */
 .modal-bottom-sheet .modal-footer-wrapper {
     position: relative;
-    background: rgba(15, 15, 15, 0.85); /* Fond sombre translucide */
+    background: rgb(250 248 245);
     backdrop-filter: blur(16px);
     -webkit-backdrop-filter: blur(16px);
     padding: 24px 24px 32px 24px;
     margin-top: auto;
-    border-top: 1px solid rgba(255, 255, 255, 0.08); /* Ligne lumineuse */
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
     box-shadow: 0 -15px 40px rgba(0, 0, 0, 0.2);
 }
 
-/* Le halo de couleur dynamique (vert, jaune, bleu ou violet) */
-.modal-bottom-sheet .modal-footer-wrapper::before {
-    content: '';
-    position: absolute;
-    top: 0; left: 0; right: 0;
-    height: 1px;
-    background: var(--modal-theme-color, transparent);
-    box-shadow: 0 0 15px var(--modal-theme-color, transparent);
-    opacity: 0.5;
-}
-
-/* Pour que les flèches ressortent bien par-dessus le fond flouté */
 .modal-bottom-sheet .modal-footer-wrapper > * {
     position: relative;
     z-index: 2;
 }
 
 /* --- 8. ARCHITECTURE DU MENU BURGER --- */
-
 .menu-full-screen {
     position: fixed;
     top: 0;
@@ -1459,6 +1411,7 @@ h1, h2, h3, h4, h5, h6 {
 .menu-full-screen.is-open {
     opacity: 1;
     pointer-events: auto;
+    transform: translateY(0) scale(1);
 }
 
 .menu-inner {
@@ -1474,12 +1427,6 @@ h1, h2, h3, h4, h5, h6 {
     justify-content: space-between;
     align-items: flex-start;
     margin-bottom: 40px;
-}
-
-.menu-full-screen.is-open {
-    opacity: 1;
-    pointer-events: auto;
-    transform: translateY(0) scale(1);
 }
 
 .menu-full-screen .menu-header,
@@ -1639,13 +1586,373 @@ h1, h2, h3, h4, h5, h6 {
     opacity: 0.8;
 }
 
-/* --- 9. RESPONSIVE TABLETTE & DESKTOP (Écrans >= 768px) --- */
+/* ==========================================================================
+   TRANSITIONS FLUIDES ENTRE MODALES
+   ========================================================================== */
+.modal-bottom-sheet[class*="is-switching-"] .modal-overlay-close {
+    opacity: 1 !important;
+    visibility: visible !important;
+}
+
+.modal-bottom-sheet[class*="is-switching-"] .modal-content {
+    transition: none !important;
+}
+
+/* Animations de transition lissées */
+.modal-bottom-sheet.is-switching-out .modal-content {
+    animation: slideOutLeft 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+.modal-bottom-sheet.is-switching-in .modal-content {
+    animation: slideInRight 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+.modal-bottom-sheet.is-switching-out-reverse .modal-content {
+    animation: slideOutRight 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+.modal-bottom-sheet.is-switching-in-reverse .modal-content {
+    animation: slideInLeft 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes slideOutLeft {
+    0%   { transform: translateX(0) scale(1); opacity: 1; }
+    100% { transform: translateX(-30%) scale(0.95); opacity: 0; }
+}
+@keyframes slideInRight {
+    0%   { transform: translateX(100%); opacity: 0; }
+    100% { transform: translateX(0); opacity: 1; }
+}
+@keyframes slideOutRight {
+    0%   { transform: translateX(0) scale(1); opacity: 1; }
+    100% { transform: translateX(30%) scale(0.95); opacity: 0; }
+}
+@keyframes slideInLeft {
+    0%   { transform: translateX(-100%); opacity: 0; }
+    100% { transform: translateX(0); opacity: 1; }
+}
+
+/* ==========================================================================
+   FOOTER DU SITE
+   ========================================================================== */
+.site-footer {
+    background-color: #F4F1EA;
+    border-top: 1px solid rgba(44, 42, 38, 0.08);
+    padding: 40px 24px 24px 24px;
+    margin-top: auto;
+}
+
+.footer-container {
+    max-width: 1000px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 32px;
+}
+
+.footer-top-row {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 24px;
+}
+
+.footer-logo {
+    display: flex;
+    justify-content: center;
+    width: 100%;
+}
+
+.footer-logo img {
+    max-width: 160px;
+    height: auto;
+    display: block;
+    transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.footer-logo img:hover {
+    opacity: 1;
+    transform: translateY(-3px);
+}
+
+.footer-nav {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+}
+
+.footer-link {
+    font-family: 'Outfit', sans-serif;
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: #2C2A26;
+    text-decoration: none;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    transition: color 0.3s ease, opacity 0.3s ease;
+}
+
+.footer-link:hover {
+    opacity: 0.6;
+}
+
+.footer-bottom-row {
+    border-top: 1px solid rgba(44, 42, 38, 0.1);
+    padding-top: 24px;
+    text-align: center;
+}
+
+.footer-copyright {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.85rem;
+    color: rgba(44, 42, 38, 0.6);
+    margin: 0;
+}
+
+/* --- EN-TÊTE ET LOGO --- */
+.site-header {
+    position: absolute;
+    top: 20px;
+    left: 24px;
+    z-index: 100;
+}
+
+.site-branding img {
+    max-width: 120px;
+    height: auto;
+    display: block;
+}
+
+/* ==========================================================================
+   PAGES LÉGALES (Mentions & Confidentialité)
+   ========================================================================== */
+.legal-page-wrapper {
+    background-color: #F4F1EA;
+    padding: 170px 16px 20px 16px;
+    min-height: calc(100vh - 250px);
+}
+
+.legal-container {
+    max-width: 800px;
+    margin: 0 auto;
+    background-color: #FFFFFF;
+    padding: 30px 20px;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(44, 42, 38, 0.04);
+}
+
+.legal-back {
+    margin-bottom: 30px;
+    text-align: center;
+}
+
+.btn-retour {
+    display: inline-block;
+    padding: 10px 24px;
+    color: #2C2A26;
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 500;
+    border: 1px solid rgba(44, 42, 38, 0.15);
+    border-radius: 50px;
+    transition: all 0.3s ease;
+}
+
+.btn-retour:hover {
+    background-color: #2C2A26;
+    color: #FFFFFF;
+    transform: translateX(-4px);
+}
+
+.legal-title {
+    font-size: 26px;
+    color: #2C2A26;
+    margin-bottom: 32px;
+    line-height: 1.2;
+    font-weight: 600;
+}
+
+.legal-content {
+    color: #4A4742;
+    font-size: 15px;
+    line-height: 1.6;
+}
+
+.legal-content p {
+    margin-bottom: 20px;
+}
+
+.legal-content h2 {
+    font-size: 20px;
+    color: #2C2A26;
+    margin-top: 35px;
+    margin-bottom: 16px;
+    font-weight: 600;
+}
+
+.legal-content ul,
+.legal-content ol {
+    margin-bottom: 20px;
+    padding-left: 20px;
+}
+
+.legal-content li {
+    margin-bottom: 8px;
+}
+
+.legal-content a {
+    color: #2C2A26;
+    text-decoration: underline;
+    font-weight: 500;
+}
+
+/* ==========================================================================
+   MEDIA QUERIES - TABLETTE & DESKTOP (Écrans >= 768px + États Hover)
+   ========================================================================== */
+
+@media (hover: hover) {
+    .btn-modal-link:hover {
+        transform: translateY(-3px);
+        box-shadow:
+                0 10px 20px -5px rgba(17, 17, 17, 0.15),
+                0 20px 25px -5px rgba(17, 17, 17, 0.1),
+                inset 0 1px 0 rgba(255, 255, 255, 0.3);
+    }
+
+    .btn-modal-link:hover::after {
+        transform: translateX(4px);
+    }
+
+    .carousel-card-immersive {
+        transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.4s ease !important;
+    }
+
+    .carousel-card-immersive:hover {
+        transform: translateY(-12px) scale(1.02) !important;
+        box-shadow: 0 25px 50px rgba(0,0,0,0.4) !important;
+        z-index: 10;
+    }
+}
+
 @media screen and (min-width: 768px) {
+
     .carte-header,
     .carousel-header {
         text-align: center;
         max-width: 800px;
         margin: 0 auto 40px auto;
+    }
+
+    .hero-content h1 {
+        font-size: 4rem;
+        max-width: 900px;
+        margin: 0 auto 24px auto;
+    }
+
+    .hero-content p {
+        font-size: 1.3rem;
+        max-width: 600px;
+        margin: 0 auto;
+    }
+
+    .pin-label {
+        font-size: 0.75rem;
+        padding: 5px 12px;
+        letter-spacing: 1px;
+    }
+
+    .pin-button {
+        width: 50px;
+        height: 50px;
+        animation: pulseRadarDesktop 2.5s infinite cubic-bezier(0.25, 0.8, 0.25, 1);
+    }
+
+    .pin-dot {
+        width: 20px;
+        height: 20px;
+        border: 3px solid #FFFFFF;
+    }
+
+    .carte-container {
+        display: flex;
+        justify-content: center;
+        padding: 0 24px;
+        overflow-x: hidden;
+    }
+
+    .carte-scroll-pan {
+        width: 100%;
+        max-width: 2400px;
+        min-width: unset;
+        box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+    }
+
+    .carte-footer-text {
+        display: none;
+    }
+
+    .modal-bottom-sheet {
+        justify-content: center !important;
+        align-items: center;
+        padding: 40px;
+    }
+
+    .modal-content {
+        display: flex;
+        flex-direction: row;
+        max-width: 900px;
+        height: 600px;
+        max-height: 85vh;
+        border-radius: 24px !important;
+        overflow: hidden;
+
+        /* Transition douce pour desktop */
+        transform: scale(0.95);
+        opacity: 0;
+        transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.4s ease;
+    }
+
+    .modal-bottom-sheet.is-open .modal-content {
+        transform: scale(1);
+        opacity: 1;
+    }
+
+    .modal-header-image {
+        width: 45%;
+        height: 100%;
+        min-height: unset;
+    }
+
+    .modal-header-image img {
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .modal-body {
+        width: 55%;
+        height: 100%;
+        position: relative;
+    }
+
+    .modal-close-btn {
+        top: 20px;
+        right: 20px;
+        background-color: #FAFAFA;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+    }
+
+    .modal-bottom-sheet.is-switching-out .modal-content {
+        transform: translateX(-50px) scale(0.95) !important;
+    }
+
+    .modal-bottom-sheet.is-switching-in .modal-content {
+        animation: slideInLateralDesktop 0.5s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+    }
+
+    .modal-bottom-sheet.is-switching-out-reverse .modal-content {
+        transform: translateX(50px) scale(0.95) !important;
+    }
+
+    .modal-bottom-sheet.is-switching-in-reverse .modal-content {
+        animation: slideInLateralDesktopReverse 0.5s cubic-bezier(0.25, 1, 0.5, 1) forwards;
     }
 
     .carousel-container {
@@ -1679,153 +1986,61 @@ h1, h2, h3, h4, h5, h6 {
     .carousel-navigation {
         display: none;
     }
-}
 
-@media (hover: hover) {
-    .carousel-card-immersive {
-        transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.4s ease !important;
-    }
-
-    .carousel-card-immersive:hover {
-        transform: translateY(-12px) scale(1.02) !important;
-        box-shadow: 0 25px 50px rgba(0,0,0,0.4) !important;
-        z-index: 10;
-    }
-}
-
-/* --- TRANSITIONS FLUIDES ENTRE MODALES --- */
-
-/* 1. Force le fond noir à rester visible pendant le changement */
-.modal-bottom-sheet.is-switching-out .modal-overlay-close {
-    opacity: 1 !important;
-    visibility: visible !important;
-}
-
-/* 2. L'ancienne modale glisse vers la gauche en s'effaçant */
-.modal-bottom-sheet.is-switching-out .modal-content {
-    transform: translateX(-50px) !important;
-    opacity: 0 !important;
-    transition: transform 0.3s ease, opacity 0.3s ease;
-}
-
-/* 3. La nouvelle modale arrive par la droite (Effet iOS) */
-.modal-bottom-sheet.is-switching-in .modal-content {
-    transform: translateX(50px);
-    opacity: 0;
-    animation: slideInLateral 0.4s cubic-bezier(0.25, 1, 0.5, 1) forwards;
-}
-
-@keyframes slideInLateral {
-    to {
-        transform: translateX(0);
-        opacity: 1;
-    }
-}
-
-/* ==========================================================================
-   9. RESPONSIVE TABLETTE & DESKTOP (Écrans >= 768px)
-   ========================================================================== */
-
-@media screen and (min-width: 768px) {
-
-    /* --- EN-TÊTES & ALIGNEMENTS --- */
-    .carte-header,
-    .carousel-header {
-        text-align: center;
-        max-width: 800px;
-        margin: 0 auto 40px auto;
-    }
-
-    /* --- 1. SECTION HERO (Plus impactant sur Desktop) --- */
-    .hero-content h1 {
-        font-size: 4rem; /* Un titre beaucoup plus grand pour remplir l'écran */
+    .menu-inner {
         max-width: 900px;
-        margin: 0 auto 24px auto;
+        justify-content: center;
     }
 
-    .hero-content p {
-        font-size: 1.3rem;
-        max-width: 600px;
-        margin: 0 auto;
+    .menu-activities-list {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 24px;
+        flex-grow: 0;
     }
 
-    /* Effet lévitation au survol sur Desktop */
-    @media (hover: hover) {
-        .carousel-card-immersive {
-            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.4s ease !important;
-        }
-
-        .carousel-card-immersive:hover {
-            transform: translateY(-12px) scale(1.02) !important;
-            box-shadow: 0 25px 50px rgba(0,0,0,0.4) !important;
-            z-index: 10;
-        }
+    .menu-activity-item {
+        padding: 20px 24px;
     }
 
-    /* --- 3. MODALES ACTIVITÉS (Image à gauche, texte à droite) --- */
-
-    /* Le fond de la modale centre le contenu au lieu de le coller en bas */
-    .modal-bottom-sheet {
-        justify-content: center !important;
-        align-items: center;
-        padding: 40px;
+    .site-header {
+        top: 40px;
+        left: 40px;
     }
 
-    /* La boîte de la modale s'élargit et se coupe en deux */
-    .modal-content {
-        display: flex;
-        flex-direction: row; /* Magie : image à gauche, contenu à droite */
-        max-width: 900px; /* Beaucoup plus large qu'en mobile */
-        height: 600px; /* Fixe la hauteur pour un rendu "carte" */
-        max-height: 85vh;
-        border-radius: 24px !important;
-        overflow: hidden;
-
-        /* On change l'animation d'arrivée (Pop au lieu de glisser du bas) */
-        transform: scale(0.95);
-        opacity: 0;
-        transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.4s ease;
+    .site-branding img {
+        max-width: 180px;
     }
 
-    .modal-bottom-sheet.is-open .modal-content {
-        transform: scale(1);
-        opacity: 1;
+    .legal-page-wrapper {
+        padding: 300px 24px 80px 24px;
+        min-height: calc(100vh - 200px);
     }
 
-    /* Moitié Gauche : L'image */
-    .modal-header-image {
-        width: 45%;
-        height: 100%;
-        min-height: unset;
+    .legal-container {
+        padding: 50px 60px;
     }
 
-    .modal-header-image img {
-        height: 100%;
-        object-fit: cover;
+    .legal-title {
+        font-size: 36px;
+        margin-bottom: 40px;
     }
 
-    /* Moitié Droite : Le contenu et les boutons */
-    .modal-body {
-        width: 55%;
-        height: 100%;
-        position: relative; /* Pour garder le footer accroché en bas */
+    .legal-content {
+        font-size: 16px;
     }
 
-    /* La croix pour fermer : on la place DANS la zone de contenu (à droite) */
-    .modal-close-btn {
-        top: 20px;
-        right: 20px;
-        background-color: #FAFAFA;
-        box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+    .legal-content h2 {
+        font-size: 24px;
     }
+}
 
-    /* Les animations latérales (Swipe entre modales) pour Desktop */
-    .modal-bottom-sheet.is-switching-out .modal-content {
-        transform: translateX(-50px) scale(0.95) !important;
-    }
-
-    .modal-bottom-sheet.is-switching-in .modal-content {
-        animation: slideInLateralDesktop 0.4s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+/* --- KEYFRAMES ANIMATIONS DESKTOP --- */
+@media screen and (min-width: 768px) {
+    @keyframes pulseRadarDesktop {
+        0% { box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.7); }
+        70% { box-shadow: 0 0 0 25px rgba(255, 255, 255, 0); }
+        100% { box-shadow: 0 0 0 0 rgba(255, 255, 255, 0); }
     }
 
     @keyframes slideInLateralDesktop {
@@ -1833,21 +2048,8 @@ h1, h2, h3, h4, h5, h6 {
         to { transform: translateX(0) scale(1); opacity: 1; }
     }
 
-    /* --- 4. MENU BURGER FULL SCREEN (Grille sur Desktop) --- */
-    .menu-inner {
-        max-width: 900px; /* On l'élargit */
-        justify-content: center;
-    }
-
-    .menu-activities-list {
-        display: grid;
-        grid-template-columns: 1fr 1fr; /* 2 colonnes au lieu d'une liste */
-        gap: 24px;
-        flex-grow: 0;
-    }
-
-    .menu-activity-item {
-        padding: 20px 24px; /* Un peu plus aéré */
+    @keyframes slideInLateralDesktopReverse {
+        from { transform: translateX(-50px) scale(0.95); opacity: 0; }
+        to { transform: translateX(0) scale(1); opacity: 1; }
     }
 }
-

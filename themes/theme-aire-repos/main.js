@@ -22,7 +22,6 @@
         }
 
         // --- 3. GESTIONNAIRE D'ÉTAT DES MODALES ---
-        // Ajout du paramètre "direction" (par défaut sur "next")
         const openModal = (modalId, direction = 'next') => {
             const targetModal = document.getElementById(modalId);
             if (!targetModal) return;
@@ -57,21 +56,37 @@
                 currentOpenModal = targetModal;
             }
 
-            // --- MISE À JOUR DU SCROLL ET DES COULEURS (Pour la nouvelle modale) ---
-            const modalContentArea = targetModal.querySelector('.modal-content');
-            if (modalContentArea) {
-                modalContentArea.scrollTop = 0;
-            }
+            /* Réinitialisation du défilement de l'en-tête et de la zone textuelle */
+            const mainContent = targetModal.querySelector('.modal-content');
+            if (mainContent) mainContent.scrollTop = 0;
 
+            const contentArea = targetModal.querySelector('.modal-content-area');
+            if (contentArea) contentArea.scrollTop = 0;
+
+            /* Récupération de la couleur thématique par ID ou par attribut data-target */
             const cardId = modalId.replace('modal-', 'card-');
-            const relatedCard = document.getElementById(cardId);
+            let relatedCard = document.getElementById(cardId);
+
+            if (!relatedCard) {
+                relatedCard = document.querySelector(`.carousel-card-immersive[data-target="${modalId}"]`);
+            }
 
             if (relatedCard) {
                 const themeColor = relatedCard.getAttribute('data-color');
                 if (themeColor) {
+                    /* Application de la variable CSS au niveau global du document et local de la modale */
+                    document.documentElement.style.setProperty('--modal-theme-color', themeColor);
                     targetModal.style.setProperty('--modal-theme-color', themeColor);
-                    const arrows = targetModal.querySelectorAll('.modal-arrow');
+
+                    /* Coloration de toutes les flèches de navigation via leurs classes fonctionnelles */
+                    const arrows = document.querySelectorAll('.js-modal-nav, .modal-arrow');
                     arrows.forEach(arrow => arrow.style.color = themeColor);
+
+                    /* Application de la couleur uniquement sur le bouton d'action principal */
+                    const actionBtn = targetModal.querySelector('.btn-cta-decouvrir');
+                    if (actionBtn) {
+                        actionBtn.style.backgroundColor = themeColor;
+                    }
                 }
             }
         };
@@ -88,7 +103,6 @@
         document.body.addEventListener('click', (e) => {
 
             // A. Ouvrir une modale (via un bouton contenant data-target)
-            // On vérifie que ce n'est PAS un bouton de navigation interne à la modale
             const openBtn = e.target.closest('[data-target]');
             if (openBtn && !e.target.closest('.js-modal-nav')) {
                 const targetId = openBtn.getAttribute('data-target');
@@ -100,7 +114,6 @@
             const navBtn = e.target.closest('.js-modal-nav');
             if (navBtn) {
                 const nextModalId = navBtn.getAttribute('data-target');
-                // Détecte si on a cliqué sur la flèche de gauche (.prev) ou droite
                 const direction = navBtn.classList.contains('prev') ? 'prev' : 'next';
 
                 if (document.getElementById(nextModalId)) {
@@ -131,13 +144,60 @@
                 return;
             }
 
-            // E. Navigation Carrousel Desktop
-            if (e.target.closest('.carousel-arrow.prev') || e.target.closest('.js-car-prev')) {
-                if(carouselContainer) carouselContainer.scrollBy({ left: -320, behavior: 'smooth' });
-                return;
-            }
-            if (e.target.closest('.carousel-arrow.next') || e.target.closest('.js-car-next')) {
-                if(carouselContainer) carouselContainer.scrollBy({ left: 320, behavior: 'smooth' });
+            // E. Navigation Carrousel Mobile & Desktop (LE CORRECTIF ULTIME ANTI-SAUT)
+            const btnPrev = e.target.closest('.carousel-arrow.prev') || e.target.closest('.js-car-prev');
+            const btnNext = e.target.closest('.carousel-arrow.next') || e.target.closest('.js-car-next');
+
+            if (btnPrev || btnNext) {
+                e.preventDefault();
+
+                if (carouselContainer) {
+                    // Verrou anti-spam (empêche les doubles clics accidentels)
+                    if (carouselContainer.dataset.isLocked === 'true') return;
+                    carouselContainer.dataset.isLocked = 'true';
+
+                    // Calcul mathématique de la carte centrale
+                    const cardsArray = Array.from(carouselContainer.querySelectorAll('.carousel-card-immersive'));
+                    const containerCenter = carouselContainer.scrollLeft + (carouselContainer.offsetWidth / 2);
+
+                    let currentIndex = 0;
+                    let minDistance = Infinity;
+
+                    cardsArray.forEach((card, index) => {
+                        const cardCenter = card.offsetLeft + (card.offsetWidth / 2);
+                        const distance = Math.abs(cardCenter - containerCenter);
+                        if (distance < minDistance) {
+                            minDistance = distance;
+                            currentIndex = index;
+                        }
+                    });
+
+                    // Cible
+                    let targetIndex = currentIndex;
+                    if (btnNext && currentIndex < cardsArray.length - 1) {
+                        targetIndex++;
+                    } else if (btnPrev && currentIndex > 0) {
+                        targetIndex--;
+                    }
+
+                    if (targetIndex !== currentIndex) {
+                        const targetCard = cardsArray[targetIndex];
+                        const scrollPos = targetCard.offsetLeft - (carouselContainer.offsetWidth / 2) + (targetCard.offsetWidth / 2);
+
+                        // Désactivation temporaire de l'aimant CSS pour éviter la "catapulte"
+                        carouselContainer.style.scrollSnapType = 'none';
+                        carouselContainer.scrollTo({ left: scrollPos, behavior: 'smooth' });
+
+                        // Réactivation de l'aimant après le défilement (500ms)
+                        setTimeout(() => {
+                            carouselContainer.style.scrollSnapType = 'x mandatory';
+                            carouselContainer.dataset.isLocked = 'false';
+                        }, 500);
+                    } else {
+                        // Si on est à la fin, on déverrouille direct
+                        carouselContainer.dataset.isLocked = 'false';
+                    }
+                }
                 return;
             }
 
@@ -158,6 +218,22 @@
             const dots = document.querySelectorAll('.carousel-dots .dot');
             const wrapper = carouselContainer.closest('.carousel-content-wrapper');
 
+            const firstCard = cards[0];
+            const initialBg = firstCard.getAttribute('data-bg');
+            const initialColor = firstCard.getAttribute('data-color');
+
+            if (initialBg) blurBg.style.backgroundImage = `url('${initialBg}')`;
+            if (wrapper && initialColor) wrapper.style.setProperty('--nav-active-color', initialColor);
+
+            firstCard.classList.add('is-active');
+            if (dots.length > 0) dots[0].classList.add('active');
+
+            const observerOptions = {
+                root: carouselContainer,
+                rootMargin: '0px -40% 0px -40%',
+                threshold: 0
+            };
+
             const observer = new IntersectionObserver((entries) => {
                 entries.forEach(entry => {
                     if (entry.isIntersecting) {
@@ -177,7 +253,7 @@
                         entry.target.classList.remove('is-active');
                     }
                 });
-            }, { root: carouselContainer, threshold: 0.5 });
+            }, observerOptions);
 
             cards.forEach(card => observer.observe(card));
         }
