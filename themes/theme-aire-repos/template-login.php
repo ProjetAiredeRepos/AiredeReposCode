@@ -3,50 +3,85 @@
  * Template Name: Cyclo-Data Login
  */
 
-// Si l'utilisateur est déjà connecté, on le redirige vers le dashboard
+$login_error = '';
+$require_password_change = false;
+
+// 1. Vérification si l'utilisateur est déjà connecté
 if ( is_user_logged_in() ) {
-    wp_redirect( home_url('/dashboard/') );
-    exit;
+    // A-t-il l'obligation de changer son mot de passe ?
+    $force_change = get_user_meta(get_current_user_id(), '_cyclo_force_pwd_change', true);
+    if ( $force_change === '1' ) {
+        $require_password_change = true;
+    } else {
+        wp_redirect( home_url('/dashboard/') );
+        exit;
+    }
 }
 
-// Gestion de la soumission du formulaire
-$login_error = '';
-if ( $_SERVER['REQUEST_METHOD'] === 'POST' && isset( $_POST['cyclo_login_nonce'] ) ) {
-    // 1. Protection CSRF (Cross-Site Request Forgery)
-    if ( wp_verify_nonce( $_POST['cyclo_login_nonce'], 'cyclo_login_action' ) ) {
+// 2. Gestion de la soumission des formulaires
+if ( $_SERVER['REQUEST_METHOD'] === 'POST' ) {
 
-        // 2. Nettoyage et Validation (OWASP)
+    // CAS A : Soumission du NOUVEAU mot de passe (Changement forcé)
+    if ( isset($_POST['cyclo_new_password_nonce']) && wp_verify_nonce($_POST['cyclo_new_password_nonce'], 'cyclo_new_pwd_action') ) {
+        $user_id = get_current_user_id();
+        $new_pwd = $_POST['new_pwd'];
+        $confirm_pwd = $_POST['confirm_pwd'];
+
+        if ( $new_pwd !== $confirm_pwd ) {
+            $login_error = "Les mots de passe ne correspondent pas.";
+            $require_password_change = true; // On maintient le formulaire affiché
+        } elseif ( strlen($new_pwd) < 8 ) {
+            $login_error = "Le mot de passe doit contenir au moins 8 caractères.";
+            $require_password_change = true;
+        } else {
+            // Modification du mot de passe
+            wp_set_password( $new_pwd, $user_id );
+            // On supprime le marqueur de changement obligatoire
+            delete_user_meta( $user_id, '_cyclo_force_pwd_change' );
+
+            // On reconnecte l'utilisateur sans qu'il ait besoin de se reloguer
+            wp_clear_auth_cookie();
+            wp_set_current_user( $user_id );
+            wp_set_auth_cookie( $user_id );
+
+            wp_safe_redirect(home_url('/dashboard/'));
+            exit;
+        }
+    }
+
+    // CAS B : Connexion classique
+    elseif ( isset( $_POST['cyclo_login_nonce'] ) && wp_verify_nonce( $_POST['cyclo_login_nonce'], 'cyclo_login_action' ) ) {
         $raw_email = isset($_POST['log']) ? trim($_POST['log']) : '';
         $password = isset($_POST['pwd']) ? $_POST['pwd'] : '';
 
-        // REGEX stricte pour la validation de l'email
-        $email_pattern = '/^[a-zA-Z0-9._%+-]+@[a-z-A-Z0-9.-]+\.[a-zA-Z]{2,}$/';
+        // Validation OWASP
+        $email_pattern = '/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/';
 
         if (empty($raw_email) || empty($password)) {
             $login_error = "Veuillez remplir tous les champs.";
         } elseif (!preg_match($email_pattern, $raw_email)) {
             $login_error = "Le format de l'adresse e-mail est invalide.";
         } else {
-            // L'email est validé par le Regex, on le sécurise pour WordPress
-            $safe_email = sanitize_email($raw_email);
-
             $creds = array(
-                    'user_login' => $safe_email,
-                'user_password' => $password,
-                'remember' => isset($_POST['rememberme'])
+                    'user_login'    => sanitize_email($raw_email),
+                    'user_password' => $password,
+                    'remember'      => isset($_POST['rememberme'])
             );
 
-            // 3. Authentification
+            // Authentification
             $user = wp_signon($creds, false);
 
             if (is_wp_error($user)) {
-                // Délai artificiel pour ralentir les attaques par force brute (Timing Attack Mitigation)
-                sleep(1);
-                // Message d'erreur générique pour ne pas révéler si l'email existe ou non (OWASP)
-                $login_error = "Identifiants incorrects. Veuillez réesayer.";
+                sleep(1); // Brute Force Mitigation
+                $login_error = "Identifiants incorrects. Veuillez réessayer.";
             } else {
-                wp_safe_redirect(home_url('/dashboard/'));
-                exit;
+                // Succès de connexion ! On vérifie s'il doit changer son mot de passe
+                if ( get_user_meta($user->ID, '_cyclo_force_pwd_change', true) === '1' ) {
+                    $require_password_change = true; // Déclenche l'affichage du second formulaire
+                } else {
+                    wp_safe_redirect(home_url('/dashboard/'));
+                    exit;
+                }
             }
         }
     } else {
@@ -54,13 +89,11 @@ if ( $_SERVER['REQUEST_METHOD'] === 'POST' && isset( $_POST['cyclo_login_nonce']
     }
 }
 
-// Données dynamiques pour l'affichage
 $site_name = get_bloginfo('name') ?: 'Cyclo-Data 41';
 $site_desc = get_bloginfo('description') ?: "Plateforme d'administration des statistiques d'usage.";
-// Récupère l'image mise en avant de la page, sinon image par défaut
 $bg_image_url = get_the_post_thumbnail_url(get_the_ID(), 'full') ?: get_template_directory_uri() . '/assets/images/loire-cover.jpg';
 
-get_header('dashboard');  // On utilise un header allégé
+get_header('dashboard');
 ?>
 
 <div class="cyclo-login-layout">
@@ -76,33 +109,61 @@ get_header('dashboard');  // On utilise un header allégé
 
     <div class="login-form-container">
         <div class="login-form-inner">
-            <div class="login-header">
-                <h2>Heureux de vous retrouver !</h2>
-                <p>Connectez-vous pour accéder à votre espace.</p>
-            </div>
 
             <?php if ( $login_error ) : ?>
                 <div class="login-alert error"><?php echo esc_html( $login_error ); ?></div>
             <?php endif; ?>
 
-            <form method="post" action="" class="cyclo-form">
-                <?php wp_nonce_field( 'cyclo_login_action', 'cyclo_login_nonce' ); ?>
-
-                <div class="form-group">
-                    <label for="user_login">Adresse e-mail</label>
-                    <input type="email" name="log" id="user_login" required autocomplete="email" placeholder="admin@example.com">
+            <?php if ( $require_password_change ) : ?>
+                <div class="login-header">
+                    <h2>Sécurisation de votre compte</h2>
+                    <p>Pour des raisons de sécurité, vous devez définir un nouveau mot de passe personnel avant d'accéder au tableau de bord.</p>
                 </div>
 
-                <div class="form-group">
-                    <label for="user_pass">Mot de passe</label>
-                    <input type="password" name="pwd" id="user_pass" required autocomplete="current-password" placeholder="Votre mot de passe">
+                <form method="post" action="" class="cyclo-form">
+                    <?php wp_nonce_field( 'cyclo_new_pwd_action', 'cyclo_new_password_nonce' ); ?>
+
+                    <div class="form-group">
+                        <label for="new_pwd">Nouveau mot de passe</label>
+                        <input type="password" name="new_pwd" id="new_pwd" required placeholder="8 caractères minimum">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="confirm_pwd">Confirmer le mot de passe</label>
+                        <input type="password" name="confirm_pwd" id="confirm_pwd" required placeholder="Confirmez votre saisie">
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="submit" class="btn-primary-login">Mettre à jour et accéder</button>
+                    </div>
+                </form>
+
+            <?php else : ?>
+                <div class="login-header">
+                    <h2>Heureux de vous retrouver !</h2>
+                    <p>Connectez-vous pour accéder à votre espace.</p>
                 </div>
 
-                <div class="form-actions">
-                    <button type="submit" class="btn-primary-login">Connexion</button>
-                    <a href="<?php echo esc_url(wp_lostpassword_url()); ?>" class="link-forgot">Mot de passe oublié ?</a>
-                </div>
-            </form>
+                <form method="post" action="" class="cyclo-form">
+                    <?php wp_nonce_field( 'cyclo_login_action', 'cyclo_login_nonce' ); ?>
+
+                    <div class="form-group">
+                        <label for="user_login">Adresse e-mail</label>
+                        <input type="email" name="log" id="user_login" required autocomplete="email" placeholder="admin@example.com">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="user_pass">Mot de passe</label>
+                        <input type="password" name="pwd" id="user_pass" required autocomplete="current-password" placeholder="Votre mot de passe">
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="submit" class="btn-primary-login">Connexion</button>
+                        <a href="<?php echo esc_url(wp_lostpassword_url()); ?>" class="link-forgot">Mot de passe oublié ?</a>
+                    </div>
+                </form>
+            <?php endif; ?>
+
         </div>
     </div>
 </div>
