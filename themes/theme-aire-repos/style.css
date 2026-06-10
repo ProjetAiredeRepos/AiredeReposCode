@@ -492,6 +492,49 @@ textarea[name="q5_suggestions"]:focus {
     display: block;
 }
 
+/* ==========================================================================
+   DASHBOARD : LISTE UTILISATEURS
+   ========================================================================== */
+.user-row {
+    display: flex;
+    align-items: center;
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid var(--dash-border);
+    transition: background 0.2s;
+}
+.user-row:last-child { border-bottom: none; }
+.user-row:hover { background: #F8FAFC; }
+
+.u-avatar {
+    width: 40px; height: 40px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    color: white; font-weight: bold; font-size: 0.9rem;
+    margin-right: 1rem;
+}
+.u-info { flex-grow: 1; }
+.u-info strong { display: block; font-size: 0.95rem; color: var(--dash-text-main); }
+.u-info span { font-size: 0.85rem; color: var(--dash-text-muted); }
+
+.u-role { width: 150px; }
+.u-date { width: 150px; font-size: 0.85rem; color: var(--dash-text-muted); text-align: right;}
+
+/* Badges & Couleurs */
+.bg-yellow { background: #ECC94B; }
+.bg-purple { background: #9F7AEA; }
+.bg-blue { background: #4299E1; }
+
+.badge { padding: 4px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 700; display: inline-block;}
+.badge-yellow { background: #FEFCBF; color: #B7791F; }
+.badge-purple { background: #E9D8FD; color: #6B46C1; }
+.badge-blue { background: #BEE3F8; color: #2B6CB0; }
+
+@media (max-width: 768px) {
+    .user-row { flex-wrap: wrap; gap: 10px; }
+    .u-info { width: calc(100% - 60px); }
+    .u-role, .u-date { width: 50%; text-align: left; padding-left: 56px; }
+}
+
 @media (max-width: 1024px) {
     /* 1. On libère le layout pour éviter que le overflow cache le menu */
     .cyclo-app-layout {

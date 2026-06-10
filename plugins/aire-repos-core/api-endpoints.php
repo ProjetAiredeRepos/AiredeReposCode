@@ -21,6 +21,8 @@ function cyclo_register_all_endpoints() {
     register_rest_route( 'cyclo-data/v1', '/discovery-overview', array( 'methods' => 'GET', 'callback' => 'cyclo_get_discovery_overview', 'permission_callback' => $dashboard_auth ) );
     register_rest_route( 'cyclo-data/v1', '/survey-overview', array( 'methods' => 'GET', 'callback' => 'cyclo_get_survey_overview', 'permission_callback' => $dashboard_auth ) );
     register_rest_route( 'cyclo-data/v1', '/export-csv', array( 'methods' => 'GET', 'callback' => 'cyclo_export_csv_data', 'permission_callback' => $dashboard_auth ) );
+    // Route pour récupérer les utilisateurs
+    register_rest_route( 'cyclo-data/v1', '/users', array( 'methods' => 'GET', 'callback' => 'cyclo_get_users_list', 'permission_callback' => $dashboard_auth ) );
 }
 
 // =========================================================================
@@ -219,4 +221,50 @@ function cyclo_export_csv_data( WP_REST_Request $request ) {
         }}
     }
     fclose($output); exit;
+}
+
+// Fonction pour avoir la liste des utilisateurs
+function cyclo_get_users_list( WP_REST_Request $request ) {
+    // Vérification de sécurité : Seul l'Admin ou l'Éditeur peut voir la liste
+    $current_user = wp_get_current_user();
+    if ( !array_intersect(['administrator', 'cyclo_admin', 'cyclo_editeur'], (array) $current_user->roles) ) {
+        return new WP_Error( 'forbidden', 'Vous n\'avez pas les droits pour voir cette page.', array( 'status' => 403 ) );
+    }
+
+    $wp_users = get_users();
+    $formatted_users = [];
+
+    foreach ( $wp_users as $u ) {
+        $roles = (array) $u->roles;
+        $main_role = 'Utilisateur';
+        $role_color = 'blue';
+
+        if ( in_array('administrator', $roles) || in_array('cyclo_admin', $roles) ) {
+            $main_role = 'Admin'; $role_color = 'yellow';
+        } elseif ( in_array('cyclo_editeur', $roles) ) {
+            $main_role = 'Éditeur'; $role_color = 'purple';
+        }
+
+        // Création des initiales pour l'avatar
+        $initials = strtoupper(substr($u->first_name, 0, 1) . substr($u->last_name, 0, 1));
+        if (empty($initials)) $initials = strtoupper(substr($u->display_name, 0, 2));
+
+        $formatted_users[] = array(
+            'id' => $u->ID,
+            'name' => $u->display_name,
+            'email' => $u->user_email,
+            'role' => $main_role,
+            'role_color' => $role_color,
+            'initials' => $initials,
+            'date' => date_i18n('d M Y', strtotime($u->user_registered))
+        );
+    }
+
+    return rest_ensure_response( array(
+        'status' => 'success',
+        'data' => array(
+            'total' => count($formatted_users),
+            'users' => $formatted_users
+        )
+    ));
 }

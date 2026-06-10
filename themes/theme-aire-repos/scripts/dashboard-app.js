@@ -14,8 +14,13 @@ document.addEventListener('DOMContentLoaded', () => {
         filterType: 'annee', dateStart: `${new Date().getFullYear()}-01-01`, dateEnd: `${new Date().getFullYear()}-12-31`
     };
 
+    // --- 1. MOTEUR API ---
     async function fetchApiData() {
-        const endpoint = appState.module === 'discovery' ? 'discovery-overview' : 'survey-overview';
+        // Routage de l'endpoint selon le module
+        let endpoint = 'discovery-overview';
+        if (appState.module === 'survey') endpoint = 'survey-overview';
+        if (appState.module === 'users') endpoint = 'users';
+
         const params = new URLSearchParams({ level: appState.level, id: appState.entityId, start_date: appState.dateStart, end_date: appState.dateEnd, filter_type: appState.filterType });
 
         root.innerHTML = '<div class="loading-state">Analyse des données en cours...</div>';
@@ -23,28 +28,39 @@ document.addEventListener('DOMContentLoaded', () => {
 
         try {
             const res = await fetch(`/wp-json/cyclo-data/v1/${endpoint}?${params.toString()}`, { headers: { 'X-WP-Nonce': apiNonce } });
-            if(!res.ok) throw new Error("Erreur Serveur");
+            if(!res.ok) throw new Error("Erreur Serveur ou Accès Refusé");
+
+            // C'est cette ligne qui manquait dans ton code !
             const result = await res.json();
 
+            // Affichage de la bonne vue
             if (appState.module === 'discovery') renderDiscoveryOverview(result.data);
-            else renderSurveyOverview(result.data);
+            else if (appState.module === 'survey') renderSurveyOverview(result.data);
+            else if (appState.module === 'users') renderUsersList(result.data);
+
         } catch (error) {
             root.innerHTML = `<div class="error-state">${error.message}</div>`;
         }
     }
 
+    // --- 2. TITRES DYNAMIQUES ---
     function updateHeaderTitles() {
-        const modName = appState.module === 'discovery' ? "Outils de découverte" : "Questionnaires";
+        const modName = appState.module === 'discovery' ? "Outils de découverte" : (appState.module === 'survey' ? "Questionnaires" : "Utilisateurs");
         let lvlName = appState.level === 'route' ? ` <span class="sep">></span> ${appState.entityName}` : (appState.level === 'aire' ? ` <span class="sep">></span> Itinéraire <span class="sep">></span> ${appState.entityName}` : "");
-        const title = appState.level === 'global' ? "Vue d'ensemble" : appState.entityName;
 
-        document.querySelector('.breadcrumbs').innerHTML = `Administration <span class="sep">></span> ${modName}${lvlName}`;
+        const breadcrumbsEl = document.querySelector('.breadcrumbs');
+        if (breadcrumbsEl) breadcrumbsEl.innerHTML = `Administration <span class="sep">></span> ${modName}${lvlName}`;
+
         const titleH1 = document.getElementById('dash-main-title');
-        if(titleH1) titleH1.innerText = title;
+        if(titleH1) titleH1.innerText = appState.level === 'global' ? "Vue d'ensemble" : appState.entityName;
     }
 
-    // --- RENDU DÉCOUVERTE ---
+    // --- 3. RENDU DÉCOUVERTE ---
     function renderDiscoveryOverview(data) {
+        // Réafficher les filtres s'ils ont été masqués par la vue Utilisateurs
+        const headerActions = document.querySelector('.header-actions');
+        if (headerActions) headerActions.style.display = 'flex';
+
         let linksHtml = '<div style="padding:10px 0; color:#888;">Aucun lien cliqué sur la période.</div>';
         if(data.top_links && data.top_links.length > 0) {
             linksHtml = data.top_links.map((link, idx) => `
@@ -70,8 +86,12 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // --- RENDU QUESTIONNAIRES ---
+    // --- 4. RENDU QUESTIONNAIRES ---
     function renderSurveyOverview(data) {
+        // Réafficher les filtres s'ils ont été masqués
+        const headerActions = document.querySelector('.header-actions');
+        if (headerActions) headerActions.style.display = 'flex';
+
         const sCount = {};
         if (data.q4_raw) data.q4_raw.forEach(r => { if(r.q4_connaissance) r.q4_connaissance.split(',').forEach(s => { const src=s.trim(); sCount[src]=(sCount[src]||0)+1; }); });
 
@@ -95,9 +115,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
         initTimelineChart(document.getElementById('chart-survey-timeline'), data.timeline);
 
-        // FIX : Ajout du label "Score" pour retirer le "undefined"
         if(document.getElementById('chart-radar') && data.total_reponses > 0) {
-            new Chart(document.getElementById('chart-radar'), { type: 'radar', data: { labels: ['Aire', 'Sécurité', 'Services'], datasets: [{ label: 'Score sur 100', data: data.radar_scores, backgroundColor: THEME.primaryLight, borderColor: THEME.primary }] }, options:{responsive:true, maintainAspectRatio:false, scales: { r: { min: 0, max: 100, ticks:{display:false} } }, plugins: { legend: { display: false } }} });
+            new Chart(document.getElementById('chart-radar'), { type: 'radar', data: { labels: ['Aire', 'Sécurité', 'Services'], datasets: [{ label: 'Score', data: data.radar_scores, backgroundColor: THEME.primaryLight, borderColor: THEME.primary }] }, options:{responsive:true, maintainAspectRatio:false, scales: { r: { min: 0, max: 100, ticks:{display:false} } }, plugins: { legend: { display: false } }} });
         }
 
         const renderMiniBar = (id, distData) => {
@@ -112,7 +131,6 @@ document.addEventListener('DOMContentLoaded', () => {
         if(document.getElementById('chart-orig') && data.origine && data.origine.length > 0) new Chart(document.getElementById('chart-orig'), { type: 'doughnut', data: { labels: data.origine.map(i=> i.profil_origine === 'fr' ? 'Français' : 'Étranger'), datasets: [{ data: data.origine.map(i=>i.total), backgroundColor:['#1A9E66', '#8EEABF'] }] }, options: { responsive:true, maintainAspectRatio:false, cutout:'65%' }});
         if(document.getElementById('chart-acc') && data.accompagnement && data.accompagnement.length > 0) new Chart(document.getElementById('chart-acc'), { type: 'doughnut', data: { labels: data.accompagnement.map(i=>i.profil_accompagnement), datasets: [{ data: data.accompagnement.map(i=>i.total), backgroundColor:['#1A9E66', '#F6AD55', '#E53E3E', '#2F855A'] }] }, options: { responsive:true, maintainAspectRatio:false, cutout:'65%' }});
 
-        // FIX : Initialisation du graphique PAYS
         if(document.getElementById('chart-pays')) {
             if (data.pays && data.pays.length > 0) {
                 new Chart(document.getElementById('chart-pays'), { type: 'bar', data: { labels: data.pays.map(i=>i.profil_pays.toUpperCase()), datasets: [{ label: 'Visiteurs', data: data.pays.map(i=>i.total), backgroundColor: THEME.primary, borderRadius: 4 }] }, options: { indexAxis: 'y', responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}} }});
@@ -122,7 +140,46 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // --- TIMELINE INTELLIGENTE ---
+    // --- 5. RENDU UTILISATEURS ---
+    function renderUsersList(data) {
+        // Masque les filtres de date et d'export (inutiles sur cette vue)
+        const headerActions = document.querySelector('.header-actions');
+        if (headerActions) headerActions.style.display = 'none';
+
+        let usersHtml = '<div style="padding:1.5rem; text-align:center;">Aucun utilisateur trouvé.</div>';
+        if(data.users && data.users.length > 0) {
+            usersHtml = data.users.map(u => `
+                <div class="user-row">
+                    <div class="u-avatar bg-${u.role_color}">${u.initials}</div>
+                    <div class="u-info">
+                        <strong>${u.name}</strong>
+                        <span>${u.email}</span>
+                    </div>
+                    <div class="u-role">
+                        <span class="badge badge-${u.role_color}">${u.role}</span>
+                    </div>
+                    <div class="u-date">📅 ${u.date}</div>
+                </div>
+            `).join('');
+        }
+
+        root.innerHTML = `
+            <div class="dash-card card-third"><div class="card-header"><h3>Total utilisateurs</h3></div><div class="kpi-value">${data.total}</div></div>
+            <div class="dash-card card-third"><div class="card-header"><h3>Actifs</h3></div><div class="kpi-value" style="color:#1A9E66;">${data.total}</div></div>
+            <div class="dash-card card-third"><div class="card-header"><h3>Inactifs</h3></div><div class="kpi-value" style="color:#E53E3E;">0</div></div>
+
+            <div class="dash-card card-full" style="padding:0;">
+                <div style="padding: 1.5rem; border-bottom: 1px solid var(--dash-border);">
+                    <h3 style="margin:0; font-size:1.1rem;">Comptes & Permissions</h3>
+                </div>
+                <div class="users-list-container">
+                    ${usersHtml}
+                </div>
+            </div>
+        `;
+    }
+
+    // --- 6. TIMELINE INTELLIGENTE ---
     function initTimelineChart(ctx, timelineData) {
         if (!ctx) return;
         let labels = [], chartData = [];
@@ -148,11 +205,15 @@ document.addEventListener('DOMContentLoaded', () => {
         new Chart(ctx, { type: 'line', data: { labels: labels, datasets: [{ label: 'Volume', data: chartData, borderColor: THEME.primary, backgroundColor: THEME.primaryLight, fill: true, tension: 0.4 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { precision: 0 } } } } });
     }
 
-    // --- ÉCOUTEURS D'ÉVÉNEMENTS (Navigation) ---
+    // --- 7. ÉCOUTEURS D'ÉVÉNEMENTS ---
     document.querySelectorAll('.nav-item[data-action="route"], .nav-item[data-action="route-and-toggle"]').forEach(btn => {
         btn.addEventListener('click', (e) => {
             document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active')); e.currentTarget.classList.add('active');
-            appState.module = e.currentTarget.getAttribute('data-module'); appState.level = e.currentTarget.getAttribute('data-level'); appState.entityId = e.currentTarget.getAttribute('data-id'); appState.entityName = e.currentTarget.getAttribute('data-name') || "Vue d'ensemble";
+
+            appState.module = e.currentTarget.getAttribute('data-module');
+            appState.level = e.currentTarget.getAttribute('data-level');
+            appState.entityId = e.currentTarget.getAttribute('data-id');
+            appState.entityName = e.currentTarget.getAttribute('data-name') || "Vue d'ensemble";
 
             if (e.currentTarget.getAttribute('data-action') === 'route-and-toggle') {
                 const sub = document.getElementById(e.currentTarget.getAttribute('data-target'));
@@ -180,7 +241,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    // --- GESTION DU MENU MOBILE ET OVERLAY (CORRIGÉ ET BLINDÉ) ---
     const mobileBtn = document.getElementById('mobile-menu-btn');
     const sidebar = document.querySelector('.cyclo-sidebar');
     const overlay = document.getElementById('sidebar-overlay');
@@ -200,7 +260,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (overlay) overlay.addEventListener('click', closeMobileMenu);
 
-    // Exports
     const btnCsv = document.getElementById('export-csv-btn');
     if (btnCsv) btnCsv.addEventListener('click', () => { window.location.href = `/wp-json/cyclo-data/v1/export-csv?${new URLSearchParams({...appState, _wpnonce: apiNonce}).toString()}`; });
 
