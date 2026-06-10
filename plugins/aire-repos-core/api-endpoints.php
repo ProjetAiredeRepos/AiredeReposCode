@@ -23,6 +23,10 @@ function cyclo_register_all_endpoints() {
     register_rest_route( 'cyclo-data/v1', '/export-csv', array( 'methods' => 'GET', 'callback' => 'cyclo_export_csv_data', 'permission_callback' => $dashboard_auth ) );
     // Route pour récupérer les utilisateurs
     register_rest_route( 'cyclo-data/v1', '/users', array( 'methods' => 'GET', 'callback' => 'cyclo_get_users_list', 'permission_callback' => $dashboard_auth ) );
+    // Création d'un utilisateur
+    register_rest_route( 'cyclo-data/v1', '/users/create', array( 'methods' => 'POST', 'callback' => 'cyclo_create_user', 'permission_callback' => $dashboard_auth ) );
+    // Mise à jour des paramètres (Mot de passe, Profil)
+    register_rest_route( 'cyclo-data/v1', '/settings/update', array( 'methods' => 'POST', 'callback' => 'cyclo_update_settings', 'permission_callback' => $dashboard_auth ) );
 }
 
 // =========================================================================
@@ -267,4 +271,78 @@ function cyclo_get_users_list( WP_REST_Request $request ) {
             'users' => $formatted_users
         )
     ));
+}
+
+// =========================================================================
+// GESTION DES UTILISATEURS ET PARAMÈTRES
+// =========================================================================
+
+function cyclo_create_user( WP_REST_Request $request ) {
+    $current_user = wp_get_current_user();
+
+    // Sécurité stricte : Seuls les Admins peuvent créer des comptes
+    if ( !in_array('administrator', (array) $current_user->roles) && !in_array('cyclo_admin', (array) $current_user->roles) ) {
+        return new WP_Error( 'forbidden', 'Droits insuffisants.', array( 'status' => 403 ) );
+    }
+
+    $email      = sanitize_email( $request->get_param('email') );
+    $first_name = sanitize_text_field( $request->get_param('first_name') );
+    $last_name  = sanitize_text_field( $request->get_param('last_name') );
+    $role       = sanitize_text_field( $request->get_param('role') ); // ex: 'cyclo_editeur', 'cyclo_user'
+
+    if ( email_exists($email) ) {
+        return new WP_Error( 'exists', 'Cette adresse e-mail est déjà utilisée.', array( 'status' => 400 ) );
+    }
+
+    // Génération native d'un mot de passe ultra-sécurisé (12 caractères, lettres, chiffres, symboles)
+    $password = wp_generate_password( 12, true, true );
+
+    $user_id = wp_insert_user( array(
+        'user_login' => $email, // On utilise l'email comme identifiant
+        'user_email' => $email,
+        'user_pass'  => $password,
+        'first_name' => $first_name,
+        'last_name'  => $last_name,
+        'role'       => $role
+    ) );
+
+    if ( is_wp_error( $user_id ) ) return $user_id;
+
+    // MARQUEUR DE SÉCURITÉ : Force le changement de mot de passe à la première connexion
+    update_user_meta( $user_id, '_cyclo_force_pwd_change', '1' );
+
+    return rest_ensure_response( array(
+        'status' => 'success',
+        'message' => 'Utilisateur créé avec succès.',
+        // C'est la SEULE et UNIQUE fois où le mot de passe est retourné en clair pour être affiché dans le Dashboard (conformément à ta maquette)
+        'temp_password' => $password
+    ) );
+}
+
+function cyclo_update_settings( WP_REST_Request $request ) {
+    $user_id = get_current_user_id();
+    if ( !$user_id ) return new WP_Error( 'unauthorized', 'Non connecté.', array( 'status' => 401 ) );
+
+    $new_password = $request->get_param('new_password');
+    $accent_color = sanitize_hex_color( $request->get_param('accent_color') ); // Exemple pour tes maquettes de couleurs
+
+    // Si l'utilisateur change de mot de passe depuis les paramètres
+    if ( !empty($new_password) ) {
+        wp_set_password( $new_password, $user_id );
+
+        // On supprime le marqueur temporaire au cas où
+        delete_user_meta( $user_id, '_cyclo_force_pwd_change' );
+
+        // Reconnexion forcée en arrière-plan car wp_set_password détruit les cookies de session
+        clean_user_cache( $user_id );
+        wp_clear_auth_cookie();
+        wp_set_current_user( $user_id );
+        wp_set_auth_cookie( $user_id );
+    }
+
+    if ( !empty($accent_color) ) {
+        update_user_meta( $user_id, 'cyclo_accent_color', $accent_color );
+    }
+
+    return rest_ensure_response( ['status' => 'success'] );
 }

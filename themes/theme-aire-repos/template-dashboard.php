@@ -8,6 +8,8 @@ if ( !is_user_logged_in() ) {
     wp_redirect( home_url('connexion'));
     exit;
 }
+// Sécurité pour ne pas contourner le changement de mot de passe obligatoire lors de la première connexion
+if (get_user_meta(get_current_user_id(), '_cyclo_force_pwd_change', true) === '1') { wp_redirect(home_url('/login/')); exit; }
 
 $user = wp_get_current_user();
 $api_nonce = wp_create_nonce( 'wp_rest' ); // Nonce pour sécuriser les appels fetch()
