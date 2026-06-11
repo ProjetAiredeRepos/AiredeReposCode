@@ -624,9 +624,198 @@ textarea[name="q5_suggestions"]:focus {
     font-family: 'Outfit', sans-serif;
 }
 
+/* ==========================================================================
+   MODALE (CREATION UTILISATEUR)
+   ========================================================================== */
 
+/* L'arrière-plan grisé (Overlay) */
+.cyclo-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5); /* Noir transparent */
+    z-index: 9999;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    backdrop-filter: blur(2px); /* Petit effet de flou moderne */
+}
 
-/* Site Découverte */
+/* Le conteneur blanc de la modale */
+.cyclo-modal-content {
+    background-color: #ffffff;
+    border-radius: 8px;
+    width: 100%;
+    max-width: 500px; /* Largeur max de la modale */
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+    animation: modalFadeIn 0.3s ease;
+}
+
+@keyframes modalFadeIn {
+    from { opacity: 0; transform: translateY(-20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* L'en-tête */
+.cyclo-modal-header {
+    padding: 24px 24px 16px;
+    border-bottom: 1px solid #EDF2F7;
+    position: relative;
+}
+
+.cyclo-modal-header h3 {
+    margin: 0 0 4px 0;
+    font-size: 1.25rem;
+    color: #2D3748;
+}
+
+.cyclo-modal-header p {
+    margin: 0;
+    color: #718096;
+    font-size: 0.9rem;
+}
+
+.close-modal {
+    position: absolute;
+    top: 24px;
+    right: 24px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #A0AEC0;
+    padding: 0;
+    display: flex;
+}
+
+.close-modal:hover {
+    color: #4A5568;
+}
+
+/* Le corps et le formulaire */
+.cyclo-modal-body {
+    padding: 24px;
+}
+
+.cyclo-form .form-row {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 16px;
+}
+
+.cyclo-form .form-row .form-group {
+    flex: 1;
+    margin-bottom: 0;
+}
+
+.cyclo-form .form-group {
+    margin-bottom: 16px;
+    display: flex;
+    flex-direction: column;
+}
+
+.cyclo-form label {
+    font-weight: 500;
+    font-size: 0.9rem;
+    color: #4A5568;
+    margin-bottom: 6px;
+}
+
+.cyclo-form input[type="text"],
+.cyclo-form input[type="email"],
+.cyclo-form input[type="password"],
+.cyclo-form select {
+    padding: 10px 12px;
+    border: 1px solid #E2E8F0;
+    border-radius: 6px;
+    font-family: inherit;
+    font-size: 0.95rem;
+    color: #2D3748;
+    background-color: #F7FAFC;
+    transition: border-color 0.2s;
+}
+
+.cyclo-form input:focus,
+.cyclo-form select:focus {
+    outline: none;
+    border-color: #1A9E66;
+    background-color: #fff;
+}
+
+/* Actions (Boutons) */
+.form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    margin-top: 24px;
+}
+
+.btn-primary {
+    background-color: #1A9E66;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 6px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.btn-primary:hover {
+    background-color: #148354;
+}
+
+.btn-secondary {
+    background-color: white;
+    color: #4A5568;
+    padding: 10px 20px;
+    border: 1px solid #E2E8F0;
+    border-radius: 6px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.btn-secondary:hover {
+    background-color: #F7FAFC;
+}
+
+/* Écran de succès (Mot de passe généré) */
+.alert-success {
+    background-color: #E7F5EF;
+    color: #148354;
+    padding: 16px;
+    border-radius: 6px;
+    margin-bottom: 20px;
+}
+
+.alert-success p {
+    margin: 0 0 8px 0;
+}
+.alert-success p:last-child {
+    margin: 0;
+    font-size: 0.9rem;
+}
+
+.password-display {
+    display: flex;
+    gap: 8px;
+    margin-top: 8px;
+}
+
+.password-display input {
+    flex: 1;
+    background-color: #EDF2F7;
+    font-family: monospace;
+    font-weight: bold;
+    font-size: 1.1rem;
+    color: #2D3748;
+}
+
+/* ==========================================================================
+   SITE DÉCOUVERTE
+   ========================================================================== */
 
 /* --- 0. RESET ET COMPORTEMENT GLOBAL --- */
 html {
