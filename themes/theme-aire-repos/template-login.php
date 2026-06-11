@@ -125,12 +125,22 @@ get_header('dashboard');
 
                     <div class="form-group">
                         <label for="new_pwd">Nouveau mot de passe</label>
-                        <input type="password" name="new_pwd" id="new_pwd" required placeholder="8 caractères minimum">
+                        <div style="position: relative; display: flex; align-items: center;">
+                            <input type="password" name="new_pwd" id="new_pwd" required placeholder="8 caractères minimum" style="width: 100%; padding-right: 40px;">
+                            <button type="button" class="toggle-password-btn" aria-label="Afficher le mot de passe" style="position: absolute; right: 10px; background: none; border: none; cursor: pointer; color: #718096; display: flex; padding: 4px;">
+                                <svg class="icon-eye" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                            </button>
+                        </div>
                     </div>
 
                     <div class="form-group">
                         <label for="confirm_pwd">Confirmer le mot de passe</label>
-                        <input type="password" name="confirm_pwd" id="confirm_pwd" required placeholder="Confirmez votre saisie">
+                        <div style="position: relative; display: flex; align-items: center;">
+                            <input type="password" name="confirm_pwd" id="confirm_pwd" required placeholder="Confirmez votre saisie" style="width: 100%; padding-right: 40px;">
+                            <button type="button" class="toggle-password-btn" aria-label="Afficher le mot de passe" style="position: absolute; right: 10px; background: none; border: none; cursor: pointer; color: #718096; display: flex; padding: 4px;">
+                                <svg class="icon-eye" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                            </button>
+                        </div>
                     </div>
 
                     <div class="form-actions">
@@ -154,7 +164,12 @@ get_header('dashboard');
 
                     <div class="form-group">
                         <label for="user_pass">Mot de passe</label>
-                        <input type="password" name="pwd" id="user_pass" required autocomplete="current-password" placeholder="Votre mot de passe">
+                        <div style="position: relative; display: flex; align-items: center;">
+                            <input type="password" name="pwd" id="user_pass" required autocomplete="current-password" placeholder="Votre mot de passe" style="width: 100%; padding-right: 40px;">
+                            <button type="button" class="toggle-password-btn" aria-label="Afficher le mot de passe" style="position: absolute; right: 10px; background: none; border: none; cursor: pointer; color: #718096; display: flex; padding: 4px;">
+                                <svg class="icon-eye" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                            </button>
+                        </div>
                     </div>
 
                     <div class="form-actions">
@@ -167,5 +182,33 @@ get_header('dashboard');
         </div>
     </div>
 </div>
+
+<!-- Script pour écouter le clic sur les boutons pour pouvoir voir les mots de passe -->
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const toggleButtons = document.querySelectorAll('.toggle-password-btn');
+
+        // Les deux icônes SVG en chaîne de caractères
+        const iconEye = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>';
+        const iconEyeOff = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>';
+
+        toggleButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                // Cible l'input qui se trouve juste avant le bouton dans le DOM
+                const input = this.previousElementSibling;
+
+                if (input.getAttribute('type') === 'password') {
+                    input.setAttribute('type', 'text');
+                    this.innerHTML = iconEyeOff;
+                    this.style.color = '#1A9E66'; // Couleur primaire quand activé
+                } else {
+                    input.setAttribute('type', 'password');
+                    this.innerHTML = iconEye;
+                    this.style.color = '#718096'; // Couleur neutre par défaut
+                }
+            });
+        });
+    });
+</script>
 
 <?php get_footer('dashboard'); ?>
