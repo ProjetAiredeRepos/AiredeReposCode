@@ -1,5 +1,3 @@
-<?php wp_footer(); ?>
-
 <footer class="site-footer">
     <div class="footer-container">
 
@@ -46,9 +44,9 @@
 </footer>
 
 <?php
+
 wp_footer();
 ?>
 
 </body>
 </html>
-
