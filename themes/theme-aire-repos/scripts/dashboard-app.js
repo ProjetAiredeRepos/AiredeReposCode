@@ -33,10 +33,11 @@ document.addEventListener('DOMContentLoaded', () => {
             // C'est cette ligne qui manquait dans ton code !
             const result = await res.json();
 
-            // Affichage de la bonne vue
+            // Remplace le bloc d'affichage de la bonne vue par ceci :
             if (appState.module === 'discovery') renderDiscoveryOverview(result.data);
             else if (appState.module === 'survey') renderSurveyOverview(result.data);
             else if (appState.module === 'users') renderUsersList(result.data);
+            else if (appState.module === 'permissions') renderPermissionsView(); // Nouvel appel
 
         } catch (error) {
             root.innerHTML = `<div class="error-state">${error.message}</div>`;
@@ -45,14 +46,29 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- 2. TITRES DYNAMIQUES ---
     function updateHeaderTitles() {
-        const modName = appState.module === 'discovery' ? "Outils de découverte" : (appState.module === 'survey' ? "Questionnaires" : "Utilisateurs");
+        let modName = "Vue d'ensemble";
+        if (appState.module === 'discovery') modName = "Outils de découverte";
+        else if (appState.module === 'survey') modName = "Questionnaires";
+        else if (appState.module === 'users') modName = "Utilisateurs";
+        else if (appState.module === 'permissions') modName = "Utilisateurs"; // Les permissions sont dans la section Utilisateurs
+
         let lvlName = appState.level === 'route' ? ` <span class="sep">></span> ${appState.entityName}` : (appState.level === 'aire' ? ` <span class="sep">></span> Itinéraire <span class="sep">></span> ${appState.entityName}` : "");
 
         const breadcrumbsEl = document.querySelector('.breadcrumbs');
-        if (breadcrumbsEl) breadcrumbsEl.innerHTML = `Administration <span class="sep">></span> ${modName}${lvlName}`;
+        if (breadcrumbsEl) {
+            // Ajustement du fil d'ariane
+            if (appState.module === 'users' || appState.module === 'permissions') {
+                breadcrumbsEl.innerHTML = `Administration <span class="sep">></span> Utilisateurs`;
+            } else {
+                breadcrumbsEl.innerHTML = `Administration <span class="sep">></span> ${modName}${lvlName}`;
+            }
+        }
 
         const titleH1 = document.getElementById('dash-main-title');
-        if(titleH1) titleH1.innerText = appState.level === 'global' ? "Vue d'ensemble" : appState.entityName;
+        if(titleH1) {
+            // Si on est sur une vue globale (comme les permissions ou les utilisateurs), on utilise le nom de l'entité passé par le bouton du menu
+            titleH1.innerText = appState.level === 'global' ? appState.entityName : appState.entityName;
+        }
     }
 
     // --- 3. RENDU DÉCOUVERTE ---
@@ -190,6 +206,182 @@ document.addEventListener('DOMContentLoaded', () => {
         if (btnCreateUser) {
             btnCreateUser.addEventListener('click', openCreateUserModal);
         }
+    }
+
+    // --- 5B. RENDU GESTION DES PERMISSIONS ---
+    async function renderPermissionsView() {
+        const headerActions = document.querySelector('.header-actions');
+        if (headerActions) headerActions.style.display = 'none';
+
+        // L'interface complète fidèle aux maquettes Figma
+        root.innerHTML = `
+            <div class="dash-card card-full" style="padding: 2rem;">
+                <h3 style="margin-top: 0; font-size: 1.25rem;">Rôles disponibles</h3>
+                <p style="color: var(--text-muted); margin-bottom: 24px;">Sélectionnez un rôle pour visualiser et modifier ses permissions</p>
+                
+                <div style="display: flex; gap: 16px; margin-bottom: 32px;" id="role-selector">
+                    <button class="btn-secondary role-select-btn" data-role="cyclo_user" style="display: flex; align-items: center; gap: 8px;">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg> Utilisateur
+                    </button>
+                    <button class="btn-secondary role-select-btn" data-role="cyclo_editeur" style="display: flex; align-items: center; gap: 8px;">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg> Éditeur
+                    </button>
+                    <button class="btn-secondary role-select-btn" data-role="administrator" style="display: flex; align-items: center; gap: 8px;">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg> Admin
+                    </button>
+                </div>
+
+                <div style="display: flex; gap: 24px; margin-bottom: 32px;">
+                    <div style="flex: 1; background: #F7FAFC; padding: 20px; border-radius: 8px; border: 1px solid #E2E8F0; display: flex; align-items: center; gap: 16px;">
+                        <div style="background: #E2E8F0; padding: 12px; border-radius: 8px; color: #4A5568;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg></div>
+                        <div>
+                            <span style="font-size: 0.85rem; color: #718096; text-transform: uppercase; font-weight: bold;">Rôle sélectionné</span>
+                            <div style="font-size: 1.25rem; font-weight: bold; color: #2D3748; margin-top: 4px;" id="perm-role-name">...</div>
+                        </div>
+                    </div>
+                    <div style="flex: 1; background: #E7F5EF; padding: 20px; border-radius: 8px; border: 1px solid #C6F6D5; display: flex; align-items: center; gap: 16px;">
+                        <div style="background: #C6F6D5; padding: 12px; border-radius: 8px; color: #1A9E66;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
+                        <div>
+                            <span style="font-size: 0.85rem; color: #2F855A; text-transform: uppercase; font-weight: bold;">Permissions actives</span>
+                            <div style="font-size: 1.25rem; font-weight: bold; color: #1A9E66; margin-top: 4px;" id="perm-active-count">0 / 11</div>
+                        </div>
+                    </div>
+                    <div style="flex: 1; background: #F7FAFC; padding: 20px; border-radius: 8px; border: 1px solid #E2E8F0; display: flex; align-items: center; gap: 16px;">
+                        <div style="background: #E2E8F0; padding: 12px; border-radius: 8px; color: #4A5568;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path></svg></div>
+                        <div>
+                            <span style="font-size: 0.85rem; color: #718096; text-transform: uppercase; font-weight: bold;">Catégories concernées</span>
+                            <div style="font-size: 1.25rem; font-weight: bold; color: #2D3748; margin-top: 4px;">4</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="permissions-matrix" style="opacity: 0.5; pointer-events: none; transition: opacity 0.3s;" id="permissions-container">
+                    
+                    <div style="border: 1px solid #E2E8F0; border-radius: 8px; margin-bottom: 16px; overflow: hidden;">
+                        <div style="background: #F7FAFC; padding: 12px 20px; border-bottom: 1px solid #E2E8F0; font-weight: 600;">Gestion des permissions</div>
+                        <div style="padding: 20px; display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                            <label style="display: flex; gap: 12px; align-items: start; cursor: pointer;"><input type="checkbox" class="cap-checkbox" data-cap="cyclo_view_permissions" style="margin-top: 4px; accent-color: #1A9E66;"> <div><strong>Voir les permissions</strong><br><span style="font-size:0.85rem; color:#718096;">Permet de voir la page Gestion des Permissions.</span></div></label>
+                            <label style="display: flex; gap: 12px; align-items: start; cursor: pointer;"><input type="checkbox" class="cap-checkbox" data-cap="cyclo_edit_permissions" style="margin-top: 4px; accent-color: #1A9E66;"> <div><strong>Modifier les permissions</strong><br><span style="font-size:0.85rem; color:#718096;">Permet de modifier les permissions.</span></div></label>
+                        </div>
+                    </div>
+
+                    <div style="border: 1px solid #E2E8F0; border-radius: 8px; margin-bottom: 16px; overflow: hidden;">
+                        <div style="background: #F7FAFC; padding: 12px 20px; border-bottom: 1px solid #E2E8F0; font-weight: 600;">Gestion des utilisateurs</div>
+                        <div style="padding: 20px; display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 20px;">
+                            <label style="display: flex; gap: 12px; align-items: start; cursor: pointer;"><input type="checkbox" class="cap-checkbox" data-cap="cyclo_view_users" style="margin-top: 4px; accent-color: #1A9E66;"> <div><strong>Voir les utilisateurs</strong><br><span style="font-size:0.85rem; color:#718096;">Permet d'afficher la liste.</span></div></label>
+                            <label style="display: flex; gap: 12px; align-items: start; cursor: pointer;"><input type="checkbox" class="cap-checkbox" data-cap="cyclo_create_users" style="margin-top: 4px; accent-color: #1A9E66;"> <div><strong>Créer un utilisateur</strong><br><span style="font-size:0.85rem; color:#718096;">Permet d'ajouter des comptes.</span></div></label>
+                            <label style="display: flex; gap: 12px; align-items: start; cursor: pointer;"><input type="checkbox" class="cap-checkbox" data-cap="cyclo_edit_users" style="margin-top: 4px; accent-color: #1A9E66;"> <div><strong>Modifier un utilisateur</strong><br><span style="font-size:0.85rem; color:#718096;">Permet de changer les profils.</span></div></label>
+                            <label style="display: flex; gap: 12px; align-items: start; cursor: pointer;"><input type="checkbox" class="cap-checkbox" data-cap="cyclo_delete_users" style="margin-top: 4px; accent-color: #1A9E66;"> <div><strong>Supprimer un utilisateur</strong><br><span style="font-size:0.85rem; color:#718096;">Action irréversible.</span></div></label>
+                        </div>
+                    </div>
+                    
+                    <div style="border: 1px solid #E2E8F0; border-radius: 8px; margin-bottom: 16px; overflow: hidden;">
+                        <div style="background: #F7FAFC; padding: 12px 20px; border-bottom: 1px solid #E2E8F0; font-weight: 600;">Accès aux statistiques</div>
+                        <div style="padding: 20px; display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px;">
+                            <label style="display: flex; gap: 12px; align-items: start; cursor: pointer;"><input type="checkbox" class="cap-checkbox" data-cap="cyclo_view_stats" style="margin-top: 4px; accent-color: #1A9E66;"> <div><strong>Voir les statistiques</strong><br><span style="font-size:0.85rem; color:#718096;">Permet de voir les tableaux de bord.</span></div></label>
+                            <label style="display: flex; gap: 12px; align-items: start; cursor: pointer;"><input type="checkbox" class="cap-checkbox" data-cap="cyclo_export_stats" style="margin-top: 4px; accent-color: #1A9E66;"> <div><strong>Exporter les données</strong><br><span style="font-size:0.85rem; color:#718096;">Permet d'exporter les données en CSV/Excel.</span></div></label>
+                            <label style="display: flex; gap: 12px; align-items: start; cursor: pointer;"><input type="checkbox" class="cap-checkbox" data-cap="cyclo_compare_stats" style="margin-top: 4px; accent-color: #1A9E66;"> <div><strong>Comparaison de périodes</strong><br><span style="font-size:0.85rem; color:#718096;">Permet d'activer la comparaison temporelle.</span></div></label>
+                        </div>
+                    </div>
+
+                    <div style="border: 1px solid #E2E8F0; border-radius: 8px; margin-bottom: 16px; overflow: hidden;">
+                        <div style="background: #F7FAFC; padding: 12px 20px; border-bottom: 1px solid #E2E8F0; font-weight: 600;">Gestion des questionnaires</div>
+                        <div style="padding: 20px; display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                            <label style="display: flex; gap: 12px; align-items: start; cursor: pointer;"><input type="checkbox" class="cap-checkbox" data-cap="cyclo_view_surveys" style="margin-top: 4px; accent-color: #1A9E66;"> <div><strong>Voir les réponses</strong><br><span style="font-size:0.85rem; color:#718096;">Permet de consulter les réponses aux questionnaires.</span></div></label>
+                            <label style="display: flex; gap: 12px; align-items: start; cursor: pointer;"><input type="checkbox" class="cap-checkbox" data-cap="cyclo_manage_surveys" style="margin-top: 4px; accent-color: #1A9E66;"> <div><strong>Gérer les questionnaires</strong><br><span style="font-size:0.85rem; color:#718096;">Permet de modifier les questionnaires existants.</span></div></label>
+                        </div>
+                    </div>
+
+                    <div style="text-align: right; margin-top: 24px;">
+                        <button id="btn-save-permissions" class="btn-primary" style="padding: 12px 24px;">Sauvegarder les modifications</button>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        const container = document.getElementById('permissions-container');
+        const checkboxes = document.querySelectorAll('.cap-checkbox');
+        let currentRole = null;
+
+        // Met à jour les compteurs dynamiquement
+        function updateCounters(roleName) {
+            const checkedCount = document.querySelectorAll('.cap-checkbox:checked').length;
+            document.getElementById('perm-active-count').innerText = `${checkedCount} / 11`;
+
+            let roleDisplay = "Utilisateur";
+            if (roleName === 'cyclo_editeur') roleDisplay = "Éditeur";
+            if (roleName === 'administrator') roleDisplay = "Admin";
+            document.getElementById('perm-role-name').innerText = roleDisplay;
+        }
+
+        // Écouteur pour actualiser le compteur dès qu'on coche/décoche une case
+        checkboxes.forEach(chk => {
+            chk.addEventListener('change', () => updateCounters(currentRole));
+        });
+
+        async function loadRolePermissions(roleName) {
+            container.style.opacity = '0.5';
+            container.style.pointerEvents = 'none';
+            currentRole = roleName;
+
+            try {
+                const res = await fetch(`/wp-json/cyclo-data/v1/permissions/${roleName}`, { headers: { 'X-WP-Nonce': apiNonce } });
+                const result = await res.json();
+
+                if (result.status === 'success') {
+                    checkboxes.forEach(chk => {
+                        const cap = chk.getAttribute('data-cap');
+                        chk.checked = result.data[cap] === true;
+                        chk.disabled = (roleName === 'administrator');
+                    });
+
+                    updateCounters(roleName);
+
+                    container.style.opacity = '1';
+                    container.style.pointerEvents = (roleName === 'administrator') ? 'none' : 'auto';
+                    document.getElementById('btn-save-permissions').style.display = (roleName === 'administrator') ? 'none' : 'inline-block';
+                }
+            } catch (error) { console.error("Erreur chargement permissions", error); }
+        }
+
+        document.querySelectorAll('.role-select-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                document.querySelectorAll('.role-select-btn').forEach(b => {
+                    b.classList.remove('btn-primary');
+                    b.classList.add('btn-secondary');
+                });
+                const target = e.currentTarget;
+                target.classList.remove('btn-secondary');
+                target.classList.add('btn-primary');
+
+                loadRolePermissions(target.getAttribute('data-role'));
+            });
+        });
+
+        document.getElementById('btn-save-permissions').addEventListener('click', async () => {
+            if (!currentRole) return;
+            const btn = document.getElementById('btn-save-permissions');
+            btn.innerText = "Sauvegarde..."; btn.disabled = true;
+
+            const payload = {};
+            checkboxes.forEach(chk => { payload[chk.getAttribute('data-cap')] = chk.checked; });
+
+            try {
+                const res = await fetch(`/wp-json/cyclo-data/v1/permissions/${currentRole}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'X-WP-Nonce': apiNonce },
+                    body: JSON.stringify(payload)
+                });
+                const result = await res.json();
+                if (result.status === 'success') alert("Permissions mises à jour avec succès.");
+                else alert("Erreur : " + result.message);
+            } catch (error) { alert("Erreur réseau."); }
+
+            btn.innerText = "Sauvegarder les modifications"; btn.disabled = false;
+        });
+
+        // Simule le premier clic pour charger l'Éditeur par défaut
+        document.querySelector('[data-role="cyclo_editeur"]').click();
     }
 
     // --- 6. TIMELINE INTELLIGENTE ---

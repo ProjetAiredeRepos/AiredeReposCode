@@ -27,6 +27,9 @@ function cyclo_register_all_endpoints() {
     register_rest_route( 'cyclo-data/v1', '/users/create', array( 'methods' => 'POST', 'callback' => 'cyclo_create_user', 'permission_callback' => $dashboard_auth ) );
     // Mise à jour des paramètres (Mot de passe, Profil)
     register_rest_route( 'cyclo-data/v1', '/settings/update', array( 'methods' => 'POST', 'callback' => 'cyclo_update_settings', 'permission_callback' => $dashboard_auth ) );
+    // Gestion des permissions (Lecture et Écriture)
+    register_rest_route( 'cyclo-data/v1', '/permissions/(?P<role>[a-zA-Z0-9_-]+)', array( 'methods' => 'GET', 'callback' => 'cyclo_get_permissions', 'permission_callback' => $dashboard_auth ) );
+    register_rest_route( 'cyclo-data/v1', '/permissions/(?P<role>[a-zA-Z0-9_-]+)', array( 'methods' => 'POST', 'callback' => 'cyclo_update_permissions', 'permission_callback' => $dashboard_auth ) );
 }
 
 // =========================================================================
@@ -345,4 +348,74 @@ function cyclo_update_settings( WP_REST_Request $request ) {
     }
 
     return rest_ensure_response( ['status' => 'success'] );
+}
+
+// =========================================================================
+// GESTION DES PERMISSIONS (CAPABILITIES)
+// =========================================================================
+
+// Liste exacte de nos permissions personnalisées (calquée sur tes maquettes)
+function cyclo_get_custom_caps() {
+    return [
+        'cyclo_view_permissions', 'cyclo_edit_permissions',
+        'cyclo_view_users', 'cyclo_create_users', 'cyclo_edit_users', 'cyclo_delete_users',
+        'cyclo_view_stats', 'cyclo_export_stats', 'cyclo_compare_stats',
+        'cyclo_view_surveys', 'cyclo_manage_surveys'
+    ];
+}
+
+function cyclo_get_permissions( WP_REST_Request $request ) {
+    $role_name = sanitize_text_field( $request->get_param('role') ); // ex: 'cyclo_user', 'cyclo_editeur'
+    $role_obj = get_role( $role_name );
+
+    if ( !$role_obj ) {
+        return new WP_Error( 'not_found', 'Rôle introuvable.', array( 'status' => 404 ) );
+    }
+
+    $all_caps = cyclo_get_custom_caps();
+    $active_caps = [];
+
+    // On vérifie quelles permissions le rôle possède actuellement
+    foreach ( $all_caps as $cap ) {
+        $active_caps[$cap] = isset( $role_obj->capabilities[$cap] ) && $role_obj->capabilities[$cap] === true;
+    }
+
+    // Protection : L'administrateur a toujours tout
+    if ( $role_name === 'administrator' ) {
+        foreach ( $all_caps as $cap ) { $active_caps[$cap] = true; }
+    }
+
+    return rest_ensure_response( [ 'status' => 'success', 'data' => $active_caps ] );
+}
+
+function cyclo_update_permissions( WP_REST_Request $request ) {
+    $current_user = wp_get_current_user();
+
+    // Sécurité : Seul un Admin peut modifier les droits
+    if ( !in_array('administrator', (array) $current_user->roles) ) {
+        return new WP_Error( 'forbidden', 'Droits insuffisants.', array( 'status' => 403 ) );
+    }
+
+    $role_name = sanitize_text_field( $request->get_param('role') );
+
+    // Garde-fou critique : On ne touche JAMAIS aux droits de l'administrateur système via l'UI
+    if ( $role_name === 'administrator' ) {
+        return new WP_Error( 'forbidden', 'Les permissions Administrateur sont verrouillées.', array( 'status' => 403 ) );
+    }
+
+    $role_obj = get_role( $role_name );
+    if ( !$role_obj ) return new WP_Error( 'not_found', 'Rôle introuvable.', array( 'status' => 404 ) );
+
+    $permissions = $request->get_json_params(); // Récupère le tableau des cases cochées/décochées
+    $all_caps = cyclo_get_custom_caps();
+
+    foreach ( $all_caps as $cap ) {
+        if ( isset($permissions[$cap]) && $permissions[$cap] === true ) {
+            $role_obj->add_cap( $cap );
+        } else {
+            $role_obj->remove_cap( $cap );
+        }
+    }
+
+    return rest_ensure_response( [ 'status' => 'success', 'message' => 'Permissions mises à jour.' ] );
 }
