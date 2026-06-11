@@ -19,8 +19,6 @@
             // On récupère l'URL de l'image du logo
             $logo_url = wp_get_attachment_image_url($custom_logo_id, 'full');
 
-            // On affiche l'image avec un lien d'ancrage (#accueil) pour remonter en haut
-            echo '<a href="#accueil" class="js-smooth-scroll" aria-label="Remonter en haut de la page">';
             echo '<img src="' . esc_url($logo_url) . '" alt="Logo ' . get_bloginfo('name') . '">';
             echo '</a>';
 
