@@ -195,3 +195,40 @@ function cyclo_register_itineraire_taxonomy() {
     register_taxonomy( 'itineraire', array( 'aire_repos' ), $args );
 }
 
+// =========================================================================
+// VERROUILLAGE DE L'INTERFACE NATIVE (SPA EXPERIENCE)
+// =========================================================================
+
+// 1. Rediriger wp-login.php vers notre page de connexion personnalisée
+add_action('init', 'cyclo_redirect_native_login');
+function cyclo_redirect_native_login() {
+    global $pagenow;
+    // Remplace 'connexion' par le vrai slug de ta page qui utilise template-login.php
+    $custom_login_url = home_url('/connexion/');
+
+    if ( $pagenow == 'wp-login.php' && $_SERVER['REQUEST_METHOD'] == 'GET' ) {
+        // On permet les actions de déconnexion natives, sinon on redirige
+        if ( !isset($_GET['action']) || $_GET['action'] !== 'logout' ) {
+            wp_redirect($custom_login_url);
+            exit;
+        }
+    }
+}
+
+// 2. Bloquer l'accès à /wp-admin/ pour les non-administrateurs techniques
+add_action('admin_init', 'cyclo_block_wp_admin');
+function cyclo_block_wp_admin() {
+    // Si ce n'est pas une requête AJAX et que l'utilisateur n'est pas le webmaster absolu
+    if ( !wp_doing_ajax() && !current_user_can('manage_options') ) {
+        wp_redirect(home_url('/dashboard'));
+        exit;
+    }
+}
+
+// 3. Cacher la barre noire d'administration WordPress (Admin Bar) sur le Front-End
+add_action('after_setup_theme', 'cyclo_remove_admin_bar');
+function cyclo_remove_admin_bar() {
+    if (!current_user_can('manage_options') || !is_admin()) {
+        show_admin_bar(false);
+    }
+}
