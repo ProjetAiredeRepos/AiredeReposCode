@@ -157,7 +157,7 @@
     padding: 16px;
     border: 3px solid #E1E3E2;
     border-radius: 8px;
-    background: #E1E3E2; /* Fond gris très clair pour trancher avec le blanc de la carte */
+    background: #E8E8E8; /* Fond gris très clair pour trancher avec le blanc de la carte */
     cursor: pointer;
     transition: all 0.2s ease;
     font-weight: 500;
