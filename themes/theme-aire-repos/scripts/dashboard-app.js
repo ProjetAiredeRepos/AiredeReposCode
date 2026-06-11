@@ -169,14 +169,27 @@ document.addEventListener('DOMContentLoaded', () => {
             <div class="dash-card card-third"><div class="card-header"><h3>Inactifs</h3></div><div class="kpi-value" style="color:#E53E3E;">0</div></div>
 
             <div class="dash-card card-full" style="padding:0;">
-                <div style="padding: 1.5rem; border-bottom: 1px solid var(--dash-border);">
+                <div style="padding: 1.5rem; border-bottom: 1px solid var(--dash-border); display: flex; justify-content: space-between; align-items: center;">
                     <h3 style="margin:0; font-size:1.1rem;">Comptes & Permissions</h3>
+                    
+                    <button id="btn-open-create-user" class="btn-primary" style="display: flex; align-items: center; gap: 8px;">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M12 5v14M5 12h14"></path>
+                        </svg>
+                        Nouvel utilisateur
+                    </button>
                 </div>
                 <div class="users-list-container">
                     ${usersHtml}
                 </div>
             </div>
         `;
+
+        // On attache l'événement pour ouvrir la modale juste après l'injection dans le DOM
+        const btnCreateUser = document.getElementById('btn-open-create-user');
+        if (btnCreateUser) {
+            btnCreateUser.addEventListener('click', openCreateUserModal);
+        }
     }
 
     // --- 6. TIMELINE INTELLIGENTE ---
@@ -269,6 +282,76 @@ document.addEventListener('DOMContentLoaded', () => {
         const originalText = btnPdf.innerHTML;
         btnPdf.innerHTML = "Génération..."; btnPdf.disabled = true;
         html2pdf().set({ margin: 10, filename: `Export_${appState.module}.pdf`, image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 2 }, jsPDF: { format: 'a4', orientation: 'landscape' } }).from(element).save().then(() => { btnPdf.innerHTML = originalText; btnPdf.disabled = false; });
+    });
+
+    // Logique de la Modale "Nouvel utilisateur"
+    const modalCreateUser = document.getElementById('modal-create-user');
+    const formCreateUser = document.getElementById('form-create-user');
+    const successScreen = document.getElementById('create-user-success');
+
+    // Ouverture de la Modale "Nouvel Utilisateur"
+    function openCreateUserModal() {
+        formCreateUser.style.display = 'block';
+        successScreen.style.display = 'none';
+        formCreateUser.reset();
+        modalCreateUser.style.display = 'flex'; // Affiche la modale
+    }
+
+    // Fermeture de la modale
+    document.querySelectorAll('.close-modal, .cancel-modal').forEach(btn => {
+        btn.addEventListener('click', () => { modalCreateUser.style.display = 'none'; });
+    });
+
+    // Gérer la soumission vers l'API REST
+    formCreateUser.addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        // Récupération des données
+        const payload = {
+            first_name: document.getElementById('new_user_firstname').value,
+            last_name: document.getElementById('new_user_lastname').value,
+            email: document.getElementById('new_user_email').value,
+            role: document.getElementById('new_user_role').value
+        };
+
+        try {
+            // Envoi à l'API (nécessite le nonce de sécurité WP)
+            const response = await fetch('/wp-json/cyclo-data/v1/users/create', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-WP-Nonce': apiNonce // CORRECTION : On utilise la variable apiNonce
+                },
+                body: JSON.stringify(payload)
+            });
+
+            const result = await response.json();
+
+            if (response.ok && result.status === 'success') {
+                // Basculer l'interface sur l'écran de succès
+                formCreateUser.style.display = 'none';
+                successScreen.style.display = 'block';
+
+                // Afficher le mot de passe généré
+                document.getElementById('generated_password').value = result.temp_password;
+
+                // Recharger la liste des utilisateurs en arrière-plan
+                // loadUsersList(); // Appelle ta fonction existante ici
+            } else {
+                alert("Erreur : " + (result.message || "Impossible de créer l'utilisateur"));
+            }
+        } catch (error) {
+            console.error("Erreur réseau :", error);
+            alert("Erreur de connexion à l'API.");
+        }
+    });
+
+    // Bouton copier le mot de passe
+    document.getElementById('copy-password').addEventListener('click', () => {
+        const pwdField = document.getElementById('generated_password');
+        pwdField.select();
+        document.execCommand('copy');
+        alert('Mot de passe copié !'); // À remplacer par un Toast UI si tu en as un
     });
 
     // Lancement

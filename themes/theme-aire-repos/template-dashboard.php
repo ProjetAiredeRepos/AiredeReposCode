@@ -174,6 +174,70 @@ get_header('dashboard');
 
             <div id="dashboard-root" class="dashboard-grid">
             </div>
+
+            <!-- Fenêtre modale avec formulaire de création de nouvel utilisateur -->
+            <div id="modal-create-user" class="cyclo-modal" style="display: none;">
+                <div class="cyclo-modal-content">
+                    <div class="cyclo-modal-header">
+                        <h3>Nouvel utilisateur</h3>
+                        <p>Créez un nouveau compte utilisateur</p>
+                        <button class="close-modal" aria-label="Fermer">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"></path></svg>
+                        </button>
+                    </div>
+
+                    <div class="cyclo-modal-body">
+                        <form id="form-create-user" class="cyclo-form">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="new_user_firstname">Prénom</label>
+                                    <input type="text" id="new_user_firstname" required placeholder="Jean">
+                                </div>
+                                <div class="form-group">
+                                    <label for="new_user_lastname">Nom</label>
+                                    <input type="text" id="new_user_lastname" required placeholder="Dupont">
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="new_user_email">Email</label>
+                                <input type="email" id="new_user_email" required placeholder="jean.dupont@example.com">
+                            </div>
+
+                            <div class="form-group">
+                                <label for="new_user_role">Rôle</label>
+                                <select id="new_user_role" required>
+                                    <option value="cyclo_user">Utilisateur (Consultation uniquement)</option>
+                                    <option value="cyclo_editeur">Éditeur (Gestion des données)</option>
+                                    <option value="cyclo_admin">Admin (Accès total)</option>
+                                </select>
+                            </div>
+
+                            <div class="form-actions">
+                                <button type="button" class="btn-secondary cancel-modal">Annuler</button>
+                                <button type="submit" class="btn-primary">Créer l'utilisateur</button>
+                            </div>
+                        </form>
+
+                        <div id="create-user-success" style="display: none;">
+                            <div class="alert-success">
+                                <p><strong>Compte créé avec succès !</strong></p>
+                                <p>Ce mot de passe est temporaire. L'utilisateur devra obligatoirement le changer dès sa première connexion.</p>
+                            </div>
+                            <div class="temp-password-box">
+                                <label>Mot de passe temporaire (généré automatiquement) :</label>
+                                <div class="password-display">
+                                    <input type="text" id="generated_password" readonly>
+                                    <button type="button" id="copy-password" class="btn-secondary">Copier</button>
+                                </div>
+                            </div>
+                            <div class="form-actions" style="margin-top: 20px;">
+                                <button type="button" class="btn-primary close-modal">Terminer</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </main>
 
     </div>
