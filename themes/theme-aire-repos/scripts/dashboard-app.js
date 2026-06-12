@@ -21,6 +21,34 @@ document.addEventListener('DOMContentLoaded', () => {
         if (appState.module === 'survey') endpoint = 'survey-overview';
         if (appState.module === 'users') endpoint = 'users';
 
+        // INTERCEPTION POUR LES PARAMÈTRES
+        if (appState.module === 'settings') {
+            root.innerHTML = '<div class="loading-state">Chargement des paramètres...</div>';
+            updateHeaderTitles();
+            try {
+                const res = await fetch(`/wp-json/cyclo-data/v1/settings`, { headers: { 'X-WP-Nonce': apiNonce } });
+
+                // 1. On vérifie d'abord si le serveur a planté (Erreur 500 ou 404)
+                if (!res.ok) {
+                    const textError = await res.text();
+                    console.error("Réponse brute du serveur :", textError);
+                    throw new Error(`Erreur HTTP ${res.status}`);
+                }
+
+                const result = await res.json();
+
+                // 2. On vérifie si l'API a renvoyé un statut d'erreur WordPress
+                if (result.status !== 'success' && !result.data) {
+                    throw new Error(result.message || "Endpoint introuvable ou accès refusé.");
+                }
+
+                renderSettingsView(result.data);
+            } catch(e) {
+                console.error("Erreur critique Paramètres :", e);
+                root.innerHTML = `<div class="error-state" style="color: #E53E3E; border: 1px solid #FC8181; background: #FFF5F5;">Détail de l'erreur : ${e.message}<br><small>Ouvre la console (F12) pour plus d'infos.</small></div>`;
+            }
+            return; // On stoppe la fonction ici pour ce module
+        }
         const params = new URLSearchParams({ level: appState.level, id: appState.entityId, start_date: appState.dateStart, end_date: appState.dateEnd, filter_type: appState.filterType });
 
         root.innerHTML = '<div class="loading-state">Analyse des données en cours...</div>';
@@ -33,11 +61,12 @@ document.addEventListener('DOMContentLoaded', () => {
             // C'est cette ligne qui manquait dans ton code !
             const result = await res.json();
 
-            // Remplace le bloc d'affichage de la bonne vue par ceci :
+            // Affichage de la bonne vue
             if (appState.module === 'discovery') renderDiscoveryOverview(result.data);
             else if (appState.module === 'survey') renderSurveyOverview(result.data);
             else if (appState.module === 'users') renderUsersList(result.data);
-            else if (appState.module === 'permissions') renderPermissionsView(); // Nouvel appel
+            else if (appState.module === 'permissions') renderPermissionsView();
+            else if (appState.module === 'settings') renderSettingsView(); // <-- NOUVELLE LIGNE
 
         } catch (error) {
             root.innerHTML = `<div class="error-state">${error.message}</div>`;
@@ -546,6 +575,144 @@ document.addEventListener('DOMContentLoaded', () => {
         alert('Mot de passe copié !'); // À remplacer par un Toast UI si tu en as un
     });
 
+    // --- 8. RENDU DES PARAMÈTRES ---
+    function renderSettingsView(data) {
+        const headerActions = document.querySelector('.header-actions');
+        if (headerActions) headerActions.style.display = 'none';
+
+        // Bloc Notifications (Uniquement si Admin)
+        let notificationsHtml = '';
+        if (data.is_admin) {
+            notificationsHtml = `
+                <div class="settings-section" style="background: white; border: 1px solid #E2E8F0; border-radius: 8px; margin-bottom: 24px; padding: 24px;">
+                    <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 16px; border-bottom: 1px solid #EDF2F7; padding-bottom: 12px;">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#718096" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+                        <h3 style="margin: 0; font-size: 1.1rem; color: #2D3748;">Notifications</h3>
+                    </div>
+                    
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                        <div>
+                            <strong style="display: block; color: #2D3748;">Alertes par email</strong>
+                            <span style="font-size: 0.85rem; color: #718096;">Recevoir un email lors d'un pic de consultations</span>
+                        </div>
+                        <label class="toggle-switch" style="position: relative; display: inline-block; width: 44px; height: 24px;">
+                            <input type="checkbox" id="opt_alert_email" ${data.global.alert_email === '1' ? 'checked' : ''} style="opacity: 0; width: 0; height: 0;">
+                            <span class="slider" style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #CBD5E0; border-radius: 24px; transition: .4s;"></span>
+                        </label>
+                    </div>
+
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <strong style="display: block; color: #2D3748;">Rapport hebdomadaire</strong>
+                            <span style="font-size: 0.85rem; color: #718096;">Envoi automatique chaque lundi matin</span>
+                        </div>
+                        <label class="toggle-switch" style="position: relative; display: inline-block; width: 44px; height: 24px;">
+                            <input type="checkbox" id="opt_weekly_report" ${data.global.weekly_report === '1' ? 'checked' : ''} style="opacity: 0; width: 0; height: 0;">
+                            <span class="slider" style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #CBD5E0; border-radius: 24px; transition: .4s;"></span>
+                        </label>
+                    </div>
+                </div>
+            `;
+        }
+
+        root.innerHTML = `
+            <div style="max-width: 800px; margin: 0 auto; padding-bottom: 40px;">
+                
+                ${notificationsHtml}
+
+                <div class="settings-section" style="background: white; border: 1px solid #E2E8F0; border-radius: 8px; margin-bottom: 24px; padding: 24px;">
+                    <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 20px; border-bottom: 1px solid #EDF2F7; padding-bottom: 12px;">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#718096" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
+                        <h3 style="margin: 0; font-size: 1.1rem; color: #2D3748;">Langue & Région</h3>
+                    </div>
+                    
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                        <div>
+                            <strong style="display: block; color: #2D3748;">Langue de l'interface</strong>
+                            <span style="font-size: 0.85rem; color: #718096;">Langue affichée dans le back-office</span>
+                        </div>
+                        <select id="opt_locale" class="cyclo-select" style="padding: 8px 12px; border-radius: 6px; border: 1px solid #E2E8F0;">
+                            <option value="fr_FR" ${data.user.locale === 'fr_FR' ? 'selected' : ''}>Français</option>
+                            <option value="en_US" ${data.user.locale === 'en_US' ? 'selected' : ''}>English</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="settings-section" style="background: white; border: 1px solid #E2E8F0; border-radius: 8px; margin-bottom: 24px; padding: 24px;">
+                    <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 20px; border-bottom: 1px solid #EDF2F7; padding-bottom: 12px;">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#718096" stroke-width="2"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"></path></svg>
+                        <h3 style="margin: 0; font-size: 1.1rem; color: #2D3748;">Apparence</h3>
+                    </div>
+                    
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                        <div>
+                            <strong style="display: block; color: #2D3748;">Densité d'affichage</strong>
+                            <span style="font-size: 0.85rem; color: #718096;">Compacité de l'interface</span>
+                        </div>
+                        <select id="opt_density" class="cyclo-select" style="padding: 8px 12px; border-radius: 6px; border: 1px solid #E2E8F0;">
+                            <option value="confortable" ${data.user.density === 'confortable' ? 'selected' : ''}>Confortable</option>
+                            <option value="compact" ${data.user.density === 'compact' ? 'selected' : ''}>Compacte</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div style="text-align: right;">
+                    <button id="btn-save-settings" class="btn-primary" style="padding: 10px 24px; font-size: 1rem; display: flex; align-items: center; gap: 8px; margin-left: auto;">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
+                        Sauvegarder
+                    </button>
+                </div>
+            </div>
+        `;
+
+        // Écouteur pour la sauvegarde
+        document.getElementById('btn-save-settings').addEventListener('click', async () => {
+            const btn = document.getElementById('btn-save-settings');
+            const originalText = btn.innerHTML;
+            btn.innerText = "Enregistrement..."; btn.disabled = true;
+
+            const payload = {
+                density: document.getElementById('opt_density').value,
+                locale: document.getElementById('opt_locale').value
+            };
+
+            // Ajoute les données globales si elles existent dans le DOM (Admin uniquement)
+            const alertEmail = document.getElementById('opt_alert_email');
+            if (alertEmail) payload.alert_email = alertEmail.checked ? '1' : '0';
+
+            const weeklyReport = document.getElementById('opt_weekly_report');
+            if (weeklyReport) payload.weekly_report = weeklyReport.checked ? '1' : '0';
+
+            try {
+                const res = await fetch('/wp-json/cyclo-data/v1/settings', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'X-WP-Nonce': apiNonce },
+                    body: JSON.stringify(payload)
+                });
+
+                const result = await res.json();
+                if (result.status === 'success') {
+                    btn.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg> Enregistré`;
+                    btn.style.backgroundColor = '#148354';
+                    setTimeout(() => { btn.innerHTML = originalText; btn.style.backgroundColor = ''; btn.disabled = false; }, 2000);
+                }
+            } catch (error) {
+                alert("Erreur de sauvegarde.");
+                btn.innerHTML = originalText; btn.disabled = false;
+            }
+        });
+
+        // Petit script intégré pour le style CSS des "Toggles" dynamiques
+        const style = document.createElement('style');
+        style.innerHTML = `
+            .toggle-switch input:checked + .slider { background-color: #1A9E66; }
+            .toggle-switch .slider:before { position: absolute; content: ""; height: 18px; width: 18px; left: 3px; bottom: 3px; background-color: white; border-radius: 50%; transition: .4s; }
+            .toggle-switch input:checked + .slider:before { transform: translateX(20px); }
+        `;
+        document.head.appendChild(style);
+    }
+
     // Lancement
     fetchApiData();
 });
+

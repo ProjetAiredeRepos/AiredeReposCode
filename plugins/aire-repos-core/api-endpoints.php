@@ -25,8 +25,9 @@ function cyclo_register_all_endpoints() {
     register_rest_route( 'cyclo-data/v1', '/users', array( 'methods' => 'GET', 'callback' => 'cyclo_get_users_list', 'permission_callback' => $dashboard_auth ) );
     // Création d'un utilisateur
     register_rest_route( 'cyclo-data/v1', '/users/create', array( 'methods' => 'POST', 'callback' => 'cyclo_create_user', 'permission_callback' => $dashboard_auth ) );
-    // Mise à jour des paramètres (Mot de passe, Profil)
-    register_rest_route( 'cyclo-data/v1', '/settings/update', array( 'methods' => 'POST', 'callback' => 'cyclo_update_settings', 'permission_callback' => $dashboard_auth ) );
+    // Routes pour les paramètres (GET = lecture, POST = écriture)
+    register_rest_route( 'cyclo-data/v1', '/settings', array( 'methods' => 'GET', 'callback' => 'cyclo_get_settings', 'permission_callback' => $dashboard_auth ) );
+    register_rest_route( 'cyclo-data/v1', '/settings', array( 'methods' => 'POST', 'callback' => 'cyclo_update_settings', 'permission_callback' => $dashboard_auth ) );
     // Gestion des permissions (Lecture et Écriture)
     register_rest_route( 'cyclo-data/v1', '/permissions/(?P<role>[a-zA-Z0-9_-]+)', array( 'methods' => 'GET', 'callback' => 'cyclo_get_permissions', 'permission_callback' => $dashboard_auth ) );
     register_rest_route( 'cyclo-data/v1', '/permissions/(?P<role>[a-zA-Z0-9_-]+)', array( 'methods' => 'POST', 'callback' => 'cyclo_update_permissions', 'permission_callback' => $dashboard_auth ) );
@@ -277,7 +278,7 @@ function cyclo_get_users_list( WP_REST_Request $request ) {
 }
 
 // =========================================================================
-// GESTION DES UTILISATEURS ET PARAMÈTRES
+// GESTION DES UTILISATEURS
 // =========================================================================
 
 function cyclo_create_user( WP_REST_Request $request ) {
@@ -322,29 +323,58 @@ function cyclo_create_user( WP_REST_Request $request ) {
     ) );
 }
 
+// =========================================================================
+// GESTION DES PARAMÈTRES (OPTIONS ET USER META)
+// =========================================================================
+
+function cyclo_get_settings( WP_REST_Request $request ) {
+    $user_id = get_current_user_id();
+    $is_admin = current_user_can('administrator');
+
+    // Récupération des préférences utilisateur
+    $user_settings = [
+        'accent_color' => get_user_meta($user_id, 'cyclo_accent_color', true) ?: '#1A9E66',
+        'density'      => get_user_meta($user_id, 'cyclo_display_density', true) ?: 'confortable',
+        'locale'       => get_user_meta($user_id, 'locale', true) ?: get_locale(),
+    ];
+
+    // Récupération des options globales (visibles/modifiables que par l'admin)
+    $global_settings = [];
+    if ( $is_admin ) {
+        $global_settings = [
+            'alert_email'    => get_option('cyclo_alert_email', '0'),
+            'weekly_report'  => get_option('cyclo_weekly_report', '0'),
+            'retention'      => get_option('cyclo_data_retention', '24'),
+            'export_format'  => get_option('cyclo_export_format', 'csv'),
+        ];
+    }
+
+    return rest_ensure_response([
+        'status' => 'success',
+        'data' => [
+            'is_admin' => $is_admin,
+            'user'     => $user_settings,
+            'global'   => $global_settings
+        ]
+    ]);
+}
+
 function cyclo_update_settings( WP_REST_Request $request ) {
     $user_id = get_current_user_id();
     if ( !$user_id ) return new WP_Error( 'unauthorized', 'Non connecté.', array( 'status' => 401 ) );
 
-    $new_password = $request->get_param('new_password');
-    $accent_color = sanitize_hex_color( $request->get_param('accent_color') ); // Exemple pour tes maquettes de couleurs
+    $params = $request->get_json_params();
 
-    // Si l'utilisateur change de mot de passe depuis les paramètres
-    if ( !empty($new_password) ) {
-        wp_set_password( $new_password, $user_id );
+    // 1. Sauvegarde des préférences Utilisateur
+    if ( isset($params['accent_color']) ) update_user_meta( $user_id, 'cyclo_accent_color', sanitize_hex_color($params['accent_color']) );
+    if ( isset($params['density']) ) update_user_meta( $user_id, 'cyclo_display_density', sanitize_text_field($params['density']) );
 
-        // On supprime le marqueur temporaire au cas où
-        delete_user_meta( $user_id, '_cyclo_force_pwd_change' );
-
-        // Reconnexion forcée en arrière-plan car wp_set_password détruit les cookies de session
-        clean_user_cache( $user_id );
-        wp_clear_auth_cookie();
-        wp_set_current_user( $user_id );
-        wp_set_auth_cookie( $user_id );
-    }
-
-    if ( !empty($accent_color) ) {
-        update_user_meta( $user_id, 'cyclo_accent_color', $accent_color );
+    // 2. Sauvegarde des Options Globales (Si Admin)
+    if ( current_user_can('administrator') ) {
+        if ( isset($params['alert_email']) ) update_option( 'cyclo_alert_email', sanitize_text_field($params['alert_email']) );
+        if ( isset($params['weekly_report']) ) update_option( 'cyclo_weekly_report', sanitize_text_field($params['weekly_report']) );
+        if ( isset($params['retention']) ) update_option( 'cyclo_data_retention', sanitize_text_field($params['retention']) );
+        if ( isset($params['export_format']) ) update_option( 'cyclo_export_format', sanitize_text_field($params['export_format']) );
     }
 
     return rest_ensure_response( ['status' => 'success'] );
