@@ -616,53 +616,53 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         root.innerHTML = `
-            <div style="max-width: 800px; margin: 0 auto; padding-bottom: 40px;">
+            <div style="grid-column: 1 / -1; width: 100%; max-width: 800px; margin: 0 auto; padding-bottom: 40px;">
+            
+            ${notificationsHtml}
+
+            <div class="settings-section" style="background: white; border: 1px solid #E2E8F0; border-radius: 8px; margin-bottom: 24px; padding: 24px;">
+                <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 20px; border-bottom: 1px solid #EDF2F7; padding-bottom: 12px;">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#718096" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
+                    <h3 style="margin: 0; font-size: 1.1rem; color: #2D3748;">Langue & Région</h3>
+                </div>
                 
-                ${notificationsHtml}
-
-                <div class="settings-section" style="background: white; border: 1px solid #E2E8F0; border-radius: 8px; margin-bottom: 24px; padding: 24px;">
-                    <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 20px; border-bottom: 1px solid #EDF2F7; padding-bottom: 12px;">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#718096" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
-                        <h3 style="margin: 0; font-size: 1.1rem; color: #2D3748;">Langue & Région</h3>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                    <div>
+                        <strong style="display: block; color: #2D3748;">Langue de l'interface</strong>
+                        <span style="font-size: 0.85rem; color: #718096;">Langue affichée dans le back-office</span>
                     </div>
-                    
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                        <div>
-                            <strong style="display: block; color: #2D3748;">Langue de l'interface</strong>
-                            <span style="font-size: 0.85rem; color: #718096;">Langue affichée dans le back-office</span>
-                        </div>
-                        <select id="opt_locale" class="cyclo-select" style="padding: 8px 12px; border-radius: 6px; border: 1px solid #E2E8F0;">
-                            <option value="fr_FR" ${data.user.locale === 'fr_FR' ? 'selected' : ''}>Français</option>
-                            <option value="en_US" ${data.user.locale === 'en_US' ? 'selected' : ''}>English</option>
-                        </select>
-                    </div>
-                </div>
-
-                <div class="settings-section" style="background: white; border: 1px solid #E2E8F0; border-radius: 8px; margin-bottom: 24px; padding: 24px;">
-                    <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 20px; border-bottom: 1px solid #EDF2F7; padding-bottom: 12px;">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#718096" stroke-width="2"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"></path></svg>
-                        <h3 style="margin: 0; font-size: 1.1rem; color: #2D3748;">Apparence</h3>
-                    </div>
-                    
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                        <div>
-                            <strong style="display: block; color: #2D3748;">Densité d'affichage</strong>
-                            <span style="font-size: 0.85rem; color: #718096;">Compacité de l'interface</span>
-                        </div>
-                        <select id="opt_density" class="cyclo-select" style="padding: 8px 12px; border-radius: 6px; border: 1px solid #E2E8F0;">
-                            <option value="confortable" ${data.user.density === 'confortable' ? 'selected' : ''}>Confortable</option>
-                            <option value="compact" ${data.user.density === 'compact' ? 'selected' : ''}>Compacte</option>
-                        </select>
-                    </div>
-                </div>
-
-                <div style="text-align: right;">
-                    <button id="btn-save-settings" class="btn-primary" style="padding: 10px 24px; font-size: 1rem; display: flex; align-items: center; gap: 8px; margin-left: auto;">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
-                        Sauvegarder
-                    </button>
+                    <select id="opt_locale" class="cyclo-select" style="padding: 8px 12px; border-radius: 6px; border: 1px solid #E2E8F0; min-width: 200px;">
+                        <option value="fr_FR" ${data.user.locale === 'fr_FR' ? 'selected' : ''}>Français</option>
+                        <option value="en_US" ${data.user.locale === 'en_US' ? 'selected' : ''}>English</option>
+                    </select>
                 </div>
             </div>
+
+            <div class="settings-section" style="background: white; border: 1px solid #E2E8F0; border-radius: 8px; margin-bottom: 24px; padding: 24px;">
+                <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 20px; border-bottom: 1px solid #EDF2F7; padding-bottom: 12px;">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#718096" stroke-width="2"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"></path></svg>
+                    <h3 style="margin: 0; font-size: 1.1rem; color: #2D3748;">Apparence</h3>
+                </div>
+                
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                    <div>
+                        <strong style="display: block; color: #2D3748;">Densité d'affichage</strong>
+                        <span style="font-size: 0.85rem; color: #718096;">Compacité de l'interface</span>
+                    </div>
+                    <select id="opt_density" class="cyclo-select" style="padding: 8px 12px; border-radius: 6px; border: 1px solid #E2E8F0; min-width: 200px;">
+                        <option value="confortable" ${data.user.density === 'confortable' ? 'selected' : ''}>Confortable</option>
+                        <option value="compact" ${data.user.density === 'compact' ? 'selected' : ''}>Compacte</option>
+                    </select>
+                </div>
+            </div>
+
+            <div style="text-align: right;">
+                <button id="btn-save-settings" class="btn-primary" style="padding: 10px 24px; font-size: 1rem; display: flex; align-items: center; gap: 8px; margin-left: auto;">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
+                    Sauvegarder
+                </button>
+            </div>
+        </div>
         `;
 
         // Écouteur pour la sauvegarde
@@ -710,6 +710,55 @@ document.addEventListener('DOMContentLoaded', () => {
             .toggle-switch input:checked + .slider:before { transform: translateX(20px); }
         `;
         document.head.appendChild(style);
+    }
+
+    // --- 9. SÉLECTEUR DE DATES (FLATPICKR) ---
+    const datePickerBtn = document.getElementById('date-picker-btn');
+    const datePickerLabel = document.getElementById('date-picker-label');
+
+    if (datePickerBtn && typeof flatpickr !== 'undefined') {
+
+        // Initialisation de la date affichée au chargement
+        const currentYear = new Date().getFullYear();
+        datePickerLabel.innerText = `1 jan. - 31 déc. ${currentYear}`;
+
+        // On stocke l'instance dans une variable
+        const fpInstance = flatpickr(datePickerBtn, {
+            mode: "range",
+            locale: "fr",
+            dateFormat: "Y-m-d",
+            defaultDate: [appState.dateStart, appState.dateEnd],
+            maxDate: "today",
+
+            onChange: function(selectedDates, dateStr, instance) {
+                if (selectedDates.length === 2) {
+                    const formatter = new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'short' });
+                    const yearFormatter = new Intl.DateTimeFormat('fr-FR', { year: 'numeric' });
+
+                    const startStr = formatter.format(selectedDates[0]);
+                    const endStr = formatter.format(selectedDates[1]);
+                    const yearStr = yearFormatter.format(selectedDates[1]);
+
+                    datePickerLabel.innerText = `${startStr} - ${endStr} ${yearStr}`;
+
+                    appState.dateStart = instance.formatDate(selectedDates[0], "Y-m-d");
+                    appState.dateEnd = instance.formatDate(selectedDates[1], "Y-m-d");
+                    appState.filterType = 'custom';
+
+                    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+                    fetchApiData();
+                }
+            }
+        });
+
+        // FORCE l'ouverture du calendrier au clic sur le bouton
+        datePickerBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            fpInstance.open();
+        });
+
+    } else {
+        console.error("Flatpickr n'est pas chargé ou le bouton date-picker-btn est introuvable.");
     }
 
     // Lancement

@@ -1,6 +1,6 @@
 <?php
 // Fichier : wp-content/themes/theme-aire-repos/single-aire_repos-questionnaire.php
-get_header();
+get_header('dashboard');
 $aire_id = get_the_ID();
 
 // Récupération des champs ACF (avec des fallbacks sécurisés si le client oublie de remplir un champ)
@@ -10,7 +10,6 @@ $q_label_1 = get_field('q_label_1') ?: "Évaluez votre niveau de satisfaction de
 $q_label_2 = get_field('q_label_2') ?: "Évaluez votre niveau de satisfaction sur la sécurité *";
 $q_label_3 = get_field('q_label_3') ?: "Évaluez votre satisfaction sur les services *";
 $q_label_4 = get_field('q_label_4') ?: "Comment avez-vous eu connaissance de cet itinéraire ? *";
-$q_label_5 = get_field('q_label_5') ?: "Avez-vous des suggestions ou remarques complémentaires ?";
 $q_bg = get_field('q_image_fond') ? 'background-image: url(' . esc_url(get_field('q_image_fond')) . '); background-size: cover; background-position: center;' : '';
 
 $q_profil_titre = get_field('q_profil_titre') ?: "Aidez-nous à mieux vous connaître";
@@ -109,19 +108,6 @@ $q_profil_q4 = get_field('q_profil_q4') ?: "Comment êtes-vous venu ?";
                         </div>
                     </div>
 
-                    <!-- Q5 -->
-                    <div class="q-step" role="group" aria-labelledby="q5-title">
-                        <div class="q-question-header">
-                            <div class="q-number">5</div>
-                            <div class="q-question-text" id="q5-title">
-                                <?php echo esc_html($q_label_5); ?> <span class="q-badge-facultatif">Facultatif</span>
-                            </div>
-                        </div>
-                        <div class="q-options-container">
-                            <textarea name="q5_suggestions" rows="4" placeholder="Écrivez votre message ici..."></textarea>
-                        </div>
-                    </div>
-
                     <!-- Zone Profilage Dynamique (Accordéon) -->
                     <div class="q-profilage-zone">
                         <!-- Le bouton déclencheur de l'accordéon -->
@@ -184,7 +170,9 @@ $q_profil_q4 = get_field('q_profil_q4') ?: "Comment êtes-vous venu ?";
                         <p class="q-rgpd-title">CONFIDENTIALITÉ (RGPD)</p>
                         <label class="q-checkbox-card">
                             <input type="checkbox" id="rgpd-consent" required>
-                            J'accepte que mes réponses soient traitées anonymement à des fins statistiques (RGPD). *
+                            J'accepte que mes réponses soient traitées
+                            <strong><u>anonymement</u></strong>
+                            à des fins statistiques (RGPD). *
                         </label>
                     </div>
 

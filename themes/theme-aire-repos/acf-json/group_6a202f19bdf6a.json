@@ -129,27 +129,6 @@
             "append": ""
         },
         {
-            "key": "field_6a202fa1c1f88",
-            "label": "Question 5",
-            "name": "q_label_5",
-            "aria-label": "",
-            "type": "text",
-            "instructions": "",
-            "required": 0,
-            "conditional_logic": 0,
-            "wrapper": {
-                "width": "",
-                "class": "",
-                "id": ""
-            },
-            "default_value": "Avez-vous des suggestions ?",
-            "maxlength": "",
-            "allow_in_bindings": 0,
-            "placeholder": "",
-            "prepend": "",
-            "append": ""
-        },
-        {
             "key": "field_6a203613bdc34",
             "label": "Image de fond optionnel",
             "name": "q_image_fond",
@@ -302,5 +281,5 @@
     "display_title": "",
     "allow_ai_access": false,
     "ai_description": "",
-    "modified": 1781101076
+    "modified": 1782396994
 }
