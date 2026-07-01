@@ -72,6 +72,10 @@ get_header('dashboard');
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script src="https://npmcdn.com/flatpickr/dist/l10n/fr.js"></script>
+
     <div class="cyclo-app-layout" data-nonce="<?php echo esc_attr($api_nonce); ?>">
 
         <aside class="cyclo-sidebar">
@@ -162,6 +166,11 @@ get_header('dashboard');
                         <button class="filter-btn">Mois</button>
                         <button class="filter-btn active">Année</button>
                     </div>
+
+                    <button class="btn-action outline" id="date-picker-btn" title="Sélectionner une plage de dates personnalisée">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+                        <span id="date-picker-label">Sélectionner une période</span>
+                    </button>
 
                     <button class="btn-action outline" id="export-csv-btn" title="Télécharger les données brutes pour Excel">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
