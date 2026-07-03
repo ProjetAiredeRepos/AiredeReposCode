@@ -1,5 +1,18 @@
 // Fichier : wp-content/themes/theme-aire-repos/scripts/dashboard-app.js
 
+// Plugin réutilisable pour les graphiques circulaires et barres
+const percentageTooltip = {
+    callbacks: {
+        label: function(context) {
+            let dataset = context.dataset.data;
+            let total = dataset.reduce((previousValue, currentValue) => previousValue + currentValue, 0);
+            let currentValue = dataset[context.dataIndex];
+            let percentage = Math.round((currentValue / total) * 100);
+            return ` ${context.label} : ${currentValue} (${percentage}%)`;
+        }
+    }
+};
+
 document.addEventListener('DOMContentLoaded', () => {
     const appLayout = document.querySelector('.cyclo-app-layout');
     if (!appLayout) return;
@@ -11,7 +24,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     let appState = {
         module: 'discovery', level: 'global', entityId: 'all', entityName: "Vue d'ensemble",
-        filterType: 'annee', dateStart: `${new Date().getFullYear()}-01-01`, dateEnd: `${new Date().getFullYear()}-12-31`
+        filterType: 'annee', dateStart: `${new Date().getFullYear()}-01-01`, dateEnd: `${new Date().getFullYear()}-12-31`,
+        compare: false
     };
 
     // --- 1. MOTEUR API ---
@@ -49,7 +63,14 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             return; // On stoppe la fonction ici pour ce module
         }
-        const params = new URLSearchParams({ level: appState.level, id: appState.entityId, start_date: appState.dateStart, end_date: appState.dateEnd, filter_type: appState.filterType });
+        const params = new URLSearchParams({
+            level: appState.level,
+            id: appState.entityId,
+            start_date: appState.dateStart,
+            end_date: appState.dateEnd,
+            filter_type: appState.filterType,
+            compare: appState.compare ? '1' : '0'
+        });
 
         root.innerHTML = '<div class="loading-state">Analyse des données en cours...</div>';
         updateHeaderTitles();
@@ -106,6 +127,11 @@ document.addEventListener('DOMContentLoaded', () => {
         const headerActions = document.querySelector('.header-actions');
         if (headerActions) headerActions.style.display = 'flex';
 
+        // Calcul des minutes et secondes
+        const min = Math.floor(data.temps_moyen / 60);
+        const sec = data.temps_moyen % 60;
+        const timeString = data.temps_moyen > 0 ? `${min} min ${sec} s` : "0 min 0 s";
+
         let linksHtml = '<div style="padding:10px 0; color:#888;">Aucun lien cliqué sur la période.</div>';
         if(data.top_links && data.top_links.length > 0) {
             linksHtml = data.top_links.map((link, idx) => `
@@ -117,17 +143,31 @@ document.addEventListener('DOMContentLoaded', () => {
 
         root.innerHTML = `
             <div class="dash-card card-full"><div class="card-header"><h3>Évolution des consultations</h3><p>Période: ${appState.filterType}</p></div><div class="chart-container main-chart"><canvas id="chart-evo"></canvas></div></div>
+            <div class="dash-card card-half"><div class="card-header"><h3>Temps moyen passé</h3><p>Par session</p></div><div class="kpi-value">${timeString}</div></div>
             <div class="dash-card card-half"><div class="card-header"><h3>Consultations totales</h3></div><div class="kpi-value">${data.total_consultations.toLocaleString('fr-FR')}</div></div>
             <div class="dash-card card-half"><div class="card-header"><h3>Origine géographique</h3></div><div class="chart-container" style="height: 250px;"><canvas id="chart-geo"></canvas></div></div>
             <div class="dash-card card-half"><div class="card-header"><h3>Répartition par tranche horaire</h3></div><div class="chart-container" style="height: 250px;"><canvas id="chart-hour"></canvas></div></div>
             <div class="dash-card card-half"><div class="card-header"><h3>Liens les plus cliqués</h3></div><div style="max-height:250px; overflow-y:auto;">${linksHtml}</div></div>
         `;
-        initTimelineChart(document.getElementById('chart-evo'), data.timeline);
+        initTimelineChart(document.getElementById('chart-evo'), data.timeline, data.timeline_compare);
         if(document.getElementById('chart-geo') && data.geo_stats && data.geo_stats.length > 0) new Chart(document.getElementById('chart-geo'), { type: 'doughnut', data: { labels: data.geo_stats.map(i=>i.code_langue.toUpperCase()), datasets: [{ data: data.geo_stats.map(i=>i.total), backgroundColor: ['#1A9E66','#41C48F','#8EEABF'] }] }, options: { responsive:true, maintainAspectRatio:false, cutout:'65%' } });
         if(document.getElementById('chart-hour') && data.hourly_stats) {
             const hData = new Array(24).fill(0);
             data.hourly_stats.forEach(r => hData[parseInt(r.heure)] = parseInt(r.total));
-            new Chart(document.getElementById('chart-hour'), { type: 'bar', data: { labels: Array.from({length:24}, (_,i)=>`${i}h`), datasets: [{ data: hData, backgroundColor: THEME.primary, borderRadius:4 }] }, options: { responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}} }});
+            new Chart(document.getElementById('chart-hour'), {
+                type: 'bar',
+                data: {
+                    labels: Array.from({length:24}, (_,i)=>`${i}h`),
+                    datasets: [{ data: hData, backgroundColor: THEME.primary, borderRadius:4 }]
+                },
+                options: {
+                    responsive:true,
+                    maintainAspectRatio:false,
+                    plugins:{
+                        tooltip: percentageTooltip // Injection du calcul de pourcentage
+                    }
+                }
+            });
         }
     }
 
@@ -147,9 +187,27 @@ document.addEventListener('DOMContentLoaded', () => {
             
             <div class="dash-card card-full"><div class="card-header"><h3>Évolution des réponses</h3><p>Période: ${appState.filterType}</p></div><div class="chart-container main-chart"><canvas id="chart-survey-timeline"></canvas></div></div>
             
-            <div class="dash-card card-third"><div class="card-header"><h3>1. Note Aire</h3></div><div class="chart-container" style="height: 200px;"><canvas id="chart-q1"></canvas></div></div>
-            <div class="dash-card card-third"><div class="card-header"><h3>2. Note Sécurité</h3></div><div class="chart-container" style="height: 200px;"><canvas id="chart-q2"></canvas></div></div>
-            <div class="dash-card card-third"><div class="card-header"><h3>3. Note Services</h3></div><div class="chart-container" style="height: 200px;"><canvas id="chart-q3"></canvas></div></div>
+            <div class="dash-card card-third">
+                <div class="card-header" style="display:flex; justify-content:space-between;">
+                    <h3>1. Note Aire</h3>
+                    <span style="font-weight:bold; color:var(--primary);">${data.averages.aire} / 4</span>
+                </div>
+                <div class="chart-container" style="height: 200px;"><canvas id="chart-q1"></canvas></div>
+            </div>
+            <div class="dash-card card-third">
+                <div class="card-header" style="display:flex; justify-content:space-between;">
+                    <h3>2. Note Sécurité</h3>
+                    <span style="font-weight:bold; color:var(--primary);">${data.averages.securite} / 4</span>
+                </div>
+                <div class="chart-container" style="height: 200px;"><canvas id="chart-q2"></canvas></div>
+            </div>
+            <div class="dash-card card-third">
+                <div class="card-header" style="display:flex; justify-content:space-between;">
+                    <h3>3. Note Services</h3>
+                    <span style="font-weight:bold; color:var(--primary);">${data.averages.services} / 4</span>
+                </div>
+                <div class="chart-container" style="height: 200px;"><canvas id="chart-q3"></canvas></div>
+            </div>
             
             <div class="dash-card card-full"><div class="card-header"><h3>4. Sources de découverte</h3></div><div class="chart-container" style="height: 250px;"><canvas id="chart-q4"></canvas></div></div>
             
@@ -158,17 +216,44 @@ document.addEventListener('DOMContentLoaded', () => {
             <div class="dash-card card-third"><div class="card-header"><h3>Pays</h3></div><div class="chart-container" style="height: 200px;"><canvas id="chart-pays"></canvas></div></div>
         `;
 
-        initTimelineChart(document.getElementById('chart-survey-timeline'), data.timeline);
+        initTimelineChart(document.getElementById('chart-survey-timeline'), data.timeline, data.timeline_compare);
 
         if(document.getElementById('chart-radar') && data.total_reponses > 0) {
-            new Chart(document.getElementById('chart-radar'), { type: 'radar', data: { labels: ['Aire', 'Sécurité', 'Services'], datasets: [{ label: 'Score', data: data.radar_scores, backgroundColor: THEME.primaryLight, borderColor: THEME.primary }] }, options:{responsive:true, maintainAspectRatio:false, scales: { r: { min: 0, max: 100, ticks:{display:false} } }, plugins: { legend: { display: false } }} });
+            new Chart(document.getElementById('chart-radar'), {
+                type: 'radar',
+                data: {
+                    labels: ['Aire', 'Sécurité', 'Services'],
+                    datasets: [{ label: 'Score', data: data.radar_scores, backgroundColor: THEME.primaryLight, borderColor: THEME.primary }]
+                },
+                options:{
+                    responsive:true,
+                    maintainAspectRatio:false,
+                    scales: { r: { min: 0, max: 100, ticks:{display:false} } },
+                    plugins: {
+                        tooltip: percentageTooltip // Injection du calcul de pourcentage
+                    }
+                }
+            });
         }
 
         const renderMiniBar = (id, distData) => {
             if(!document.getElementById(id)) return;
             const vals = [0,0,0,0];
             if(distData) distData.forEach(r => { if(r.note>=1 && r.note<=4) vals[parseInt(r.note)-1] = parseInt(r.total); });
-            new Chart(document.getElementById(id), { type: 'bar', data: { labels: ['1/4', '2/4', '3/4', '4/4'], datasets: [{ label: 'Votes', data: vals, backgroundColor: THEME.primary, borderRadius: 4 }] }, options: { responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}} }});
+            new Chart(document.getElementById(id), {
+                type: 'bar',
+                data: {
+                    labels: ['1/4', '2/4', '3/4', '4/4'],
+                    datasets: [{ label: 'Votes', data: vals, backgroundColor: THEME.primary, borderRadius: 4 }]
+                },
+                options: {
+                    responsive:true,
+                    maintainAspectRatio:false,
+                    plugins:{
+                        tooltip: percentageTooltip // Injection du calcul de pourcentage
+                    }
+                }
+            });
         };
         renderMiniBar('chart-q1', data.q1_dist); renderMiniBar('chart-q2', data.q2_dist); renderMiniBar('chart-q3', data.q3_dist);
 
@@ -178,7 +263,21 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if(document.getElementById('chart-pays')) {
             if (data.pays && data.pays.length > 0) {
-                new Chart(document.getElementById('chart-pays'), { type: 'bar', data: { labels: data.pays.map(i=>i.profil_pays.toUpperCase()), datasets: [{ label: 'Visiteurs', data: data.pays.map(i=>i.total), backgroundColor: THEME.primary, borderRadius: 4 }] }, options: { indexAxis: 'y', responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}} }});
+                new Chart(document.getElementById('chart-pays'), {
+                    type: 'bar',
+                    data: {
+                        labels: data.pays.map(i=>i.profil_pays.toUpperCase()),
+                        datasets: [{ label: 'Visiteurs', data: data.pays.map(i=>i.total), backgroundColor: THEME.primary, borderRadius: 4 }]
+                    },
+                    options: {
+                        indexAxis: 'y',
+                        responsive:true,
+                        maintainAspectRatio:false,
+                        plugins:{
+                            tooltip: percentageTooltip // Injection du calcul de pourcentage
+                        }
+                    }
+                });
             } else {
                 document.getElementById('chart-pays').parentElement.innerHTML = '<div style="text-align:center; color:#999; padding-top:20px;">Aucune donnée</div>';
             }
@@ -413,30 +512,59 @@ document.addEventListener('DOMContentLoaded', () => {
         document.querySelector('[data-role="cyclo_editeur"]').click();
     }
 
-    // --- 6. TIMELINE INTELLIGENTE ---
-    function initTimelineChart(ctx, timelineData) {
+    // --- 6. TIMELINE INTELLIGENTE AVEC COMPARAISON ---
+    function initTimelineChart(ctx, timelineData, compareData = null) {
         if (!ctx) return;
-        let labels = [], chartData = [];
+        let labels = [], chartData = [], compData = [];
 
         if (appState.filterType === 'annee') {
             labels = ['Jan.', 'Fév.', 'Mars', 'Avr.', 'Mai', 'Juin', 'Juil.', 'Août', 'Sep.', 'Oct.', 'Nov.', 'Déc.'];
-            chartData = new Array(12).fill(0);
+            chartData = new Array(12).fill(0); compData = new Array(12).fill(0);
             if(timelineData) timelineData.forEach(r => chartData[parseInt(r.label) - 1] = parseInt(r.total));
+            if(compareData) compareData.forEach(r => compData[parseInt(r.label) - 1] = parseInt(r.total));
         } else if (appState.filterType === 'jour') {
             labels = Array.from({length: 24}, (_, i) => `${i}h`);
-            chartData = new Array(24).fill(0);
+            chartData = new Array(24).fill(0); compData = new Array(24).fill(0);
             if(timelineData) timelineData.forEach(r => chartData[parseInt(r.label)] = parseInt(r.total));
+            if(compareData) compareData.forEach(r => compData[parseInt(r.label)] = parseInt(r.total));
         } else if (appState.filterType === 'semaine') {
             labels = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi', 'Dimanche'];
-            chartData = new Array(7).fill(0);
+            chartData = new Array(7).fill(0); compData = new Array(7).fill(0);
             if(timelineData) timelineData.forEach(r => chartData[parseInt(r.label)] = parseInt(r.total));
+            if(compareData) compareData.forEach(r => compData[parseInt(r.label)] = parseInt(r.total));
         } else {
             labels = Array.from({length: 31}, (_, i) => `${i+1}`);
-            chartData = new Array(31).fill(0);
+            chartData = new Array(31).fill(0); compData = new Array(31).fill(0);
             if(timelineData) timelineData.forEach(r => chartData[parseInt(r.label) - 1] = parseInt(r.total));
+            if(compareData) compareData.forEach(r => compData[parseInt(r.label) - 1] = parseInt(r.total));
         }
 
-        new Chart(ctx, { type: 'line', data: { labels: labels, datasets: [{ label: 'Volume', data: chartData, borderColor: THEME.primary, backgroundColor: THEME.primaryLight, fill: true, tension: 0.4 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { precision: 0 } } } } });
+        const datasets = [{
+            label: 'Période actuelle',
+            data: chartData,
+            borderColor: THEME.primary,
+            backgroundColor: THEME.primaryLight,
+            fill: true,
+            tension: 0.4
+        }];
+
+        if (appState.compare && compareData) {
+            datasets.push({
+                label: 'Année précédente',
+                data: compData,
+                borderColor: '#A0AEC0',
+                borderDash: [5, 5],
+                backgroundColor: 'transparent',
+                fill: false,
+                tension: 0.4
+            });
+        }
+
+        new Chart(ctx, {
+            type: 'line',
+            data: { labels: labels, datasets: datasets },
+            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: appState.compare } }, scales: { y: { beginAtZero: true, ticks: { precision: 0 } } } }
+        });
     }
 
     // --- 7. ÉCOUTEURS D'ÉVÉNEMENTS ---
@@ -702,6 +830,8 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
 
+
+
         // Petit script intégré pour le style CSS des "Toggles" dynamiques
         const style = document.createElement('style');
         style.innerHTML = `
@@ -759,6 +889,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
     } else {
         console.error("Flatpickr n'est pas chargé ou le bouton date-picker-btn est introuvable.");
+    }
+
+    // Écouteur du clic sur le bouton comparer
+    const compareCheckbox = document.getElementById('compare-checkbox');
+    if(compareCheckbox) {
+        compareCheckbox.addEventListener('change', (e) => {
+            appState.compare = e.target.checked;
+            fetchApiData(); // Relance la requête avec le paramètre compare=1
+        });
     }
 
     // Lancement
