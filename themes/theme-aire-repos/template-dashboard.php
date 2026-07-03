@@ -70,6 +70,7 @@ get_header('dashboard');
 ?>
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
@@ -173,8 +174,13 @@ get_header('dashboard');
                     </button>
 
                     <label style="display:flex; align-items:center; gap:8px; cursor:pointer; padding:8px 12px; background:white; border:1px solid #E2E8F0; border-radius:6px; font-weight:600; color:#4A5568;">
-                        <input type="checkbox" id="compare-checkbox" style="accent-color:#1A9E66;"> Comparer (N-1)
+                        <input type="checkbox" id="compare-checkbox" style="accent-color:#1A9E66;"> Comparer
                     </label>
+
+                    <button class="btn-action outline" id="compare-picker-btn" style="display:none; border-color: #A0AEC0; color: #4A5568;" title="Période de comparaison">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12V7H5a2 2 0 0 1 2-2h14v4"></path><path d="M3 15v5a2 2 0 0 0 2 2h14v-4"></path><path d="M3 15h14"></path><path d="M3 15l4-4"></path><path d="M21 12l-4 4"></path></svg>
+                        <span id="compare-picker-label">Sélectionner...</span>
+                    </button>
 
                     <button class="btn-action outline" id="export-csv-btn" title="Télécharger les données brutes pour Excel">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>

@@ -132,15 +132,26 @@ function cyclo_get_discovery_overview( WP_REST_Request $request ) {
 
     $timeline = $wpdb->get_results( $wpdb->prepare("SELECT {$group_sql}, COUNT(id_visite) as total FROM {$wpdb->prefix}visite_site {$where} GROUP BY {$group_by} ORDER BY label ASC", ...$params) );
 
-    // Comparaison (N-1)
+    // Comparaison
+    // NOUVEAU : On récupère les dates exactes voulues par l'utilisateur
+    $compare_start = sanitize_text_field( $request->get_param('compare_start') );
+    $compare_end   = sanitize_text_field( $request->get_param('compare_end') );
+
     $timeline_compare = [];
-    if ( $compare ) {
-        $prev_start = date('Y-m-d H:i:s', strtotime('-1 year', strtotime($params[0])));
-        $prev_end   = date('Y-m-d H:i:s', strtotime('-1 year', strtotime($params[1])));
-        $compare_params = $params;
-        $compare_params[0] = $prev_start;
-        $compare_params[1] = $prev_end;
-        $timeline_compare = $wpdb->get_results( $wpdb->prepare("SELECT {$group_sql}, COUNT(id_visite) as total FROM {$wpdb->prefix}visite_site {$where} GROUP BY {$group_by} ORDER BY label ASC", ...$compare_params) );
+    if ( $compare && $compare_start && $compare_end ) {
+        $compare_params = $params; // On copie les paramètres (notamment id_aire etc.)
+        // On écrase les dates de début et de fin (qui sont aux index 0 et 1)
+        $compare_params[0] = $compare_start . ' 00:00:00';
+        $compare_params[1] = $compare_end . ' 23:59:59';
+
+        // Exécution de la requête avec les nouvelles dates
+        // (Attention : assure-toi d'adapter la table et le groupe selon la fonction dans laquelle tu colles ce code)
+        // Pour discovery_overview : {$wpdb->prefix}visite_site
+        // Pour survey_overview : {$table_survey}
+        $table_name = isset($table_survey) ? $table_survey : "{$wpdb->prefix}visite_site";
+
+        $timeline_compare = $wpdb->get_results( $wpdb->prepare("SELECT {$group_sql}, COUNT(id_visite) as total FROM {$table_name} {$where} GROUP BY {$group_by} ORDER BY label ASC", ...$compare_params) );
+        // Note: Remplace "id_visite_ou_reponse" par "id_visite" dans discovery_overview et "id_reponse" dans survey_overview.
     }
 
     $hourly = $wpdb->get_results( $wpdb->prepare("SELECT HOUR(date_visite) as heure, COUNT(id_visite) as total FROM {$wpdb->prefix}visite_site {$where} GROUP BY HOUR(date_visite)", ...$params) );
@@ -181,15 +192,26 @@ function cyclo_get_survey_overview( WP_REST_Request $request ) {
     $kpi = $wpdb->get_row( $wpdb->prepare("SELECT COUNT(id_reponse) as total, AVG(q1_satisfaction_aire) as a1, AVG(q2_satisfaction_securite) as a2, AVG(q3_satisfaction_services) as a3 FROM {$table_survey} {$where}", ...$params) );
     $timeline = $wpdb->get_results( $wpdb->prepare("SELECT {$group_sql}, COUNT(id_reponse) as total FROM {$table_survey} {$where} GROUP BY {$group_by} ORDER BY label ASC", ...$params) );
 
-    // Comparaison (N-1)
+    // Comparaison
+    // NOUVEAU : On récupère les dates exactes voulues par l'utilisateur
+    $compare_start = sanitize_text_field( $request->get_param('compare_start') );
+    $compare_end   = sanitize_text_field( $request->get_param('compare_end') );
+
     $timeline_compare = [];
-    if ( $compare ) {
-        $prev_start = date('Y-m-d H:i:s', strtotime('-1 year', strtotime($params[0])));
-        $prev_end   = date('Y-m-d H:i:s', strtotime('-1 year', strtotime($params[1])));
-        $compare_params = $params;
-        $compare_params[0] = $prev_start;
-        $compare_params[1] = $prev_end;
-        $timeline_compare = $wpdb->get_results( $wpdb->prepare("SELECT {$group_sql}, COUNT(id_reponse) as total FROM {$table_survey} {$where} GROUP BY {$group_by} ORDER BY label ASC", ...$compare_params) );
+    if ( $compare && $compare_start && $compare_end ) {
+        $compare_params = $params; // On copie les paramètres (notamment id_aire etc.)
+        // On écrase les dates de début et de fin (qui sont aux index 0 et 1)
+        $compare_params[0] = $compare_start . ' 00:00:00';
+        $compare_params[1] = $compare_end . ' 23:59:59';
+
+        // Exécution de la requête avec les nouvelles dates
+        // (Attention : assure-toi d'adapter la table et le groupe selon la fonction dans laquelle tu colles ce code)
+        // Pour discovery_overview : {$wpdb->prefix}visite_site
+        // Pour survey_overview : {$table_survey}
+        $table_name = isset($table_survey) ? $table_survey : "{$wpdb->prefix}visite_site";
+
+        $timeline_compare = $wpdb->get_results( $wpdb->prepare("SELECT {$group_sql}, COUNT(id_reponse) as total FROM {$table_name} {$where} GROUP BY {$group_by} ORDER BY label ASC", ...$compare_params) );
+        // Note: Remplace "id_visite_ou_reponse" par "id_visite" dans discovery_overview et "id_reponse" dans survey_overview.
     }
 
     $q1_dist = $wpdb->get_results( $wpdb->prepare("SELECT q1_satisfaction_aire as note, COUNT(id_reponse) as total FROM {$table_survey} {$where} GROUP BY note", ...$params) );
@@ -241,16 +263,26 @@ function cyclo_export_csv_data( WP_REST_Request $request ) {
     fputs($output, chr(0xEF).chr(0xBB).chr(0xBF)); // BOM pour Excel
 
     if ( $module === 'discovery' ) {
-        fputcsv($output, ['ID Visite', 'Date (Formatée)', 'ID Aire', 'Langue', 'Temps passé (secondes)'], ';');
-        $results = $wpdb->get_results( $wpdb->prepare("SELECT * FROM {$wpdb->prefix}visite_site {$where} ORDER BY date_visite DESC", $params), ARRAY_A );
+        // CORRECTION 1 : L'en-tête de la colonne devient plus clair
+        fputcsv($output, ['ID Visite', 'Date (Formatée)', 'ID Aire', 'Langue', 'Temps passé (HH:MM:SS)'], ';');
+
+        $results = $wpdb->get_results( $wpdb->prepare("SELECT * FROM {$wpdb->prefix}visite_site {$where} ORDER BY date_visite DESC", ...$params), ARRAY_A );
+
         if($results) { foreach ( $results as $row ) {
-            // FIX CSV : Formatage clair de la date pour Excel
             $date_excel = date('d/m/Y H:i', strtotime($row['date_visite']));
-            fputcsv($output, [$row['id_visite'], $date_excel, $row['id_aire'], strtoupper($row['code_langue']), $row['temps_total']], ';');
+
+            // CORRECTION 2 : Conversion des secondes en format HH:MM:SS lisible
+            $temps_secondes = (int) $row['temps_total'];
+            $heures = floor($temps_secondes / 3600);
+            $minutes = floor(($temps_secondes / 60) % 60);
+            $secondes = $temps_secondes % 60;
+            $temps_formate = sprintf('%02d:%02d:%02d', $heures, $minutes, $secondes);
+
+            fputcsv($output, [$row['id_visite'], $date_excel, $row['id_aire'], strtoupper($row['code_langue']), $temps_formate], ';');
         }}
     } else {
         fputcsv($output, ['ID Reponse', 'Date Formatee', 'ID Aire', 'Note Aire', 'Note Securite', 'Note Services', 'Origine', 'Pays'], ';');
-        $results = $wpdb->get_results( $wpdb->prepare("SELECT * FROM {$wpdb->prefix}reponse_questionnaire {$where} ORDER BY date_soumission DESC", $params), ARRAY_A );
+        $results = $wpdb->get_results( $wpdb->prepare("SELECT * FROM {$wpdb->prefix}reponse_questionnaire {$where} ORDER BY date_soumission DESC", ...$params), ARRAY_A );
         if($results) { foreach ( $results as $row ) {
             $date_excel = date('d/m/Y H:i', strtotime($row['date_soumission']));
             fputcsv($output, [$row['id_reponse'], $date_excel, $row['id_aire'], $row['q1_satisfaction_aire'], $row['q2_satisfaction_securite'], $row['q3_satisfaction_services'], $row['profil_origine'], $row['profil_pays']], ';');

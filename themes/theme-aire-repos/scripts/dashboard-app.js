@@ -22,10 +22,26 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const THEME = { primary: '#1A9E66', primaryLight: '#E7F5EF', textMain: '#2D3748', textMuted: '#718096' };
 
+    // Enregistrement global du plugin Datalabels pour afficher les %
+    Chart.register(ChartDataLabels);
+    Chart.defaults.set('plugins.datalabels', {
+        color: '#fff',
+        font: { weight: 'bold', size: 12 },
+        formatter: (value, ctx) => {
+            let sum = 0;
+            let dataArr = ctx.chart.data.datasets[0].data;
+            dataArr.map(data => { sum += Number(data); });
+            let percentage = (value * 100 / sum).toFixed(0) + "%";
+            return percentage;
+        }
+    });
+
     let appState = {
         module: 'discovery', level: 'global', entityId: 'all', entityName: "Vue d'ensemble",
         filterType: 'annee', dateStart: `${new Date().getFullYear()}-01-01`, dateEnd: `${new Date().getFullYear()}-12-31`,
-        compare: false
+        compare: false,
+        compareStart: '', // Sera défini dynamiquement
+        compareEnd: ''
     };
 
     // --- 1. MOTEUR API ---
@@ -69,7 +85,9 @@ document.addEventListener('DOMContentLoaded', () => {
             start_date: appState.dateStart,
             end_date: appState.dateEnd,
             filter_type: appState.filterType,
-            compare: appState.compare ? '1' : '0'
+            compare: appState.compare ? '1' : '0',
+            compare_start: appState.compareStart, // Nouveau
+            compare_end: appState.compareEnd, // Nouveau
         });
 
         root.innerHTML = '<div class="loading-state">Analyse des données en cours...</div>';
@@ -145,12 +163,11 @@ document.addEventListener('DOMContentLoaded', () => {
             <div class="dash-card card-full"><div class="card-header"><h3>Évolution des consultations</h3><p>Période: ${appState.filterType}</p></div><div class="chart-container main-chart"><canvas id="chart-evo"></canvas></div></div>
             <div class="dash-card card-half"><div class="card-header"><h3>Temps moyen passé</h3><p>Par session</p></div><div class="kpi-value">${timeString}</div></div>
             <div class="dash-card card-half"><div class="card-header"><h3>Consultations totales</h3></div><div class="kpi-value">${data.total_consultations.toLocaleString('fr-FR')}</div></div>
-            <div class="dash-card card-half"><div class="card-header"><h3>Origine géographique</h3></div><div class="chart-container" style="height: 250px;"><canvas id="chart-geo"></canvas></div></div>
             <div class="dash-card card-half"><div class="card-header"><h3>Répartition par tranche horaire</h3></div><div class="chart-container" style="height: 250px;"><canvas id="chart-hour"></canvas></div></div>
             <div class="dash-card card-half"><div class="card-header"><h3>Liens les plus cliqués</h3></div><div style="max-height:250px; overflow-y:auto;">${linksHtml}</div></div>
         `;
         initTimelineChart(document.getElementById('chart-evo'), data.timeline, data.timeline_compare);
-        if(document.getElementById('chart-geo') && data.geo_stats && data.geo_stats.length > 0) new Chart(document.getElementById('chart-geo'), { type: 'doughnut', data: { labels: data.geo_stats.map(i=>i.code_langue.toUpperCase()), datasets: [{ data: data.geo_stats.map(i=>i.total), backgroundColor: ['#1A9E66','#41C48F','#8EEABF'] }] }, options: { responsive:true, maintainAspectRatio:false, cutout:'65%' } });
+
         if(document.getElementById('chart-hour') && data.hourly_stats) {
             const hData = new Array(24).fill(0);
             data.hourly_stats.forEach(r => hData[parseInt(r.heure)] = parseInt(r.total));
@@ -164,7 +181,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     responsive:true,
                     maintainAspectRatio:false,
                     plugins:{
-                        tooltip: percentageTooltip // Injection du calcul de pourcentage
+                        legend: {display: false},
+                        datalabels: {display: false}  // On désactive les labels pour ne pas surcharger les barres
+                        //tooltip: percentageTooltip // Injection du calcul de pourcentage
                     }
                 }
             });
@@ -230,7 +249,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     maintainAspectRatio:false,
                     scales: { r: { min: 0, max: 100, ticks:{display:false} } },
                     plugins: {
-                        tooltip: percentageTooltip // Injection du calcul de pourcentage
+                        legend: {display: false},
+                        datalabels: {display: false}  // On désactive les labels pour ne pas surcharger les barres
+                        //tooltip: percentageTooltip // Injection du calcul de pourcentage
                     }
                 }
             });
@@ -550,7 +571,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (appState.compare && compareData) {
             datasets.push({
-                label: 'Année précédente',
+                label: 'Période de comparaison', // MODIFIÉ
                 data: compData,
                 borderColor: '#A0AEC0',
                 borderDash: [5, 5],
@@ -563,7 +584,14 @@ document.addEventListener('DOMContentLoaded', () => {
         new Chart(ctx, {
             type: 'line',
             data: { labels: labels, datasets: datasets },
-            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: appState.compare } }, scales: { y: { beginAtZero: true, ticks: { precision: 0 } } } }
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: appState.compare },
+                    datalabels: { display: false } // CORRECTION : Désactive les % sur ce graphique
+                },
+                scales: { y: { beginAtZero: true, ticks: { precision: 0 } } } }
         });
     }
 
@@ -891,15 +919,68 @@ document.addEventListener('DOMContentLoaded', () => {
         console.error("Flatpickr n'est pas chargé ou le bouton date-picker-btn est introuvable.");
     }
 
-    // Écouteur du clic sur le bouton comparer
+    // --- GESTION DE LA COMPARAISON ET DU 2EME CALENDRIER ---
     const compareCheckbox = document.getElementById('compare-checkbox');
-    if(compareCheckbox) {
-        compareCheckbox.addEventListener('change', (e) => {
-            appState.compare = e.target.checked;
-            fetchApiData(); // Relance la requête avec le paramètre compare=1
+    const comparePickerBtn = document.getElementById('compare-picker-btn');
+    const comparePickerLabel = document.getElementById('compare-picker-label');
+    let fpCompareInstance = null;
+
+    if (comparePickerBtn && typeof flatpickr !== 'undefined') {
+        // Initialisation du 2ème Flatpickr
+        fpCompareInstance = flatpickr(comparePickerBtn, {
+            mode: "range",
+            locale: "fr",
+            dateFormat: "Y-m-d",
+            maxDate: "today",
+            onChange: function(selectedDates, dateStr, instance) {
+                if (selectedDates.length === 2) {
+                    const formatter = new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'short' });
+                    const yearFormatter = new Intl.DateTimeFormat('fr-FR', { year: 'numeric' });
+                    comparePickerLabel.innerText = `${formatter.format(selectedDates[0])} - ${formatter.format(selectedDates[1])} ${yearFormatter.format(selectedDates[1])}`;
+
+                    appState.compareStart = instance.formatDate(selectedDates[0], "Y-m-d");
+                    appState.compareEnd = instance.formatDate(selectedDates[1], "Y-m-d");
+
+                    fetchApiData(); // Recharge les graphiques avec les nouvelles dates !
+                }
+            }
+        });
+
+        comparePickerBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            fpCompareInstance.open();
         });
     }
 
+    if (compareCheckbox) {
+        compareCheckbox.addEventListener('change', (e) => {
+            appState.compare = e.target.checked;
+
+            if (appState.compare) {
+                comparePickerBtn.style.display = 'flex'; // Affiche le bouton
+
+                // Si aucune date de comparaison n'a encore été choisie, on met N-1 par défaut
+                if (!appState.compareStart) {
+                    let ds = new Date(appState.dateStart);
+                    let de = new Date(appState.dateEnd);
+                    ds.setFullYear(ds.getFullYear() - 1);
+                    de.setFullYear(de.getFullYear() - 1);
+
+                    appState.compareStart = ds.toISOString().split('T')[0];
+                    appState.compareEnd = de.toISOString().split('T')[0];
+
+                    const formatter = new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'short' });
+                    const yearFormatter = new Intl.DateTimeFormat('fr-FR', { year: 'numeric' });
+                    comparePickerLabel.innerText = `${formatter.format(ds)} - ${formatter.format(de)} ${yearFormatter.format(de)}`;
+
+                    if (fpCompareInstance) fpCompareInstance.setDate([ds, de]);
+                }
+            } else {
+                comparePickerBtn.style.display = 'none'; // Cache le bouton
+            }
+            fetchApiData();
+        });
+    }
     // Lancement
     fetchApiData();
 });
