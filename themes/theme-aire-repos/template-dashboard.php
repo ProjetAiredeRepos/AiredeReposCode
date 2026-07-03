@@ -172,6 +172,10 @@ get_header('dashboard');
                         <span id="date-picker-label">Sélectionner une période</span>
                     </button>
 
+                    <label style="display:flex; align-items:center; gap:8px; cursor:pointer; padding:8px 12px; background:white; border:1px solid #E2E8F0; border-radius:6px; font-weight:600; color:#4A5568;">
+                        <input type="checkbox" id="compare-checkbox" style="accent-color:#1A9E66;"> Comparer (N-1)
+                    </label>
+
                     <button class="btn-action outline" id="export-csv-btn" title="Télécharger les données brutes pour Excel">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
                         Données CSV

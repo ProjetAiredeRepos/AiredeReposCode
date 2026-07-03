@@ -120,63 +120,77 @@ function cyclo_get_discovery_overview( WP_REST_Request $request ) {
     $params = [];
     $where = build_dashboard_where_clause($request, 'date_visite', $params);
     $filter_type = sanitize_text_field( $request->get_param('filter_type') ?: 'annee' );
+    $compare = sanitize_text_field( $request->get_param('compare') ) === '1';
 
-    // Grouping Temporel Réparé (Semaine = WEEKDAY de 0 à 6)
     if ($filter_type === 'jour') { $group_sql = "HOUR(date_visite) as label"; $group_by = "HOUR(date_visite)"; }
     elseif ($filter_type === 'semaine') { $group_sql = "WEEKDAY(date_visite) as label"; $group_by = "WEEKDAY(date_visite)"; }
     elseif ($filter_type === 'mois') { $group_sql = "DAY(date_visite) as label"; $group_by = "DAY(date_visite)"; }
     else { $group_sql = "MONTH(date_visite) as label"; $group_by = "MONTH(date_visite)"; }
 
-    $total = $wpdb->get_var( $wpdb->prepare("SELECT COUNT(id_visite) FROM {$wpdb->prefix}visite_site {$where}", $params) );
-    $timeline = $wpdb->get_results( $wpdb->prepare("SELECT {$group_sql}, COUNT(id_visite) as total FROM {$wpdb->prefix}visite_site {$where} GROUP BY {$group_by} ORDER BY label ASC", $params) );
-    $hourly = $wpdb->get_results( $wpdb->prepare("SELECT HOUR(date_visite) as heure, COUNT(id_visite) as total FROM {$wpdb->prefix}visite_site {$where} GROUP BY HOUR(date_visite)", $params) );
-    $geo = $wpdb->get_results( $wpdb->prepare("SELECT code_langue, COUNT(id_visite) as total FROM {$wpdb->prefix}visite_site {$where} GROUP BY code_langue ORDER BY total DESC LIMIT 5", $params) );
+    $total = $wpdb->get_var( $wpdb->prepare("SELECT COUNT(id_visite) FROM {$wpdb->prefix}visite_site {$where}", ...$params) );
+    $avg_time = $wpdb->get_var( $wpdb->prepare("SELECT AVG(temps_total) FROM {$wpdb->prefix}visite_site {$where}", ...$params) );
 
-    // NOUVEAU : Extraction des vrais liens cliqués
+    $timeline = $wpdb->get_results( $wpdb->prepare("SELECT {$group_sql}, COUNT(id_visite) as total FROM {$wpdb->prefix}visite_site {$where} GROUP BY {$group_by} ORDER BY label ASC", ...$params) );
+
+    // Comparaison (N-1)
+    $timeline_compare = [];
+    if ( $compare ) {
+        $prev_start = date('Y-m-d H:i:s', strtotime('-1 year', strtotime($params[0])));
+        $prev_end   = date('Y-m-d H:i:s', strtotime('-1 year', strtotime($params[1])));
+        $compare_params = $params;
+        $compare_params[0] = $prev_start;
+        $compare_params[1] = $prev_end;
+        $timeline_compare = $wpdb->get_results( $wpdb->prepare("SELECT {$group_sql}, COUNT(id_visite) as total FROM {$wpdb->prefix}visite_site {$where} GROUP BY {$group_by} ORDER BY label ASC", ...$compare_params) );
+    }
+
+    $hourly = $wpdb->get_results( $wpdb->prepare("SELECT HOUR(date_visite) as heure, COUNT(id_visite) as total FROM {$wpdb->prefix}visite_site {$where} GROUP BY HOUR(date_visite)", ...$params) );
+    $geo = $wpdb->get_results( $wpdb->prepare("SELECT code_langue, COUNT(id_visite) as total FROM {$wpdb->prefix}visite_site {$where} GROUP BY code_langue ORDER BY total DESC LIMIT 5", ...$params) );
+
     $where_clics = str_replace('date_visite', 'date_clic', $where);
-    $links = $wpdb->get_results( $wpdb->prepare("SELECT texte_lien, COUNT(id_clic) as total FROM {$wpdb->prefix}clic_lien {$where_clics} GROUP BY texte_lien ORDER BY total DESC LIMIT 6", $params) );
+    $links = $wpdb->get_results( $wpdb->prepare("SELECT texte_lien, COUNT(id_clic) as total FROM {$wpdb->prefix}clic_lien {$where_clics} GROUP BY texte_lien ORDER BY total DESC LIMIT 6", ...$params) );
 
-    return rest_ensure_response( ['status'=>'success', 'data'=>['total_consultations'=>(int)$total, 'timeline'=>$timeline, 'hourly_stats'=>$hourly, 'geo_stats'=>$geo, 'top_links'=>$links] ]);
+    return rest_ensure_response( [
+        'status'=>'success',
+        'data'=>[
+            'total_consultations' => (int)$total,
+            'temps_moyen' => (int)$avg_time,
+            'timeline' => $timeline,
+            'timeline_compare' => $timeline_compare,
+            'hourly_stats' => $hourly,
+            'geo_stats' => $geo,
+            'top_links' => $links
+        ]
+    ]);
 }
 
 function cyclo_get_survey_overview( WP_REST_Request $request ) {
     global $wpdb;
-    $start_date = sanitize_text_field( $request->get_param('start_date') );
-    $end_date   = sanitize_text_field( $request->get_param('end_date') );
-    $level      = sanitize_text_field( $request->get_param('level') ?: 'global' );
-    $id         = sanitize_text_field( $request->get_param('id') ?: 'all' );
+    $params = [];
+    // Utilise la fonction générique pour générer le WHERE de base
+    $where = build_dashboard_where_clause($request, 'date_soumission', $params);
     $filter_type= sanitize_text_field( $request->get_param('filter_type') ?: 'annee' );
+    $compare = sanitize_text_field( $request->get_param('compare') ) === '1';
 
     $table_survey = $wpdb->prefix . 'reponse_questionnaire';
-    $where = "WHERE date_soumission >= %s AND date_soumission <= %s";
-    $params = [ $start_date . ' 00:00:00', $end_date . ' 23:59:59' ];
 
-    if ( $level === 'aire' && $id !== 'all' ) {
-        $where .= " AND id_aire = %d"; $params[] = intval($id);
-    } elseif ( $level === 'route' && is_numeric($id) ) {
-        $aires = get_posts(array('post_type' => 'aire_repos', 'numberposts' => -1, 'fields' => 'ids', 'tax_query' => array( array('taxonomy' => 'itineraire', 'field' => 'term_id', 'terms' => intval($id)) )));
-        if (!empty($aires)) {
-            $placeholders = implode(',', array_fill(0, count($aires), '%d'));
-            $where .= " AND id_aire IN ($placeholders)";
-            $params = array_merge($params, $aires);
-        } else {
-            $where .= " AND id_aire = 0";
-        }
-    }
+    if ($filter_type === 'jour') { $group_sql = "HOUR(date_soumission) as label"; $group_by = "HOUR(date_soumission)"; }
+    elseif ($filter_type === 'semaine') { $group_sql = "WEEKDAY(date_soumission) as label"; $group_by = "WEEKDAY(date_soumission)"; }
+    elseif ($filter_type === 'mois') { $group_sql = "DAY(date_soumission) as label"; $group_by = "DAY(date_soumission)"; }
+    else { $group_sql = "MONTH(date_soumission) as label"; $group_by = "MONTH(date_soumission)"; }
 
-    if ($filter_type === 'jour') {
-        $group_sql = "HOUR(date_soumission) as label"; $group_by = "HOUR(date_soumission)";
-    } elseif ($filter_type === 'semaine') {
-        $group_sql = "WEEKDAY(date_soumission) as label"; $group_by = "WEEKDAY(date_soumission)";
-    } elseif ($filter_type === 'mois') {
-        $group_sql = "DAY(date_soumission) as label"; $group_by = "DAY(date_soumission)";
-    } else {
-        $group_sql = "MONTH(date_soumission) as label"; $group_by = "MONTH(date_soumission)";
-    }
-
-    // FIX : Utilisation stricte de l'opérateur "splat" (...$params)
     $kpi = $wpdb->get_row( $wpdb->prepare("SELECT COUNT(id_reponse) as total, AVG(q1_satisfaction_aire) as a1, AVG(q2_satisfaction_securite) as a2, AVG(q3_satisfaction_services) as a3 FROM {$table_survey} {$where}", ...$params) );
     $timeline = $wpdb->get_results( $wpdb->prepare("SELECT {$group_sql}, COUNT(id_reponse) as total FROM {$table_survey} {$where} GROUP BY {$group_by} ORDER BY label ASC", ...$params) );
+
+    // Comparaison (N-1)
+    $timeline_compare = [];
+    if ( $compare ) {
+        $prev_start = date('Y-m-d H:i:s', strtotime('-1 year', strtotime($params[0])));
+        $prev_end   = date('Y-m-d H:i:s', strtotime('-1 year', strtotime($params[1])));
+        $compare_params = $params;
+        $compare_params[0] = $prev_start;
+        $compare_params[1] = $prev_end;
+        $timeline_compare = $wpdb->get_results( $wpdb->prepare("SELECT {$group_sql}, COUNT(id_reponse) as total FROM {$table_survey} {$where} GROUP BY {$group_by} ORDER BY label ASC", ...$compare_params) );
+    }
 
     $q1_dist = $wpdb->get_results( $wpdb->prepare("SELECT q1_satisfaction_aire as note, COUNT(id_reponse) as total FROM {$table_survey} {$where} GROUP BY note", ...$params) );
     $q2_dist = $wpdb->get_results( $wpdb->prepare("SELECT q2_satisfaction_securite as note, COUNT(id_reponse) as total FROM {$table_survey} {$where} GROUP BY note", ...$params) );
@@ -185,8 +199,6 @@ function cyclo_get_survey_overview( WP_REST_Request $request ) {
 
     $origine = $wpdb->get_results( $wpdb->prepare("SELECT profil_origine, COUNT(id_reponse) as total FROM {$table_survey} {$where} AND profil_origine != '' GROUP BY profil_origine", ...$params) );
     $accomp = $wpdb->get_results( $wpdb->prepare("SELECT profil_accompagnement, COUNT(id_reponse) as total FROM {$table_survey} {$where} AND profil_accompagnement != '' GROUP BY profil_accompagnement", ...$params) );
-
-    // FIX PAYS : La condition "AND profil_origine = 'et'" bloquait parfois. On prend tous les pays renseignés.
     $pays = $wpdb->get_results( $wpdb->prepare("SELECT profil_pays, COUNT(id_reponse) as total FROM {$table_survey} {$where} AND profil_pays != '' GROUP BY profil_pays ORDER BY total DESC", ...$params) );
 
     $total = isset($kpi->total) ? (int) $kpi->total : 0;
@@ -197,7 +209,23 @@ function cyclo_get_survey_overview( WP_REST_Request $request ) {
         $radar = [ round(($kpi->a1/4)*100), round(($kpi->a2/4)*100), round(($kpi->a3/4)*100) ];
     }
 
-    return rest_ensure_response( ['status'=>'success', 'data'=>['total_reponses'=>$total, 'indice_satisfaction'=>round($indice, 1), 'radar_scores'=>$radar, 'timeline'=>$timeline, 'q1_dist'=>$q1_dist, 'q2_dist'=>$q2_dist, 'q3_dist'=>$q3_dist, 'q4_raw'=>$q4_raw, 'origine'=>$origine, 'accompagnement'=>$accomp, 'pays'=>$pays] ]);
+    return rest_ensure_response( [
+        'status'=>'success',
+        'data'=>[
+            'total_reponses' => $total,
+            'indice_satisfaction' => round($indice, 1),
+            'radar_scores' => $radar,
+            'averages' => [
+                'aire' => isset($kpi->a1) ? round($kpi->a1, 1) : 0,
+                'securite' => isset($kpi->a2) ? round($kpi->a2, 1) : 0,
+                'services' => isset($kpi->a3) ? round($kpi->a3, 1) : 0
+            ],
+            'timeline' => $timeline,
+            'timeline_compare' => $timeline_compare,
+            'q1_dist' => $q1_dist, 'q2_dist' => $q2_dist, 'q3_dist' => $q3_dist,
+            'q4_raw' => $q4_raw, 'origine' => $origine, 'accompagnement' => $accomp, 'pays' => $pays
+        ]
+    ]);
 }
 
 function cyclo_export_csv_data( WP_REST_Request $request ) {
