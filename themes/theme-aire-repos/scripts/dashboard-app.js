@@ -259,7 +259,19 @@ document.addEventListener('DOMContentLoaded', () => {
             new Chart(document.getElementById('chart-radar'), { type: 'radar', data: { labels: ['Aire', 'Sécurité', 'Services'], datasets: [{ label: 'Score', data: data.radar_scores, backgroundColor: THEME.primaryLight, borderColor: THEME.primary }] }, options:{responsive:true, maintainAspectRatio:false, scales: { r: { min: 0, max: 100, ticks:{display:false} } }, plugins: { legend: { display: false } }} });
         }
 
-        const colorPalette = ['#1A9E66', '#41C48F', '#8EEABF', '#38A169', '#2F855A', '#C6F6D5'];
+        // NOUVELLE PALETTE ÉTENDUE : Harmonieuse et contrastée pour la DataViz
+        const colorPalette = [
+            '#1A9E66', // Vert (Couleur de marque principale)
+            '#2B6CB0', // Bleu profond
+            '#ED8936', // Orange dynamique
+            '#9F7AEA', // Violet doux
+            '#38B2AC', // Sarcelle / Turquoise
+            '#D69E2E', // Jaune moutarde
+            '#F56565', // Corail / Rouge doux
+            '#0BC5EA', // Cyan clair
+            '#ED64A6', // Rose
+            '#4A5568'  // Gris ardoise (au cas où il y a plus de 10 variables)
+        ];
 
         function renderCustomDoughnut(canvasId, legendId, originalLabels, originalValues) {
             // CORRECTION : Filtrage strict pour éliminer les zéros
