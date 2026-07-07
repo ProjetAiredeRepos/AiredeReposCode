@@ -647,19 +647,29 @@ document.addEventListener('DOMContentLoaded', () => {
         const datasets = [{
             label: 'Période actuelle',
             data: chartData,
-            borderColor: THEME.primary,
-            backgroundColor: THEME.primaryLight,
+            borderColor: '#1A9E66',
+            backgroundColor: 'rgba(26, 158, 102, 0.1)',
+            borderWidth: 3, // Ligne plus épaisse
+            pointBackgroundColor: '#1A9E66', // Points verts
+            pointBorderColor: '#ffffff',
+            pointRadius: 4, // Taille des points
+            pointHoverRadius: 6,
             fill: true,
             tension: 0.4
         }];
 
         if (appState.compare && compareData) {
             datasets.push({
-                label: 'Période de comparaison', // MODIFIÉ
+                label: 'Période de comparaison',
                 data: compData,
-                borderColor: '#A0AEC0',
-                borderDash: [5, 5],
+                borderColor: '#ED8936', // Orange dynamique BI
+                borderDash: [6, 6], // Tirets plus marqués et espacés
+                borderWidth: 3, // Ligne de même épaisseur pour équilibrer
                 backgroundColor: 'transparent',
+                pointBackgroundColor: '#ED8936', // Points oranges
+                pointBorderColor: '#ffffff',
+                pointRadius: 4, // Points visibles sur les intersections
+                pointHoverRadius: 6,
                 fill: false,
                 tension: 0.4
             });
@@ -673,9 +683,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 maintainAspectRatio: false,
                 plugins: {
                     legend: { display: appState.compare },
-                    datalabels: { display: false } // CORRECTION : Désactive les % sur ce graphique
+                    datalabels: { display: false } // Force la désactivation des % ici
                 },
-                scales: { y: { beginAtZero: true, ticks: { precision: 0 } } } }
+                scales: {
+                    y: { beginAtZero: true, ticks: { precision: 0 } }
+                },
+                interaction: {
+                    mode: 'index', // Affiche les deux valeurs en même temps au survol
+                    intersect: false
+                }
+            }
         });
     }
 
