@@ -9,58 +9,57 @@ document.addEventListener('DOMContentLoaded', () => {
     // Éléments de progression
     const progressFill = document.getElementById('progress-fill');
     const progressText = document.getElementById('progress-text');
+
+    // CORRECTION : On passe à 4 questions obligatoires (Q5 supprimée)
     const requiredSteps = [
         'input[name="q1_satisfaction_aire"]',
         'input[name="q2_satisfaction_securite"]',
         'input[name="q3_satisfaction_services"]',
-        'input[name="q4_connaissance[]"]',
-        'textarea[name="q5_suggestions"]'
+        'input[name="q4_connaissance[]"]'
     ];
-
-    // Logique Conditionnelle du Profilage
-    const radiosOrigine = document.querySelectorAll('input[name="profil_origine"]');
-    const blocRegion = document.getElementById('bloc-region');
-    const blocPays = document.getElementById('bloc-pays');
-    const selectPays = document.getElementById('select-pays');
-    const inputPaysAutre = document.getElementById('input-pays-autre');
 
     // --- ACCORDÉON PROFILAGE ---
     const profilageTrigger = document.getElementById('profilage-trigger');
+    const profilageContent = document.getElementById('profilage-content');
 
-    if (profilageTrigger) {
+    if (profilageContent) {
+        // CORRECTION : On force le masquage physique au chargement
+        profilageContent.style.display = 'none';
+    }
+
+    if (profilageTrigger && profilageContent) {
         profilageTrigger.addEventListener('click', () => {
-            // Lit l'état actuel (ouvert ou fermé)
             const isExpanded = profilageTrigger.getAttribute('aria-expanded') === 'true';
-            // Inverse l'état (ce qui déclenche l'animation CSS Grid et fait tourner le chevron)
             profilageTrigger.setAttribute('aria-expanded', !isExpanded);
+            // On bascule l'affichage en même temps que la flèche
+            profilageContent.style.display = isExpanded ? 'none' : 'block';
         });
     }
 
-    if (radiosOrigine.length > 0) {
-        radiosOrigine.forEach(radio => {
-            radio.addEventListener('change', (e) => {
-                if (e.target.value === 'fr') {
-                    blocRegion.classList.remove('hidden');
-                    blocPays.classList.add('hidden');
-                } else {
-                    blocRegion.classList.add('hidden');
-                    blocPays.classList.remove('hidden');
-                }
-            });
-        });
-    }
+    // --- LOGIQUE CONDITIONNELLE : PAYS ET RÉGIONS ---
+    const countrySelect = document.getElementById('user_country');
+    const groupOther = document.getElementById('group-country-other');
+    const groupRegion = document.getElementById('group-region-fr');
 
-    if (selectPays) {
-        selectPays.addEventListener('change', (e) => {
-            if (e.target.value === 'autre') {
-                inputPaysAutre.classList.remove('hidden');
-            } else {
-                inputPaysAutre.classList.add('hidden');
+    if (countrySelect) {
+        countrySelect.addEventListener('change', function() {
+            const selectedValue = this.value;
+
+            groupOther.style.display = 'none';
+            groupRegion.style.display = 'none';
+
+            document.getElementById('user_country_other').value = '';
+            document.getElementById('user_region_fr').value = '';
+
+            if (selectedValue === 'France') {
+                groupRegion.style.display = 'block';
+            } else if (selectedValue === 'Autre') {
+                groupOther.style.display = 'block';
             }
         });
     }
 
-    // Mise à jour de la barre de progression
+    // --- MISE À JOUR DE LA BARRE DE PROGRESSION ---
     if (form) {
         form.addEventListener('change', () => {
             let completed = 0;
@@ -74,20 +73,19 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             });
 
-            // Limite à 5 (les 5 questions principales)
-            completed = Math.min(completed, 5);
+            // CORRECTION : Calcul sur 4 questions
+            completed = Math.min(completed, 4);
             if (progressText && progressFill) {
-                progressText.innerText = `${completed}/5`;
-                progressFill.style.width = `${(completed / 5) * 100}%`;
+                progressText.innerText = `${completed}/4`;
+                progressFill.style.width = `${(completed / 4) * 100}%`;
             }
         });
 
-        // Soumission AJAX
+        // --- SOUMISSION AJAX ---
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
             errorAlert.classList.add('hidden');
 
-            // Vérification personnalisée pour les checkbox Q4 (au moins une requise)
             const q4Checked = document.querySelectorAll('input[name="q4_connaissance[]"]:checked').length > 0;
             if (!q4Checked) {
                 errorAlert.classList.remove('hidden');

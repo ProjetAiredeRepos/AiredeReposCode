@@ -14,8 +14,8 @@ $q_bg = get_field('q_image_fond') ? 'background-image: url(' . esc_url(get_field
 
 $q_profil_titre = get_field('q_profil_titre') ?: "Aidez-nous à mieux vous connaître";
 $q_profil_q1 = get_field('q_profil_q1') ?: "D'où venez-vous ?";
-$q_profil_q2 = get_field('q_profil_q2') ?: "Vous venez plutôt de...";
-$q_profil_q3 = get_field('q_profil_q3') ?: "De quel pays venez-vous ?";
+$q_profil_q2 = get_field('q_profil_q2') ?: "Précisez votre pays";
+$q_profil_q3 = get_field('q_profil_q3') ?: "De quel région venez-vous";
 $q_profil_q4 = get_field('q_profil_q4') ?: "Comment êtes-vous venu ?";
 ?>
 
@@ -28,7 +28,7 @@ $q_profil_q4 = get_field('q_profil_q4') ?: "Comment êtes-vous venu ?";
                     <div class="q-progress-bar-container">
                         <div class="q-progress-fill" id="progress-fill" style="width: 0%;"></div>
                     </div>
-                    <span class="q-progress-text" id="progress-text">0/5</span>
+                    <span class="q-progress-text" id="progress-text">0/4</span>
                 </div>
             </aside>
 
@@ -121,58 +121,55 @@ $q_profil_q4 = get_field('q_profil_q4') ?: "Comment êtes-vous venu ?";
 
                         <!-- Le conteneur masqué -->
                         <div class="q-accordion-content" id="profilage-content">
-                            <div class="q-accordion-inner">
-                                <fieldset class="q-sub-step">
-                                    <legend><div class="legend-content"><?php echo esc_html($q_profil_q1); ?></div></legend>
-                                    <label class="q-radio-card"><input type="radio" name="profil_origine" value="fr"> Je suis français(e)</label>
-                                    <label class="q-radio-card"><input type="radio" name="profil_origine" value="et"> Je suis étranger(ère)</label>
-                                </fieldset>
-
-                                <fieldset class="q-sub-step hidden" id="bloc-region">
-                                    <legend><div class="legend-content"><?php echo esc_html($q_profil_q2); ?></div></legend>
-                                    <label class="q-radio-card"><input type="radio" name="profil_region" value="dep41"> Du département (41)</label>
-                                    <label class="q-radio-card"><input type="radio" name="profil_region" value="centre"> De la région (Centre-Val de Loire)</label>
-                                    <label class="q-radio-card"><input type="radio" name="profil_region" value="autre_fr"> D'une autre région</label>
-                                </fieldset>
-
-                                <fieldset class="q-sub-step hidden" id="bloc-pays">
-                                    <legend><div class="legend-content"><?php echo esc_html($q_profil_q3); ?></div></legend>
-                                    <select name="profil_pays" id="select-pays" class="q-select">
-                                        <option value="">Sélectionnez...</option>
-                                        <option value="allemagne">Allemagne</option>
-                                        <option value="belgique">Belgique</option>
-                                        <option value="espagne">Espagne</option>
-                                        <option value="italie">Italie</option>
-                                        <option value="luxembourg">Luxembourg</option>
-                                        <option value="pays-bas">Pays-Bas</option>
-                                        <option value="portugal">Portugal</option>
-                                        <option value="uk">Royaume-Uni</option>
-                                        <option value="suisse">Suisse</option>
-                                        <option value="etats-unis">États-Unis</option>
-                                        <option value="canada">Canada</option>
-                                        <option value="autre">Autre pays</option>
-                                    </select>
-                                    <input type="text" name="profil_pays_autre" id="input-pays-autre" class="q-input hidden" placeholder="Précisez votre pays...">
-                                </fieldset>
-
-                                <fieldset class="q-sub-step">
-                                    <legend><div class="legend-content"><?php echo esc_html($q_profil_q4); ?></div></legend>
-                                    <label class="q-radio-card"><input type="radio" name="profil_accompagnement" value="seul"> Seul(e)</label>
-                                    <label class="q-radio-card"><input type="radio" name="profil_accompagnement" value="famille"> En famille</label>
-                                    <label class="q-radio-card"><input type="radio" name="profil_accompagnement" value="amis"> Entre amis</label>
-                                    <label class="q-radio-card"><input type="radio" name="profil_accompagnement" value="guide"> Avec un guide / agence</label>
-                                </fieldset>
+                            <div class="form-group" style="margin-bottom: 20px;">
+                                <label for="user_country" style="display: block; font-weight: 600; margin-bottom: 8px;"><?php echo esc_html($q_profil_q1); ?> </label>
+                                <select id="user_country" name="user_country" style="width: 100%; padding: 12px; border: 1px solid #E2E8F0; border-radius: 6px; background-color: #F7FAFC; color: #4A5568;">
+                                    <option value="">Sélectionnez votre pays...</option>
+                                    <option value="France">France</option>
+                                    <option value="Allemagne">Allemagne</option>
+                                    <option value="Belgique">Belgique</option>
+                                    <option value="Espagne">Espagne</option>
+                                    <option value="Italie">Italie</option>
+                                    <option value="Pays-Bas">Pays-Bas</option>
+                                    <option value="Royaume-Uni">Royaume-Uni</option>
+                                    <option value="Suisse">Suisse</option>
+                                    <option value="États-Unis">États-Unis</option>
+                                    <option value="Canada">Canada</option>
+                                    <option value="Australie">Australie</option>
+                                    <option value="Japon">Japon</option>
+                                    <option value="Chine">Chine</option>
+                                    <option value="Brésil">Brésil</option>
+                                    <option value="Autre">Autre (Préciser)...</option>
+                                </select>
                             </div>
-                        </div>
-                    </div>
 
-                    <div class="q-rgpd-zone">
+                            <div class="form-group" id="group-country-other" style="display: none; margin-bottom: 20px; padding-left: 15px; border-left: 3px solid #1A9E66;">
+                                <label for="user_country_other" style="display: block; font-weight: 600; margin-bottom: 8px;"><?php echo esc_html($q_profil_q2); ?> </label>
+                                <input type="text" id="user_country_other" name="user_country_other" placeholder="Saisissez votre pays" style="width: 100%; padding: 12px; border: 1px solid #E2E8F0; border-radius: 6px;">
+                            </div>
+
+                            <div class="form-group" id="group-region-fr" style="display: none; margin-bottom: 20px; padding-left: 15px; border-left: 3px solid #1A9E66;">
+                                <label for="user_region_fr" style="display: block; font-weight: 600; margin-bottom: 8px;"><?php echo esc_html($q_profil_q3); ?> </label>
+                                <select id="user_region_fr" name="user_region_fr" style="width: 100%; padding: 12px; border: 1px solid #E2E8F0; border-radius: 6px; background-color: #F7FAFC; color: #4A5568;">
+                                    <option value="">Sélectionnez votre région...</option>
+                                    <option value="Loir-et-Cher (41)">Département du Loir-et-Cher (41)</option>
+                                    <option value="Centre-Val de Loire (hors 41)">Région Centre-Val de Loire (hors 41)</option>
+                                    <option value="Autre région française">Autre région française</option>
+                                </select>
+                            </div>
+
+                            <fieldset class="q-sub-step">
+                                <legend><div class="legend-content"><?php echo esc_html($q_profil_q4); ?></div></legend>
+                                <label class="q-radio-card"><input type="radio" name="profil_accompagnement" value="seul"> Seul(e)</label>
+                                <label class="q-radio-card"><input type="radio" name="profil_accompagnement" value="famille"> En famille</label>
+                                <label class="q-radio-card"><input type="radio" name="profil_accompagnement" value="amis"> Entre amis</label>
+                                <label class="q-radio-card"><input type="radio" name="profil_accompagnement" value="guide"> Avec un guide / agence</label>
+                            </fieldset>
+                        </div> </div> <div class="q-rgpd-zone">
                         <p class="q-rgpd-title">CONFIDENTIALITÉ (RGPD)</p>
                         <label class="q-checkbox-card">
                             <input type="checkbox" id="rgpd-consent" required>
-                            J'accepte que mes réponses soient traitées
-                            <strong><u>anonymement</u></strong>
-                            à des fins statistiques (RGPD). *
+                            J'accepte que mes réponses soient traitées&nbsp;<strong><u>anonymement</u></strong>&nbsp;à des fins statistiques (RGPD). *
                         </label>
                     </div>
 

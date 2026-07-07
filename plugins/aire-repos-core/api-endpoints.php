@@ -73,6 +73,30 @@ function aire_repos_submit_survey( WP_REST_Request $request ) {
 
     if(empty($id_aire)) return new WP_Error('error', 'Missing data', ['status'=>400]);
 
+    // --- NOUVELLE LOGIQUE DE PROFILAGE ---
+    // On récupère les valeurs envoyées par le nouveau formulaire
+    $country_input = sanitize_text_field( $request->get_param('user_country') );
+    $country_other = sanitize_text_field( $request->get_param('user_country_other') );
+    $region_fr     = sanitize_text_field( $request->get_param('user_region_fr') );
+
+    $profil_origine = '';
+    $profil_pays    = '';
+    $profil_region  = '';
+
+    if ($country_input === 'France') {
+        $profil_origine = 'fr';
+        $profil_pays    = 'France';
+        $profil_region  = $region_fr; // Ex: Loir-et-Cher (41)
+    } elseif ($country_input === 'Autre') {
+        $profil_origine = 'etranger';
+        $profil_pays    = $country_other; // Le pays tapé à la main
+        $profil_region  = '';
+    } elseif (!empty($country_input)) {
+        $profil_origine = 'etranger';
+        $profil_pays    = $country_input; // Le pays sélectionné dans la liste
+        $profil_region  = '';
+    }
+
     $wpdb->insert( $wpdb->prefix.'reponse_questionnaire', [
         'id_aire' => $id_aire,
         'q1_satisfaction_aire' => absint($request->get_param('q1_satisfaction_aire')),
@@ -80,9 +104,10 @@ function aire_repos_submit_survey( WP_REST_Request $request ) {
         'q3_satisfaction_services' => absint($request->get_param('q3_satisfaction_services')),
         'q4_connaissance' => $q4_clean,
         'q5_suggestions' => sanitize_textarea_field($request->get_param('q5_suggestions')),
-        'profil_origine' => sanitize_text_field($request->get_param('profil_origine')),
-        'profil_region' => sanitize_text_field($request->get_param('profil_region')),
-        'profil_pays' => sanitize_text_field($request->get_param('profil_pays')),
+        // On injecte nos variables traitées
+        'profil_origine' => $profil_origine,
+        'profil_region' => $profil_region,
+        'profil_pays' => $profil_pays,
         'profil_accompagnement' => sanitize_text_field($request->get_param('profil_accompagnement')),
         'date_soumission' => current_time('mysql')
     ]);
