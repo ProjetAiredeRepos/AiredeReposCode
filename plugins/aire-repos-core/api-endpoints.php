@@ -220,6 +220,8 @@ function cyclo_get_survey_overview( WP_REST_Request $request ) {
     $q4_raw = $wpdb->get_results( $wpdb->prepare("SELECT q4_connaissance FROM {$table_survey} {$where}", ...$params) );
 
     $origine = $wpdb->get_results( $wpdb->prepare("SELECT profil_origine, COUNT(id_reponse) as total FROM {$table_survey} {$where} AND profil_origine != '' GROUP BY profil_origine", ...$params) );
+    // NOUVELLE REQUÊTE : Extraction de la répartition des régions pour les Français
+    $region_dist = $wpdb->get_results( $wpdb->prepare("SELECT profil_region, COUNT(id_reponse) as total FROM {$table_survey} {$where} AND profil_origine = 'fr' AND profil_region != '' GROUP BY profil_region", ...$params) );
     $accomp = $wpdb->get_results( $wpdb->prepare("SELECT profil_accompagnement, COUNT(id_reponse) as total FROM {$table_survey} {$where} AND profil_accompagnement != '' GROUP BY profil_accompagnement", ...$params) );
     $pays = $wpdb->get_results( $wpdb->prepare("SELECT profil_pays, COUNT(id_reponse) as total FROM {$table_survey} {$where} AND profil_pays != '' GROUP BY profil_pays ORDER BY total DESC", ...$params) );
 
@@ -245,7 +247,11 @@ function cyclo_get_survey_overview( WP_REST_Request $request ) {
             'timeline' => $timeline,
             'timeline_compare' => $timeline_compare,
             'q1_dist' => $q1_dist, 'q2_dist' => $q2_dist, 'q3_dist' => $q3_dist,
-            'q4_raw' => $q4_raw, 'origine' => $origine, 'accompagnement' => $accomp, 'pays' => $pays
+            'q4_raw' => $q4_raw,
+            'origine' => $origine,
+            'region_dist' => $region_dist,  // NOUVELLE LIGNE TRANSMISSE AU JS
+            'accompagnement' => $accomp,
+            'pays' => $pays
         ]
     ]);
 }

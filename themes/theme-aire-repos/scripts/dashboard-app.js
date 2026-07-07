@@ -343,6 +343,32 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         renderCustomDoughnut('chart-pays', 'legend-pays', paysLabels, paysValues);
 
+        // NOUVEAU BLOC : Injection du détail des régions françaises sous la légende Pays
+        const paysLegendDiv = document.getElementById('legend-pays');
+        if (paysLegendDiv && data.region_dist && data.region_dist.length > 0) {
+
+            // On crée une sous-section stylisée avec une bordure en pointillés
+            let subLegendHtml = `
+                <div style="margin-top: 14px; padding-top: 12px; border-top: 1px dashed #E2E8F0; font-size: 0.85rem; color: #718096;">
+                    <div style="font-weight: 600; margin-bottom: 6px; color: #4A5568;">Détail des répondants de France :</div>
+            `;
+
+            // On boucle sur les données renvoyées par l'API (Département 41, Région Centre, etc.)
+            data.region_dist.forEach(r => {
+                subLegendHtml += `
+                    <div style="margin-bottom: 4px; padding-left: 8px; display: flex; justify-content: space-between;">
+                        <span>• ${r.profil_region}</span>
+                        <span style="font-weight: 500; color: #2D3748;">sélectionné ${r.total} fois</span>
+                    </div>
+                `;
+            });
+
+            subLegendHtml += `</div>`;
+
+            // On insère ce HTML à la fin de la légende existante sans écraser le reste
+            paysLegendDiv.insertAdjacentHTML('beforeend', subLegendHtml);
+        }
+
         // Accompagnement
         if(data.accompagnement && data.accompagnement.length > 0) {
             renderCustomDoughnut('chart-acc', 'legend-acc', data.accompagnement.map(a => a.profil_accompagnement), data.accompagnement.map(a => parseInt(a.total)));
