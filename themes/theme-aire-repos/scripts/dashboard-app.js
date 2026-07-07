@@ -163,7 +163,11 @@ document.addEventListener('DOMContentLoaded', () => {
             <div class="dash-card card-full"><div class="card-header"><h3>Évolution des consultations</h3><p>Période: ${appState.filterType}</p></div><div class="chart-container main-chart"><canvas id="chart-evo"></canvas></div></div>
             <div class="dash-card card-half"><div class="card-header"><h3>Temps moyen passé</h3><p>Par session</p></div><div class="kpi-value">${timeString}</div></div>
             <div class="dash-card card-half"><div class="card-header"><h3>Consultations totales</h3></div><div class="kpi-value">${data.total_consultations.toLocaleString('fr-FR')}</div></div>
-            <div class="dash-card card-half"><div class="card-header"><h3>Répartition par tranche horaire</h3></div><div class="chart-container" style="height: 250px;"><canvas id="chart-hour"></canvas></div></div>
+            <div class="dash-card card-half" style="display: flex; flex-direction: column;">
+                <div class="card-header"><h3>Répartition par tranche horaire</h3></div>
+                <div class="chart-container" style="height: 200px;"><canvas id="chart-hour"></canvas></div>
+                <div id="legend-hour" style="margin-top: 15px; padding-top: 10px; border-top: 1px dashed #E2E8F0; max-height: 140px; overflow-y: auto; font-size: 0.85rem; color: #4A5568;"></div>
+            </div>
             <div class="dash-card card-half"><div class="card-header"><h3>Liens les plus cliqués</h3></div><div style="max-height:250px; overflow-y:auto;">${linksHtml}</div></div>
         `;
         initTimelineChart(document.getElementById('chart-evo'), data.timeline, data.timeline_compare);
@@ -171,22 +175,46 @@ document.addEventListener('DOMContentLoaded', () => {
         if(document.getElementById('chart-hour') && data.hourly_stats) {
             const hData = new Array(24).fill(0);
             data.hourly_stats.forEach(r => hData[parseInt(r.heure)] = parseInt(r.total));
+
+            // 1. Génération du graphique à barres
             new Chart(document.getElementById('chart-hour'), {
                 type: 'bar',
-                data: {
-                    labels: Array.from({length:24}, (_,i)=>`${i}h`),
-                    datasets: [{ data: hData, backgroundColor: THEME.primary, borderRadius:4 }]
-                },
+                data: { labels: Array.from({length:24}, (_,i)=>`${i}h`), datasets: [{ data: hData, backgroundColor: THEME.primary, borderRadius:4 }] },
                 options: {
                     responsive:true,
                     maintainAspectRatio:false,
                     plugins:{
-                        legend: {display: false},
-                        datalabels: {display: false}  // On désactive les labels pour ne pas surcharger les barres
-                        //tooltip: percentageTooltip // Injection du calcul de pourcentage
+                        legend:{display:false},
+                        datalabels: { display: false }
                     }
                 }
             });
+
+            // 2. NOUVEAU : Génération du détail textuel en dessous
+            const legendHourDiv = document.getElementById('legend-hour');
+            if (legendHourDiv) {
+                let html = '<div style="font-weight: 600; margin-bottom: 8px; color: #2D3748;">Détail des consultations :</div>';
+                let hasData = false;
+
+                // On boucle sur les 24 heures
+                hData.forEach((total, hour) => {
+                    if (total > 0) { // On n'affiche que les heures où il y a eu de l'activité
+                        hasData = true;
+                        html += `
+                            <div style="display: flex; justify-content: space-between; padding: 4px 8px; margin-bottom: 4px; background: #F7FAFC; border-radius: 4px; border: 1px solid #EDF2F7;">
+                                <span style="font-weight: 600; color: #4A5568;">${hour}h00 - ${hour+1}h00</span>
+                                <span><strong style="color: #1A9E66;">${total}</strong> consultation${total > 1 ? 's' : ''}</span>
+                            </div>
+                        `;
+                    }
+                });
+
+                if (!hasData) {
+                    html += '<div style="text-align:center; color:#A0AEC0; padding: 10px;">Aucune donnée sur cette période</div>';
+                }
+
+                legendHourDiv.innerHTML = html;
+            }
         }
     }
 
