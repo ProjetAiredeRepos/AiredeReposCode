@@ -22,10 +22,26 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const THEME = { primary: '#1A9E66', primaryLight: '#E7F5EF', textMain: '#2D3748', textMuted: '#718096' };
 
+    // Enregistrement global du plugin Datalabels pour afficher les %
+    Chart.register(ChartDataLabels);
+    Chart.defaults.set('plugins.datalabels', {
+        color: '#fff',
+        font: { weight: 'bold', size: 12 },
+        formatter: (value, ctx) => {
+            let sum = 0;
+            let dataArr = ctx.chart.data.datasets[0].data;
+            dataArr.map(data => { sum += Number(data); });
+            let percentage = (value * 100 / sum).toFixed(0) + "%";
+            return percentage;
+        }
+    });
+
     let appState = {
         module: 'discovery', level: 'global', entityId: 'all', entityName: "Vue d'ensemble",
         filterType: 'annee', dateStart: `${new Date().getFullYear()}-01-01`, dateEnd: `${new Date().getFullYear()}-12-31`,
-        compare: false
+        compare: false,
+        compareStart: '', // Sera défini dynamiquement
+        compareEnd: ''
     };
 
     // --- 1. MOTEUR API ---
@@ -69,7 +85,9 @@ document.addEventListener('DOMContentLoaded', () => {
             start_date: appState.dateStart,
             end_date: appState.dateEnd,
             filter_type: appState.filterType,
-            compare: appState.compare ? '1' : '0'
+            compare: appState.compare ? '1' : '0',
+            compare_start: appState.compareStart, // Nouveau
+            compare_end: appState.compareEnd, // Nouveau
         });
 
         root.innerHTML = '<div class="loading-state">Analyse des données en cours...</div>';
@@ -145,12 +163,11 @@ document.addEventListener('DOMContentLoaded', () => {
             <div class="dash-card card-full"><div class="card-header"><h3>Évolution des consultations</h3><p>Période: ${appState.filterType}</p></div><div class="chart-container main-chart"><canvas id="chart-evo"></canvas></div></div>
             <div class="dash-card card-half"><div class="card-header"><h3>Temps moyen passé</h3><p>Par session</p></div><div class="kpi-value">${timeString}</div></div>
             <div class="dash-card card-half"><div class="card-header"><h3>Consultations totales</h3></div><div class="kpi-value">${data.total_consultations.toLocaleString('fr-FR')}</div></div>
-            <div class="dash-card card-half"><div class="card-header"><h3>Origine géographique</h3></div><div class="chart-container" style="height: 250px;"><canvas id="chart-geo"></canvas></div></div>
             <div class="dash-card card-half"><div class="card-header"><h3>Répartition par tranche horaire</h3></div><div class="chart-container" style="height: 250px;"><canvas id="chart-hour"></canvas></div></div>
             <div class="dash-card card-half"><div class="card-header"><h3>Liens les plus cliqués</h3></div><div style="max-height:250px; overflow-y:auto;">${linksHtml}</div></div>
         `;
         initTimelineChart(document.getElementById('chart-evo'), data.timeline, data.timeline_compare);
-        if(document.getElementById('chart-geo') && data.geo_stats && data.geo_stats.length > 0) new Chart(document.getElementById('chart-geo'), { type: 'doughnut', data: { labels: data.geo_stats.map(i=>i.code_langue.toUpperCase()), datasets: [{ data: data.geo_stats.map(i=>i.total), backgroundColor: ['#1A9E66','#41C48F','#8EEABF'] }] }, options: { responsive:true, maintainAspectRatio:false, cutout:'65%' } });
+
         if(document.getElementById('chart-hour') && data.hourly_stats) {
             const hData = new Array(24).fill(0);
             data.hourly_stats.forEach(r => hData[parseInt(r.heure)] = parseInt(r.total));
@@ -164,7 +181,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     responsive:true,
                     maintainAspectRatio:false,
                     plugins:{
-                        tooltip: percentageTooltip // Injection du calcul de pourcentage
+                        legend: {display: false},
+                        datalabels: {display: false}  // On désactive les labels pour ne pas surcharger les barres
+                        //tooltip: percentageTooltip // Injection du calcul de pourcentage
                     }
                 }
             });
@@ -173,12 +192,21 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- 4. RENDU QUESTIONNAIRES ---
     function renderSurveyOverview(data) {
-        // Réafficher les filtres s'ils ont été masqués
         const headerActions = document.querySelector('.header-actions');
         if (headerActions) headerActions.style.display = 'flex';
 
+        // Calcul des sources de découverte (Q4)
         const sCount = {};
-        if (data.q4_raw) data.q4_raw.forEach(r => { if(r.q4_connaissance) r.q4_connaissance.split(',').forEach(s => { const src=s.trim(); sCount[src]=(sCount[src]||0)+1; }); });
+        if (data.q4_raw) {
+            data.q4_raw.forEach(r => {
+                if(r.q4_connaissance) {
+                    r.q4_connaissance.split(',').forEach(s => {
+                        const src = s.trim();
+                        sCount[src] = (sCount[src]||0) + 1;
+                    });
+                }
+            });
+        }
 
         root.innerHTML = `
             <div class="dash-card card-third"><div class="card-header"><h3>Réponses</h3></div><div class="kpi-value">${data.total_reponses}</div></div>
@@ -189,98 +217,137 @@ document.addEventListener('DOMContentLoaded', () => {
             
             <div class="dash-card card-third">
                 <div class="card-header" style="display:flex; justify-content:space-between;">
-                    <h3>1. Note Aire</h3>
-                    <span style="font-weight:bold; color:var(--primary);">${data.averages.aire} / 4</span>
+                    <h3>1. Note Aire</h3><span style="font-weight:bold; color:var(--primary);">${data.averages.aire} / 4</span>
                 </div>
-                <div class="chart-container" style="height: 200px;"><canvas id="chart-q1"></canvas></div>
+                <div class="chart-container" style="height: 180px;"><canvas id="chart-q1"></canvas></div>
+                <div id="legend-q1"></div>
             </div>
             <div class="dash-card card-third">
                 <div class="card-header" style="display:flex; justify-content:space-between;">
-                    <h3>2. Note Sécurité</h3>
-                    <span style="font-weight:bold; color:var(--primary);">${data.averages.securite} / 4</span>
+                    <h3>2. Note Sécurité</h3><span style="font-weight:bold; color:var(--primary);">${data.averages.securite} / 4</span>
                 </div>
-                <div class="chart-container" style="height: 200px;"><canvas id="chart-q2"></canvas></div>
+                <div class="chart-container" style="height: 180px;"><canvas id="chart-q2"></canvas></div>
+                <div id="legend-q2"></div>
             </div>
             <div class="dash-card card-third">
                 <div class="card-header" style="display:flex; justify-content:space-between;">
-                    <h3>3. Note Services</h3>
-                    <span style="font-weight:bold; color:var(--primary);">${data.averages.services} / 4</span>
+                    <h3>3. Note Services</h3><span style="font-weight:bold; color:var(--primary);">${data.averages.services} / 4</span>
                 </div>
-                <div class="chart-container" style="height: 200px;"><canvas id="chart-q3"></canvas></div>
+                <div class="chart-container" style="height: 180px;"><canvas id="chart-q3"></canvas></div>
+                <div id="legend-q3"></div>
             </div>
             
-            <div class="dash-card card-full"><div class="card-header"><h3>4. Sources de découverte</h3></div><div class="chart-container" style="height: 250px;"><canvas id="chart-q4"></canvas></div></div>
-            
-            <div class="dash-card card-third"><div class="card-header"><h3>Origine</h3></div><div class="chart-container" style="height: 200px;"><canvas id="chart-orig"></canvas></div></div>
-            <div class="dash-card card-third"><div class="card-header"><h3>Accompagnement</h3></div><div class="chart-container" style="height: 200px;"><canvas id="chart-acc"></canvas></div></div>
-            <div class="dash-card card-third"><div class="card-header"><h3>Pays</h3></div><div class="chart-container" style="height: 200px;"><canvas id="chart-pays"></canvas></div></div>
+            <div class="dash-card card-third">
+                <div class="card-header"><h3>4. Sources de découverte</h3></div>
+                <div class="chart-container" style="height: 180px;"><canvas id="chart-q4"></canvas></div>
+                <div id="legend-q4"></div>
+            </div>
+            <div class="dash-card card-third">
+                <div class="card-header"><h3>Pays</h3></div> <div class="chart-container" style="height: 180px;"><canvas id="chart-pays"></canvas></div>
+                <div id="legend-pays"></div>
+            </div>
+            <div class="dash-card card-third">
+                <div class="card-header"><h3>Accompagnement</h3></div>
+                <div class="chart-container" style="height: 180px;"><canvas id="chart-acc"></canvas></div>
+                <div id="legend-acc"></div>
+            </div>
         `;
 
         initTimelineChart(document.getElementById('chart-survey-timeline'), data.timeline, data.timeline_compare);
 
         if(document.getElementById('chart-radar') && data.total_reponses > 0) {
-            new Chart(document.getElementById('chart-radar'), {
-                type: 'radar',
-                data: {
-                    labels: ['Aire', 'Sécurité', 'Services'],
-                    datasets: [{ label: 'Score', data: data.radar_scores, backgroundColor: THEME.primaryLight, borderColor: THEME.primary }]
-                },
-                options:{
-                    responsive:true,
-                    maintainAspectRatio:false,
-                    scales: { r: { min: 0, max: 100, ticks:{display:false} } },
-                    plugins: {
-                        tooltip: percentageTooltip // Injection du calcul de pourcentage
-                    }
-                }
-            });
+            new Chart(document.getElementById('chart-radar'), { type: 'radar', data: { labels: ['Aire', 'Sécurité', 'Services'], datasets: [{ label: 'Score', data: data.radar_scores, backgroundColor: THEME.primaryLight, borderColor: THEME.primary }] }, options:{responsive:true, maintainAspectRatio:false, scales: { r: { min: 0, max: 100, ticks:{display:false} } }, plugins: { legend: { display: false } }} });
         }
 
-        const renderMiniBar = (id, distData) => {
-            if(!document.getElementById(id)) return;
-            const vals = [0,0,0,0];
-            if(distData) distData.forEach(r => { if(r.note>=1 && r.note<=4) vals[parseInt(r.note)-1] = parseInt(r.total); });
-            new Chart(document.getElementById(id), {
-                type: 'bar',
-                data: {
-                    labels: ['1/4', '2/4', '3/4', '4/4'],
-                    datasets: [{ label: 'Votes', data: vals, backgroundColor: THEME.primary, borderRadius: 4 }]
-                },
+        const colorPalette = ['#1A9E66', '#41C48F', '#8EEABF', '#38A169', '#2F855A', '#C6F6D5'];
+
+        function renderCustomDoughnut(canvasId, legendId, originalLabels, originalValues) {
+            // CORRECTION : Filtrage strict pour éliminer les zéros
+            const labels = [];
+            const values = [];
+            const colors = [];
+
+            originalValues.forEach((val, i) => {
+                if (val > 0) {
+                    labels.push(originalLabels[i]);
+                    values.push(val);
+                    // On conserve la couleur d'origine associée à l'index pour rester cohérent
+                    colors.push(colorPalette[i % colorPalette.length]);
+                }
+            });
+
+            if(!document.getElementById(canvasId) || values.length === 0) {
+                if(document.getElementById(canvasId)) document.getElementById(canvasId).parentElement.innerHTML = '<div style="text-align:center; color:#999; padding-top:20px;">Aucune donnée</div>';
+                return;
+            }
+
+            new Chart(document.getElementById(canvasId), {
+                type: 'doughnut',
+                data: { labels: labels, datasets: [{ data: values, backgroundColor: colors, borderWidth: 2 }] },
                 options: {
                     responsive:true,
                     maintainAspectRatio:false,
-                    plugins:{
-                        tooltip: percentageTooltip // Injection du calcul de pourcentage
-                    }
+                    cutout:'60%',
+                    plugins: { legend: { display: false } }
                 }
             });
-        };
-        renderMiniBar('chart-q1', data.q1_dist); renderMiniBar('chart-q2', data.q2_dist); renderMiniBar('chart-q3', data.q3_dist);
 
-        if(document.getElementById('chart-q4') && Object.keys(sCount).length > 0) new Chart(document.getElementById('chart-q4'), { type: 'bar', data: { labels: Object.keys(sCount), datasets: [{ label: 'Mentions', data: Object.values(sCount), backgroundColor: THEME.primary, borderRadius: 4 }] }, options: { indexAxis: 'y', responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}} }});
-        if(document.getElementById('chart-orig') && data.origine && data.origine.length > 0) new Chart(document.getElementById('chart-orig'), { type: 'doughnut', data: { labels: data.origine.map(i=> i.profil_origine === 'fr' ? 'Français' : 'Étranger'), datasets: [{ data: data.origine.map(i=>i.total), backgroundColor:['#1A9E66', '#8EEABF'] }] }, options: { responsive:true, maintainAspectRatio:false, cutout:'65%' }});
-        if(document.getElementById('chart-acc') && data.accompagnement && data.accompagnement.length > 0) new Chart(document.getElementById('chart-acc'), { type: 'doughnut', data: { labels: data.accompagnement.map(i=>i.profil_accompagnement), datasets: [{ data: data.accompagnement.map(i=>i.total), backgroundColor:['#1A9E66', '#F6AD55', '#E53E3E', '#2F855A'] }] }, options: { responsive:true, maintainAspectRatio:false, cutout:'65%' }});
-
-        if(document.getElementById('chart-pays')) {
-            if (data.pays && data.pays.length > 0) {
-                new Chart(document.getElementById('chart-pays'), {
-                    type: 'bar',
-                    data: {
-                        labels: data.pays.map(i=>i.profil_pays.toUpperCase()),
-                        datasets: [{ label: 'Visiteurs', data: data.pays.map(i=>i.total), backgroundColor: THEME.primary, borderRadius: 4 }]
-                    },
-                    options: {
-                        indexAxis: 'y',
-                        responsive:true,
-                        maintainAspectRatio:false,
-                        plugins:{
-                            tooltip: percentageTooltip // Injection du calcul de pourcentage
-                        }
-                    }
+            const legendDiv = document.getElementById(legendId);
+            if (legendDiv) {
+                let html = '<div style="margin-top: 20px; font-size: 0.9rem; color: #4A5568; max-height: 120px; overflow-y: auto; padding-right: 5px;">';
+                labels.forEach((label, i) => {
+                    html += `<div style="display: flex; align-items: center; margin-bottom: 8px;">
+                                <span style="width: 12px; height: 12px; background-color: ${colors[i]}; border-radius: 50%; margin-right: 10px; flex-shrink: 0;"></span>
+                                <strong style="margin-right: 6px;">${label}</strong> : sélectionné ${values[i]} fois
+                             </div>`;
                 });
-            } else {
-                document.getElementById('chart-pays').parentElement.innerHTML = '<div style="text-align:center; color:#999; padding-top:20px;">Aucune donnée</div>';
+                html += '</div>';
+                legendDiv.innerHTML = html;
             }
+        }
+
+        // Notes
+        const parseNotes = (distData) => {
+            const vals = [0,0,0,0];
+            if(distData) distData.forEach(r => { if(r.note>=1 && r.note<=4) vals[parseInt(r.note)-1] = parseInt(r.total); });
+            return vals;
+        };
+        renderCustomDoughnut('chart-q1', 'legend-q1', ['1/4', '2/4', '3/4', '4/4'], parseNotes(data.q1_dist));
+        renderCustomDoughnut('chart-q2', 'legend-q2', ['1/4', '2/4', '3/4', '4/4'], parseNotes(data.q2_dist));
+        renderCustomDoughnut('chart-q3', 'legend-q3', ['1/4', '2/4', '3/4', '4/4'], parseNotes(data.q3_dist));
+
+        // Sources
+        renderCustomDoughnut('chart-q4', 'legend-q4', Object.keys(sCount), Object.values(sCount));
+
+        // CORRECTION : Fusionner la France avec les Pays
+        let paysLabels = [];
+        let paysValues = [];
+
+        // 1. On injecte la France d'abord (en extrayant l'information de data.origine)
+        if (data.origine) {
+            const frData = data.origine.find(o => o.profil_origine === 'fr');
+            if (frData && parseInt(frData.total) > 0) {
+                paysLabels.push('FRANCE');
+                paysValues.push(parseInt(frData.total));
+            }
+        }
+
+        // 2. On ajoute les autres pays
+        if (data.pays) {
+            data.pays.forEach(p => {
+                if (p.profil_pays && p.profil_pays.trim() !== '') {
+                    paysLabels.push(p.profil_pays.toUpperCase());
+                    paysValues.push(parseInt(p.total));
+                }
+            });
+        }
+        renderCustomDoughnut('chart-pays', 'legend-pays', paysLabels, paysValues);
+
+        // Accompagnement
+        if(data.accompagnement && data.accompagnement.length > 0) {
+            renderCustomDoughnut('chart-acc', 'legend-acc', data.accompagnement.map(a => a.profil_accompagnement), data.accompagnement.map(a => parseInt(a.total)));
+        } else {
+            renderCustomDoughnut('chart-acc', 'legend-acc', [], []);
         }
     }
 
@@ -550,7 +617,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (appState.compare && compareData) {
             datasets.push({
-                label: 'Année précédente',
+                label: 'Période de comparaison', // MODIFIÉ
                 data: compData,
                 borderColor: '#A0AEC0',
                 borderDash: [5, 5],
@@ -563,7 +630,14 @@ document.addEventListener('DOMContentLoaded', () => {
         new Chart(ctx, {
             type: 'line',
             data: { labels: labels, datasets: datasets },
-            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: appState.compare } }, scales: { y: { beginAtZero: true, ticks: { precision: 0 } } } }
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: appState.compare },
+                    datalabels: { display: false } // CORRECTION : Désactive les % sur ce graphique
+                },
+                scales: { y: { beginAtZero: true, ticks: { precision: 0 } } } }
         });
     }
 
@@ -891,15 +965,68 @@ document.addEventListener('DOMContentLoaded', () => {
         console.error("Flatpickr n'est pas chargé ou le bouton date-picker-btn est introuvable.");
     }
 
-    // Écouteur du clic sur le bouton comparer
+    // --- GESTION DE LA COMPARAISON ET DU 2EME CALENDRIER ---
     const compareCheckbox = document.getElementById('compare-checkbox');
-    if(compareCheckbox) {
-        compareCheckbox.addEventListener('change', (e) => {
-            appState.compare = e.target.checked;
-            fetchApiData(); // Relance la requête avec le paramètre compare=1
+    const comparePickerBtn = document.getElementById('compare-picker-btn');
+    const comparePickerLabel = document.getElementById('compare-picker-label');
+    let fpCompareInstance = null;
+
+    if (comparePickerBtn && typeof flatpickr !== 'undefined') {
+        // Initialisation du 2ème Flatpickr
+        fpCompareInstance = flatpickr(comparePickerBtn, {
+            mode: "range",
+            locale: "fr",
+            dateFormat: "Y-m-d",
+            maxDate: "today",
+            onChange: function(selectedDates, dateStr, instance) {
+                if (selectedDates.length === 2) {
+                    const formatter = new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'short' });
+                    const yearFormatter = new Intl.DateTimeFormat('fr-FR', { year: 'numeric' });
+                    comparePickerLabel.innerText = `${formatter.format(selectedDates[0])} - ${formatter.format(selectedDates[1])} ${yearFormatter.format(selectedDates[1])}`;
+
+                    appState.compareStart = instance.formatDate(selectedDates[0], "Y-m-d");
+                    appState.compareEnd = instance.formatDate(selectedDates[1], "Y-m-d");
+
+                    fetchApiData(); // Recharge les graphiques avec les nouvelles dates !
+                }
+            }
+        });
+
+        comparePickerBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            fpCompareInstance.open();
         });
     }
 
+    if (compareCheckbox) {
+        compareCheckbox.addEventListener('change', (e) => {
+            appState.compare = e.target.checked;
+
+            if (appState.compare) {
+                comparePickerBtn.style.display = 'flex'; // Affiche le bouton
+
+                // Si aucune date de comparaison n'a encore été choisie, on met N-1 par défaut
+                if (!appState.compareStart) {
+                    let ds = new Date(appState.dateStart);
+                    let de = new Date(appState.dateEnd);
+                    ds.setFullYear(ds.getFullYear() - 1);
+                    de.setFullYear(de.getFullYear() - 1);
+
+                    appState.compareStart = ds.toISOString().split('T')[0];
+                    appState.compareEnd = de.toISOString().split('T')[0];
+
+                    const formatter = new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'short' });
+                    const yearFormatter = new Intl.DateTimeFormat('fr-FR', { year: 'numeric' });
+                    comparePickerLabel.innerText = `${formatter.format(ds)} - ${formatter.format(de)} ${yearFormatter.format(de)}`;
+
+                    if (fpCompareInstance) fpCompareInstance.setDate([ds, de]);
+                }
+            } else {
+                comparePickerBtn.style.display = 'none'; // Cache le bouton
+            }
+            fetchApiData();
+        });
+    }
     // Lancement
     fetchApiData();
 });
