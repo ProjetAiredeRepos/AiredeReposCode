@@ -41,8 +41,24 @@ function aire_repos_log_qr_scan( WP_REST_Request $request ) {
     global $wpdb;
     $id_aire = absint( $request->get_param('id_aire') );
     $lang = sanitize_text_field( $request->get_param('code_langue') );
+    $type = sanitize_text_field( $request->get_param('type_visite') ?: 'discovery' );
+
     if (empty($id_aire)) return new WP_Error('invalid', 'Invalid data', ['status'=>400]);
-    $wpdb->insert( $wpdb->prefix.'visite_site', ['date_visite'=>current_time('mysql'), 'id_aire'=>$id_aire, 'code_langue'=>strtoupper($lang), 'temps_total'=>0], ['%s','%d','%s','%d'] );
+
+    // Auto-réparation de la BDD : on ajoute la colonne 'type_visite' si elle n'existe pas
+    $col_exists = $wpdb->get_results("SHOW COLUMNS FROM {$wpdb->prefix}visite_site LIKE 'type_visite'");
+    if (empty($col_exists)) {
+        $wpdb->query("ALTER TABLE {$wpdb->prefix}visite_site ADD COLUMN type_visite varchar(20) DEFAULT 'discovery'");
+    }
+
+    $wpdb->insert( $wpdb->prefix.'visite_site', [
+        'date_visite' => current_time('mysql'),
+        'id_aire' => $id_aire,
+        'code_langue' => strtoupper($lang),
+        'temps_total' => 0,
+        'type_visite' => $type
+    ], ['%s','%d','%s','%d','%s'] );
+
     return rest_ensure_response( ['status'=>'success', 'id_visite'=>$wpdb->insert_id] );
 }
 
@@ -142,8 +158,17 @@ function build_dashboard_where_clause($request, $date_col, &$params) {
 
 function cyclo_get_discovery_overview( WP_REST_Request $request ) {
     global $wpdb;
+
+    // --- CORRECTION : Auto-réparation de la BDD au chargement du dashboard ---
+    $col_exists = $wpdb->get_results("SHOW COLUMNS FROM {$wpdb->prefix}visite_site LIKE 'type_visite'");
+    if (empty($col_exists)) {
+        $wpdb->query("ALTER TABLE {$wpdb->prefix}visite_site ADD COLUMN type_visite varchar(20) DEFAULT 'discovery'");
+    }
+    // -------------------------------------------------------------------------
+
     $params = [];
     $where = build_dashboard_where_clause($request, 'date_visite', $params);
+    $where .= " AND (type_visite = 'discovery' OR type_visite IS NULL)";
     $filter_type = sanitize_text_field( $request->get_param('filter_type') ?: 'annee' );
     $compare = sanitize_text_field( $request->get_param('compare') ) === '1';
 
@@ -201,9 +226,22 @@ function cyclo_get_discovery_overview( WP_REST_Request $request ) {
 
 function cyclo_get_survey_overview( WP_REST_Request $request ) {
     global $wpdb;
+
+    // --- CORRECTION : Auto-réparation de la BDD au chargement du dashboard ---
+    $col_exists = $wpdb->get_results("SHOW COLUMNS FROM {$wpdb->prefix}visite_site LIKE 'type_visite'");
+    if (empty($col_exists)) {
+        $wpdb->query("ALTER TABLE {$wpdb->prefix}visite_site ADD COLUMN type_visite varchar(20) DEFAULT 'discovery'");
+    }
+    // -------------------------------------------------------------------------
+
     $params = [];
     // Utilise la fonction générique pour générer le WHERE de base
     $where = build_dashboard_where_clause($request, 'date_soumission', $params);
+    // NOUVEAU : Récupération des visites spécifiques au questionnaire
+    $params_visits = [];
+    $where_visits = build_dashboard_where_clause($request, 'date_visite', $params_visits);
+    $where_visits .= " AND type_visite = 'survey'";
+    $total_consultations_survey = $wpdb->get_var( $wpdb->prepare("SELECT COUNT(id_visite) FROM {$wpdb->prefix}visite_site {$where_visits}", ...$params_visits) );
     $filter_type= sanitize_text_field( $request->get_param('filter_type') ?: 'annee' );
     $compare = sanitize_text_field( $request->get_param('compare') ) === '1';
 
@@ -262,6 +300,7 @@ function cyclo_get_survey_overview( WP_REST_Request $request ) {
         'status'=>'success',
         'data'=>[
             'total_reponses' => $total,
+            'total_consultations_survey' => (int) $total_consultations_survey, // <-- NOUVELLE LIGNE
             'indice_satisfaction' => round($indice, 1),
             'radar_scores' => $radar,
             'averages' => [

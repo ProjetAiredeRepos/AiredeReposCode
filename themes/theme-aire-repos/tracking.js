@@ -2,8 +2,9 @@
 // Script autonome gérant le cycle de vie du tracking comportemental
 
 document.addEventListener('DOMContentLoaded', async () => {
-    // 1. Lecture de l'ID injecté par WordPress (Zéro paramètre URL nécessaire)
+    // 1. Lecture de l'ID et du contexte injectés par WordPress (Zéro paramètre URL nécessaire)
     const aireId = typeof cycloData !== 'undefined' ? cycloData.aire_id : null;
+    const isSurvey = typeof cycloData !== 'undefined' && cycloData.is_survey ? 'survey' : 'discovery'; // <-- NOUVEAU
     // Détection de la langue du navigateur (ex: retourne 'fr' depuis 'fr-FR')
     const userLang = navigator.language.slice(0,2);
 
@@ -21,7 +22,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             headers: {'Content-Type': 'application/json'},
             body: JSON.stringify({
                 id_aire: parseInt(aireId, 10),
-                code_langue: userLang
+                code_langue: userLang,
+                type_visite: isSurvey // <-- NOUVEAU (On l'envoie à l'API)
             })
         });
 
