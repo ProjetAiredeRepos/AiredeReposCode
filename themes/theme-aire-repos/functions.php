@@ -35,7 +35,9 @@ function cyclo_theme_assets() {
     );
 
     // AJOUT : Injection sécurisée de l'ID de l'aire pour le tracking
-    if ( is_singular('aire_repos') ) {
+    global $wp_query;
+    // On injecte le tracker UNIQUEMENT si on est sur l'aire de repos ET qu'on n'est PAS sur le questionnaire
+    if ( is_singular('aire_repos') && !isset( $wp_query->query_vars['questionnaire'] ) ) {
         wp_localize_script('aire-repos-tracking', 'cycloData', array(
             'aire_id' => get_the_ID()
         ));
