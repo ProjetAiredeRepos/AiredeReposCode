@@ -363,7 +363,7 @@ document.addEventListener('DOMContentLoaded', () => {
         let paysLabels = [];
         let paysValues = [];
 
-        // 1. On injecte la France d'abord (en extrayant l'information de data.origine)
+        // 1. On injecte la France d'abord
         if (data.origine) {
             const frData = data.origine.find(o => o.profil_origine === 'fr');
             if (frData && parseInt(frData.total) > 0) {
@@ -372,40 +372,63 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
 
-        // 2. On ajoute les autres pays
+        // 2. On ajoute les autres pays en ignorant la France pour éviter les doublons
         if (data.pays) {
             data.pays.forEach(p => {
                 if (p.profil_pays && p.profil_pays.trim() !== '') {
-                    paysLabels.push(p.profil_pays.toUpperCase());
-                    paysValues.push(parseInt(p.total));
+                    const paysName = p.profil_pays.toUpperCase();
+                    // On filtre explicitement "FRANCE" et "FR"
+                    if (paysName !== 'FRANCE' && paysName !== 'FR') {
+                        paysLabels.push(paysName);
+                        paysValues.push(parseInt(p.total));
+                    }
                 }
             });
         }
         renderCustomDoughnut('chart-pays', 'legend-pays', paysLabels, paysValues);
 
-        // NOUVEAU BLOC : Injection du détail des régions françaises sous la légende Pays
+        // NOUVEAU BLOC : Nettoyage et fusion des anciennes données de Régions
         const paysLegendDiv = document.getElementById('legend-pays');
         if (paysLegendDiv && data.region_dist && data.region_dist.length > 0) {
 
-            // On crée une sous-section stylisée avec une bordure en pointillés
+            // On prépare nos 3 seules catégories officielles
+            const regionsConsolidees = {
+                "Loir-et-Cher (41)": 0,
+                "Centre-Val-de-Loire (hors 41)": 0,
+                "Autre région française": 0
+            };
+
+            // On boucle sur toutes les données (anciennes et nouvelles) et on les range dans les bonnes boîtes
+            data.region_dist.forEach(r => {
+                const total = parseInt(r.total);
+                const nom = r.profil_region.toLowerCase();
+
+                if (nom.includes('41') || nom.includes('loir')) {
+                    regionsConsolidees["Loir-et-Cher (41)"] += total;
+                } else if (nom.includes('centre') || nom.includes('hors 41')) {
+                    regionsConsolidees["Centre-Val-de-Loire (hors 41)"] += total;
+                } else {
+                    regionsConsolidees["Autre région française"] += total;
+                }
+            });
+
             let subLegendHtml = `
                 <div style="margin-top: 14px; padding-top: 12px; border-top: 1px dashed #E2E8F0; font-size: 0.85rem; color: #718096;">
                     <div style="font-weight: 600; margin-bottom: 6px; color: #4A5568;">Détail des répondants de France :</div>
             `;
 
-            // On boucle sur les données renvoyées par l'API (Département 41, Région Centre, etc.)
-            data.region_dist.forEach(r => {
-                subLegendHtml += `
-                    <div style="margin-bottom: 4px; padding-left: 8px; display: flex; justify-content: space-between;">
-                        <span>• ${r.profil_region}</span>
-                        <span style="font-weight: 500; color: #2D3748;">sélectionné ${r.total} fois</span>
-                    </div>
-                `;
+            Object.entries(regionsConsolidees).forEach(([region, total]) => {
+                if (total > 0) {
+                    subLegendHtml += `
+                        <div style="margin-bottom: 4px; padding-left: 8px; display: flex; justify-content: space-between;">
+                            <span>• ${region}</span>
+                            <span style="font-weight: 500; color: #2D3748;">sélectionné ${total} fois</span>
+                        </div>
+                    `;
+                }
             });
 
             subLegendHtml += `</div>`;
-
-            // On insère ce HTML à la fin de la légende existante sans écraser le reste
             paysLegendDiv.insertAdjacentHTML('beforeend', subLegendHtml);
         }
 
