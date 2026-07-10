@@ -236,13 +236,41 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
 
+        // Calcul intelligent pour gérer les données historiques (avant cette mise à jour)
+        let visits = data.total_consultations_survey || 0;
+        if (visits < data.total_reponses) visits = data.total_reponses;
+        let conversionRate = visits > 0 ? Math.round((data.total_reponses / visits) * 100) : 0;
+
         root.innerHTML = `
-            <div class="dash-card card-third"><div class="card-header"><h3>Réponses</h3></div><div class="kpi-value">${data.total_reponses}</div></div>
+            <div class="dash-card card-third">
+                <div class="card-header"><h3>Conversion (Questionnaire)</h3></div>
+                <div style="display:flex; justify-content:space-between; align-items:flex-end; text-align:center; padding: 0 10px;">
+                    <div>
+                        <div class="kpi-value" style="font-size: 1.8rem;">${visits}</div>
+                        <div style="font-size:0.8rem; color:#718096; font-weight:600; text-transform:uppercase;">Visites</div>
+                    </div>
+                    <div style="color:#CBD5E0; padding-bottom: 25px;">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                    </div>
+                    <div>
+                        <div class="kpi-value" style="font-size: 1.8rem;">${data.total_reponses}</div>
+                        <div style="font-size:0.8rem; color:#718096; font-weight:600; text-transform:uppercase;">Réponses</div>
+                    </div>
+                    <div style="color:#CBD5E0; padding-bottom: 25px;">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                    </div>
+                    <div>
+                        <div class="kpi-value" style="font-size: 1.8rem; color:#1A9E66;">${conversionRate}%</div>
+                        <div style="font-size:0.8rem; color:#1A9E66; font-weight:700; text-transform:uppercase;">Taux</div>
+                    </div>
+                </div>
+            </div>
             <div class="dash-card card-third"><div class="card-header"><h3>Satisfaction</h3></div><div class="kpi-value">${data.indice_satisfaction}/5</div></div>
             <div class="dash-card card-third"><div class="card-header"><h3>Radar des Scores</h3></div><div class="chart-container" style="height: 150px;"><canvas id="chart-radar"></canvas></div></div>
             
             <div class="dash-card card-full"><div class="card-header"><h3>Évolution des réponses</h3><p>Période: ${appState.filterType}</p></div><div class="chart-container main-chart"><canvas id="chart-survey-timeline"></canvas></div></div>
             
+            <!-- Rangée 1 : Les 3 notes -->
             <div class="dash-card card-third">
                 <div class="card-header" style="display:flex; justify-content:space-between;">
                     <h3>1. Note Aire</h3><span style="font-weight:bold; color:var(--primary);">${data.averages.aire} / 4</span>
@@ -265,13 +293,15 @@ document.addEventListener('DOMContentLoaded', () => {
                 <div id="legend-q3"></div>
             </div>
             
+            <!-- Rangée 2 : Sources, Pays et Accompagnement -->
             <div class="dash-card card-third">
                 <div class="card-header"><h3>4. Sources de découverte</h3></div>
                 <div class="chart-container" style="height: 180px;"><canvas id="chart-q4"></canvas></div>
                 <div id="legend-q4"></div>
             </div>
             <div class="dash-card card-third">
-                <div class="card-header"><h3>Pays</h3></div> <div class="chart-container" style="height: 180px;"><canvas id="chart-pays"></canvas></div>
+                <div class="card-header"><h3>Pays</h3></div>
+                <div class="chart-container" style="height: 180px;"><canvas id="chart-pays"></canvas></div>
                 <div id="legend-pays"></div>
             </div>
             <div class="dash-card card-third">
