@@ -110,10 +110,55 @@ document.addEventListener('DOMContentLoaded', () => {
                 const result = await response.json();
 
                 if (response.ok && result.status === 'success') {
+                    // 1. On cache les anciens éléments (Formulaire, Sidebar, Header)
                     form.style.display = 'none';
-                    successScreen.classList.remove('hidden');
+
                     const sidebar = document.querySelector('.q-sidebar');
                     if (sidebar) sidebar.style.display = 'none';
+
+                    const header = document.querySelector('.q-header');
+                    if (header) header.style.display = 'none'; // Cache le titre pour recentrer la vue
+
+                    // 2. On force les conteneurs parents à se centrer
+                    const qLayout = document.querySelector('.q-layout');
+                    if (qLayout) {
+                        qLayout.style.display = 'flex';
+                        qLayout.style.justifyContent = 'center';
+                        qLayout.style.alignItems = 'center';
+                        qLayout.style.minHeight = '90vh';
+                        qLayout.style.width = '100%';
+                    }
+
+                    const qContent = document.querySelector('.q-content');
+                    if (qContent) {
+                        qContent.style.display = 'flex';
+                        qContent.style.justifyContent = 'center';
+                        qContent.style.width = '100%';
+                        qContent.style.margin = '0';
+                        qContent.style.padding = '0';
+                    }
+
+                    // 3. On stylise la carte de succès pour qu'elle soit belle et large
+                    successScreen.classList.remove('hidden');
+                    successScreen.style.display = 'flex';
+                    successScreen.style.flexDirection = 'column';
+                    successScreen.style.alignItems = 'center';
+                    successScreen.style.justifyContent = 'center';
+                    successScreen.style.textAlign = 'center';
+                    successScreen.style.backgroundColor = '#ffffff';
+                    successScreen.style.padding = '3rem 2rem';
+                    successScreen.style.borderRadius = '16px';
+                    successScreen.style.boxShadow = '0 10px 30px rgba(0,0,0,0.08)';
+                    successScreen.style.maxWidth = '500px';
+                    successScreen.style.width = '90%';
+
+                    // 4. L'icône de succès
+                    const icon = successScreen.querySelector('.q-success-icon');
+                    if (icon) {
+                        icon.style.fontSize = '4rem';
+                        icon.style.color = '#1A9E66';
+                        icon.style.marginBottom = '20px';
+                    }
                 } else {
                     throw new Error(result.message || "Erreur serveur");
                 }
