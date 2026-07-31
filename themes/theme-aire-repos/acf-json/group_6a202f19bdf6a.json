@@ -28,7 +28,7 @@
             "label": "Sous-titre",
             "name": "q_sous_titre",
             "aria-label": "",
-            "type": "text",
+            "type": "wysiwyg",
             "instructions": "",
             "required": 0,
             "conditional_logic": 0,
@@ -38,11 +38,11 @@
                 "id": ""
             },
             "default_value": "",
-            "maxlength": "",
             "allow_in_bindings": 0,
-            "placeholder": "",
-            "prepend": "",
-            "append": ""
+            "tabs": "all",
+            "toolbar": "full",
+            "media_upload": 1,
+            "delay": 0
         },
         {
             "key": "field_6a202f65c1f84",
@@ -281,5 +281,5 @@
     "display_title": "",
     "allow_ai_access": false,
     "ai_description": "",
-    "modified": 1782396994
+    "modified": 1785223651
 }
