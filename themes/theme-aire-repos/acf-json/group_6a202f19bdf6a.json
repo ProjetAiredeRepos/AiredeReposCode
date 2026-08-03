@@ -58,7 +58,7 @@
                 "class": "",
                 "id": ""
             },
-            "default_value": "Évaluez votre niveau de satisfaction de l'aire de repos",
+            "default_value": "Comment jugez-vous la sécurité des aménagements de la Loire à vélo ?",
             "maxlength": "",
             "allow_in_bindings": 0,
             "placeholder": "",
@@ -79,7 +79,7 @@
                 "class": "",
                 "id": ""
             },
-            "default_value": "Évaluez votre niveau de satisfaction sur la sécurité",
+            "default_value": "Comment jugez-vous les équipements et services le long de la Loire à vélo (points d'eau, sanitaires, aires de repos...) ?",
             "maxlength": "",
             "allow_in_bindings": 0,
             "placeholder": "",
@@ -100,7 +100,7 @@
                 "class": "",
                 "id": ""
             },
-            "default_value": "Évaluez votre satisfaction sur les services",
+            "default_value": "Comment jugez-vous la qualité de la signalétique le long du parcours ?",
             "maxlength": "",
             "allow_in_bindings": 0,
             "placeholder": "",
@@ -121,7 +121,91 @@
                 "class": "",
                 "id": ""
             },
-            "default_value": "Comment avez-vous eu connaissance de cet itinéraire ?",
+            "default_value": "Recommanderiez-vous l'itinéraire de la Loire à vélo à vos proches ?",
+            "maxlength": "",
+            "allow_in_bindings": 0,
+            "placeholder": "",
+            "prepend": "",
+            "append": ""
+        },
+        {
+            "key": "field_6a7042a300794",
+            "label": "Question 5",
+            "name": "q_label_5",
+            "aria-label": "",
+            "type": "text",
+            "instructions": "",
+            "required": 0,
+            "conditional_logic": 0,
+            "wrapper": {
+                "width": "",
+                "class": "",
+                "id": ""
+            },
+            "default_value": "Evaluez votre niveau de satisfaction de l'aire de repos de Chaumont-sur-Loire",
+            "maxlength": "",
+            "allow_in_bindings": 0,
+            "placeholder": "",
+            "prepend": "",
+            "append": ""
+        },
+        {
+            "key": "field_6a7042ab00795",
+            "label": "Question 6",
+            "name": "q_label_6",
+            "aria-label": "",
+            "type": "text",
+            "instructions": "",
+            "required": 0,
+            "conditional_logic": 0,
+            "wrapper": {
+                "width": "",
+                "class": "",
+                "id": ""
+            },
+            "default_value": "Comment avez-vous connu la Loire à vélo ?",
+            "maxlength": "",
+            "allow_in_bindings": 0,
+            "placeholder": "",
+            "prepend": "",
+            "append": ""
+        },
+        {
+            "key": "field_6a7042ad00796",
+            "label": "Question 7",
+            "name": "q_label_7",
+            "aria-label": "",
+            "type": "text",
+            "instructions": "",
+            "required": 0,
+            "conditional_logic": 0,
+            "wrapper": {
+                "width": "",
+                "class": "",
+                "id": ""
+            },
+            "default_value": "Combien de jours dure votre séjour sur la Loire à vélo ?",
+            "maxlength": "",
+            "allow_in_bindings": 0,
+            "placeholder": "",
+            "prepend": "",
+            "append": ""
+        },
+        {
+            "key": "field_6a7042ad00797",
+            "label": "Question 8",
+            "name": "q_label_8",
+            "aria-label": "",
+            "type": "text",
+            "instructions": "",
+            "required": 0,
+            "conditional_logic": 0,
+            "wrapper": {
+                "width": "",
+                "class": "",
+                "id": ""
+            },
+            "default_value": "Quelle distance moyenne parcourez-vous par jour ?",
             "maxlength": "",
             "allow_in_bindings": 0,
             "placeholder": "",
@@ -281,5 +365,5 @@
     "display_title": "",
     "allow_ai_access": false,
     "ai_description": "",
-    "modified": 1785223651
+    "modified": 1785742217
 }

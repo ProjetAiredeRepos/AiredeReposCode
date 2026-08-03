@@ -120,10 +120,10 @@ function aire_repos_submit_survey( WP_REST_Request $request ) {
         'q3_satisfaction_services' => absint($request->get_param('q3_satisfaction_services')),
 
         // --- INJECTION DES 4 NOUVELLES QUESTIONS ---
-        'q6_metrique_a' => absint($request->get_param('q6_metrique_a')),
-        'q7_metrique_b' => absint($request->get_param('q7_metrique_b')),
-        'q8_metrique_c' => absint($request->get_param('q8_metrique_c')),
-        'q9_metrique_d' => absint($request->get_param('q9_metrique_d')),
+        'q6_satisfaction_signaletique' => absint($request->get_param('q6_satisfaction_signaletique')),
+        'q7_recommandation' => absint($request->get_param('q7_recommandation')),
+        'q8_duree_sejour' => absint($request->get_param('q8_duree_sejour')),
+        'q9_distance_sejour' => absint($request->get_param('q9_distance_sejour')),
 
         'q4_connaissance' => $q4_clean,
 
@@ -246,15 +246,15 @@ function cyclo_get_survey_overview( WP_REST_Request $request ) {
 
     // NOUVEAU BLOC : Ajout sécurisé des 4 nouvelles questions
     $table_survey = $wpdb->prefix . 'reponse_questionnaire';
-    $q6_exists = $wpdb->get_results("SHOW COLUMNS FROM {$table_survey} LIKE 'q6_metrique_a'");
+    $q6_exists = $wpdb->get_results("SHOW COLUMNS FROM {$table_survey} LIKE 'q6_satisfaction_signaletique'");
 
     if (empty($q6_exists)) {
         // Règle du CTO : Remplace "metrique_x" par les vrais sujets du client (ex: q6_proprete, q7_bruit)
         $wpdb->query("ALTER TABLE {$table_survey} 
-            ADD COLUMN q6_metrique_a int(1) DEFAULT 0,
-            ADD COLUMN q7_metrique_b int(1) DEFAULT 0,
-            ADD COLUMN q8_metrique_c int(1) DEFAULT 0,
-            ADD COLUMN q9_metrique_d int(1) DEFAULT 0
+            ADD COLUMN q6_satisfaction_signaletique int(1) DEFAULT 0,
+            ADD COLUMN q7_recommandation int(1) DEFAULT 0,
+            ADD COLUMN q8_duree_sejour int(1) DEFAULT 0,
+            ADD COLUMN q9_distance_jour int(1) DEFAULT 0
         ");
     }
 

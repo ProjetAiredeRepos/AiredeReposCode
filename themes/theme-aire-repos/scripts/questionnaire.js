@@ -12,10 +12,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // CORRECTION : On passe à 4 questions obligatoires (Q5 supprimée)
     const requiredSteps = [
-        'input[name="q1_satisfaction_aire"]',
-        'input[name="q2_satisfaction_securite"]',
-        'input[name="q3_satisfaction_services"]',
-        'input[name="q4_connaissance[]"]'
+        'input[name="q2_satisfaction_securite"]', // Visuel Q1
+        'input[name="q3_satisfaction_services"]', // Visuel Q2
+        'input[name="q6_satisfaction_signaletique"]', // Visuel Q3
+        'input[name="q7_recommandation"]', // Visuel Q4
+        'input[name="q1_satisfaction_aire"]', // Visuel Q5
+        'input[name="q4_connaissance[]"]', // Visuel Q6
+        'input[name="q8_duree_sejour"]', // Visuel Q7
+        'input[name="q9_distance_jour"]'  // Visuel Q8
     ];
 
     // --- ACCORDÉON PROFILAGE ---
@@ -73,11 +77,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             });
 
-            // CORRECTION : Calcul sur 4 questions
-            completed = Math.min(completed, 4);
+            // CORRECTION : Calcul sur 8 questions
+            completed = Math.min(completed, 8);
             if (progressText && progressFill) {
-                progressText.innerText = `${completed}/4`;
-                progressFill.style.width = `${(completed / 4) * 100}%`;
+                progressText.innerText = `${completed}/8`;
+                progressFill.style.width = `${(completed / 8) * 100}%`;
             }
         });
 
