@@ -6,10 +6,17 @@ $aire_id = get_the_ID();
 // Récupération des champs ACF (avec des fallbacks sécurisés si le client oublie de remplir un champ)
 $q_titre = get_field('q_titre') ?: 'Questionnaire de satisfaction';
 $q_sous_titre = get_field('q_sous_titre') ?: 'Aidez-nous à améliorer votre expérience.';
-$q_label_1 = get_field('q_label_1') ?: "Évaluez votre niveau de satisfaction de l'aire de repos *";
-$q_label_2 = get_field('q_label_2') ?: "Évaluez votre niveau de satisfaction sur la sécurité *";
-$q_label_3 = get_field('q_label_3') ?: "Évaluez votre satisfaction sur les services *";
-$q_label_4 = get_field('q_label_4') ?: "Comment avez-vous eu connaissance de cet itinéraire ? *";
+$q_label_1 = get_field('q_label_1') ?: "Comment jugez-vous la sécurité des aménagements de la Loire à vélo ? *";
+$q_label_2 = get_field('q_label_2') ?: "Comment jugez-vous les équipements et services le long de la Loire à vélo (points d'eau, sanitaires, aires de repos...) ?   *";
+$q_label_3 = get_field('q_label_3') ?: "Comment jugez-vous la qualité de la signalétique le long du parcours ?  *";
+$q_label_4 = get_field('q_label_4') ?: "Recommanderiez-vous l'itinéraire de la Loire à vélo à vos proches ? *";
+
+// NOUVEAU : Récupération des 4 nouveaux champs ACF (à créer dans ton interface WordPress)
+$q_label_5 = get_field('q_label_5') ?: "Evaluez votre niveau de satisfaction de l'aire de repos de Chaumont-sur-Loire *";
+$q_label_6 = get_field('q_label_6') ?: "Comment avez-vous connu la Loire à vélo ?  *";
+$q_label_7 = get_field('q_label_7') ?: "Combien de jours dure votre séjour sur la Loire à vélo ?  *";
+$q_label_8 = get_field('q_label_8') ?: "Quelle distance moyenne parcourez-vous par jour ? *";
+
 $q_bg = get_field('q_image_fond') ? 'background-image: url(' . esc_url(get_field('q_image_fond')) . '); background-size: cover; background-position: center;' : '';
 
 $q_profil_titre = get_field('q_profil_titre') ?: "Aidez-nous à mieux vous connaître";
@@ -28,7 +35,8 @@ $q_profil_q4 = get_field('q_profil_q4') ?: "Comment êtes-vous venu ?";
                     <div class="q-progress-bar-container">
                         <div class="q-progress-fill" id="progress-fill" style="width: 0%;"></div>
                     </div>
-                    <span class="q-progress-text" id="progress-text">0/4</span>
+                    <!-- CORRECTION : On passe à 8 questions -->
+                    <span class="q-progress-text" id="progress-text">0/8</span>
                 </div>
             </aside>
 
@@ -40,71 +48,121 @@ $q_profil_q4 = get_field('q_profil_q4') ?: "Comment êtes-vous venu ?";
 
                 <form id="form-questionnaire" data-aire="<?php echo esc_attr($aire_id); ?>">
 
-                    <!-- Q1 -->
-                    <div class="q-step" role="group" aria-labelledby="q1-title">
+                    <!-- VISUEL Q1 : Sécurité (Ancienne q2) -->
+                    <div class="q-step" role="group">
                         <div class="q-question-header">
                             <div class="q-number">1</div>
-                            <div class="q-question-text" id="q1-title">
-                                <?php echo esc_html(str_replace('*', '', $q_label_1)); ?> <span class="q-required">*</span>
-                            </div>
+                            <div class="q-question-text"><?php echo esc_html(str_replace('*', '', $q_label_1)); ?> <span class="q-required">*</span></div>
                         </div>
                         <div class="q-options-container">
-                            <label class="q-radio-card"><input type="radio" name="q1_satisfaction_aire" value="4"> Très satisfaisant</label>
-                            <label class="q-radio-card"><input type="radio" name="q1_satisfaction_aire" value="3"> Satisfaisant</label>
-                            <label class="q-radio-card"><input type="radio" name="q1_satisfaction_aire" value="2"> Peu satisfaisant</label>
-                            <label class="q-radio-card"><input type="radio" name="q1_satisfaction_aire" value="1"> Pas du tout satisfaisant</label>
+                            <label class="q-radio-card"><input type="radio" name="q2_satisfaction_securite" value="4"> Très satisfaisante</label>
+                            <label class="q-radio-card"><input type="radio" name="q2_satisfaction_securite" value="3"> Satisfaisante</label>
+                            <label class="q-radio-card"><input type="radio" name="q2_satisfaction_securite" value="2"> Peu satisfaisante</label>
+                            <label class="q-radio-card"><input type="radio" name="q2_satisfaction_securite" value="1"> Insatisfaisante</label>
                         </div>
                     </div>
 
-                    <!-- Q2 -->
-                    <div class="q-step" role="group" aria-labelledby="q2-title">
+                    <!-- VISUEL Q2 : Équipements (Ancienne q3) -->
+                    <div class="q-step" role="group">
                         <div class="q-question-header">
                             <div class="q-number">2</div>
-                            <div class="q-question-text" id="q2-title">
-                                <?php echo esc_html(str_replace('*', '', $q_label_2)); ?> <span class="q-required">*</span>
-                            </div>
-                        </div>
-                        <div class="q-options-container">
-                            <label class="q-radio-card"><input type="radio" name="q2_satisfaction_securite" value="4"> Très satisfaisant</label>
-                            <label class="q-radio-card"><input type="radio" name="q2_satisfaction_securite" value="3"> Satisfaisant</label>
-                            <label class="q-radio-card"><input type="radio" name="q2_satisfaction_securite" value="2"> Peu satisfaisant</label>
-                            <label class="q-radio-card"><input type="radio" name="q2_satisfaction_securite" value="1"> Pas du tout satisfaisant</label>
-                        </div>
-                    </div>
-
-                    <!-- Q3 -->
-                    <div class="q-step" role="group" aria-labelledby="q3-title">
-                        <div class="q-question-header">
-                            <div class="q-number">3</div>
-                            <div class="q-question-text" id="q3-title">
-                                <?php echo esc_html(str_replace('*', '', $q_label_3)); ?> <span class="q-required">*</span>
-                            </div>
+                            <div class="q-question-text"><?php echo esc_html(str_replace('*', '', $q_label_2)); ?> <span class="q-required">*</span></div>
                         </div>
                         <div class="q-options-container">
                             <label class="q-radio-card"><input type="radio" name="q3_satisfaction_services" value="4"> Très satisfaisant</label>
                             <label class="q-radio-card"><input type="radio" name="q3_satisfaction_services" value="3"> Satisfaisant</label>
                             <label class="q-radio-card"><input type="radio" name="q3_satisfaction_services" value="2"> Peu satisfaisant</label>
-                            <label class="q-radio-card"><input type="radio" name="q3_satisfaction_services" value="1"> Pas du tout satisfaisant</label>
+                            <label class="q-radio-card"><input type="radio" name="q3_satisfaction_services" value="1"> Insatisfaisant</label>
                         </div>
                     </div>
 
-                    <!-- Q4 -->
-                    <div class="q-step" role="group" aria-labelledby="q4-title">
+                    <!-- VISUEL Q3 : Signalétique (NOUVELLE q6) -->
+                    <div class="q-step" role="group">
+                        <div class="q-question-header">
+                            <div class="q-number">3</div>
+                            <div class="q-question-text"><?php echo esc_html(str_replace('*', '', $q_label_3)); ?> <span class="q-required">*</span></div>
+                        </div>
+                        <div class="q-options-container">
+                            <label class="q-radio-card"><input type="radio" name="q6_satisfaction_signaletique" value="4"> Très satisfaisante</label>
+                            <label class="q-radio-card"><input type="radio" name="q6_satisfaction_signaletique" value="3"> Satisfaisante</label>
+                            <label class="q-radio-card"><input type="radio" name="q6_satisfaction_signaletique" value="2"> Peu satisfaisante</label>
+                            <label class="q-radio-card"><input type="radio" name="q6_satisfaction_signaletique" value="1"> Insatisfaisante</label>
+                        </div>
+                    </div>
+
+                    <!-- VISUEL Q4 : Recommandation (NOUVELLE q7) -->
+                    <div class="q-step" role="group">
                         <div class="q-question-header">
                             <div class="q-number">4</div>
-                            <div class="q-question-text" id="q4-title">
-                                <?php echo esc_html(str_replace('*', '', $q_label_4)); ?> <span class="q-required">*</span>
+                            <div class="q-question-text"><?php echo esc_html(str_replace('*', '', $q_label_4)); ?> <span class="q-required">*</span></div>
+                        </div>
+                        <div class="q-options-container">
+                            <label class="q-radio-card"><input type="radio" name="q7_recommandation" value="4"> Oui tout à fait</label>
+                            <label class="q-radio-card"><input type="radio" name="q7_recommandation" value="3"> Oui probablement</label>
+                            <label class="q-radio-card"><input type="radio" name="q7_recommandation" value="2"> Non probablement pas</label>
+                            <label class="q-radio-card"><input type="radio" name="q7_recommandation" value="1"> Non pas du tout</label>
+                        </div>
+                    </div>
+
+                    <!-- VISUEL Q5 : Aire de repos (Ancienne q1) -->
+                    <div class="q-step" role="group">
+                        <div class="q-question-header">
+                            <div class="q-number">5</div>
+                            <div class="q-question-text"><?php echo esc_html(str_replace('*', '', $q_label_5)); ?> <span class="q-required">*</span></div>
+                        </div>
+                        <div class="q-options-container">
+                            <label class="q-radio-card"><input type="radio" name="q1_satisfaction_aire" value="4"> Très satisfaisante</label>
+                            <label class="q-radio-card"><input type="radio" name="q1_satisfaction_aire" value="3"> Satisfaisante</label>
+                            <label class="q-radio-card"><input type="radio" name="q1_satisfaction_aire" value="2"> Peu satisfaisante</label>
+                            <label class="q-radio-card"><input type="radio" name="q1_satisfaction_aire" value="1"> Insatisfaisante</label>
+                        </div>
+                    </div>
+
+                    <!-- VISUEL Q6 : Connaissance (Ancienne q4) -->
+                    <div class="q-step" role="group">
+                        <div class="q-question-header">
+                            <div class="q-number">6</div>
+                            <div class="q-question-text">
+                                <?php echo esc_html(str_replace('*', '', $q_label_6)); ?> <span class="q-required">*</span>
                                 <div class="q-help-text">Plusieurs réponses possibles</div>
                             </div>
                         </div>
                         <div class="q-options-container">
-                            <label class="q-checkbox-card"><input type="checkbox" name="q4_connaissance[]" value="presse"> Presse écrite</label>
-                            <label class="q-checkbox-card"><input type="checkbox" name="q4_connaissance[]" value="tv"> Télévision</label>
-                            <label class="q-checkbox-card"><input type="checkbox" name="q4_connaissance[]" value="web"> Sites Internet institutionnels</label>
-                            <label class="q-checkbox-card"><input type="checkbox" name="q4_connaissance[]" value="guides"> Guides de voyage</label>
-                            <label class="q-checkbox-card"><input type="checkbox" name="q4_connaissance[]" value="reseaux"> Réseaux Sociaux</label>
-                            <label class="q-checkbox-card"><input type="checkbox" name="q4_connaissance[]" value="recommandation"> Recommandations</label>
-                            <label class="q-checkbox-card"><input type="checkbox" name="q4_connaissance[]" value="autre"> Autre</label>
+                            <label class="q-checkbox-card"><input type="checkbox" name="q4_connaissance[]" value="Site web"> Site web</label>
+                            <label class="q-checkbox-card"><input type="checkbox" name="q4_connaissance[]" value="Réseaux sociaux"> Réseaux sociaux</label>
+                            <label class="q-checkbox-card"><input type="checkbox" name="q4_connaissance[]" value="Reportage"> Reportage (presse écrite, télévision...)</label>
+                            <label class="q-checkbox-card"><input type="checkbox" name="q4_connaissance[]" value="Guides de voyage"> Guides de voyage</label>
+                            <label class="q-checkbox-card"><input type="checkbox" name="q4_connaissance[]" value="Office de tourisme"> Office de tourisme</label>
+                            <label class="q-checkbox-card"><input type="checkbox" name="q4_connaissance[]" value="Recommandations"> Recommandations</label>
+                            <label class="q-checkbox-card"><input type="checkbox" name="q4_connaissance[]" value="Autre"> Autre</label>
+                        </div>
+                    </div>
+
+                    <!-- VISUEL Q7 : Durée de séjour (NOUVELLE q8) -->
+                    <div class="q-step" role="group">
+                        <div class="q-question-header">
+                            <div class="q-number">7</div>
+                            <div class="q-question-text"><?php echo esc_html(str_replace('*', '', $q_label_7)); ?> <span class="q-required">*</span></div>
+                        </div>
+                        <div class="q-options-container">
+                            <label class="q-radio-card"><input type="radio" name="q8_duree_sejour" value="1"> 1 journée (ou demi-journée)</label>
+                            <label class="q-radio-card"><input type="radio" name="q8_duree_sejour" value="2"> 2 à 3 jours</label>
+                            <label class="q-radio-card"><input type="radio" name="q8_duree_sejour" value="3"> 4 à 7 jours</label>
+                            <label class="q-radio-card"><input type="radio" name="q8_duree_sejour" value="4"> Plus d'une semaine</label>
+                        </div>
+                    </div>
+
+                    <!-- VISUEL Q8 : Distance moyenne (NOUVELLE q9) -->
+                    <div class="q-step" role="group">
+                        <div class="q-question-header">
+                            <div class="q-number">8</div>
+                            <div class="q-question-text"><?php echo esc_html(str_replace('*', '', $q_label_8)); ?> <span class="q-required">*</span></div>
+                        </div>
+                        <div class="q-options-container">
+                            <label class="q-radio-card"><input type="radio" name="q9_distance_jour" value="1"> Moins de 25 km</label>
+                            <label class="q-radio-card"><input type="radio" name="q9_distance_jour" value="2"> Entre 25 et 50 km</label>
+                            <label class="q-radio-card"><input type="radio" name="q9_distance_jour" value="3"> Entre 50 et 75 km</label>
+                            <label class="q-radio-card"><input type="radio" name="q9_distance_jour" value="4"> Plus de 75 km</label>
                         </div>
                     </div>
 
