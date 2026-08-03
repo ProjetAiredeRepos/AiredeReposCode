@@ -270,32 +270,54 @@ document.addEventListener('DOMContentLoaded', () => {
             
             <div class="dash-card card-full"><div class="card-header"><h3>Évolution des réponses</h3><p>Période: ${appState.filterType}</p></div><div class="chart-container main-chart"><canvas id="chart-survey-timeline"></canvas></div></div>
             
-            <!-- Rangée 1 : Les 3 notes -->
+            <!-- Rangée 1 : Les 3 notes de base -->
             <div class="dash-card card-third">
                 <div class="card-header" style="display:flex; justify-content:space-between;">
-                    <h3>1. Note Aire</h3><span style="font-weight:bold; color:var(--primary);">${data.averages.aire} / 4</span>
+                    <h3>1. Aire de repos</h3><span style="font-weight:bold; color:var(--primary);">${data.averages.aire} / 4</span>
                 </div>
                 <div class="chart-container" style="height: 180px;"><canvas id="chart-q1"></canvas></div>
                 <div id="legend-q1"></div>
             </div>
             <div class="dash-card card-third">
                 <div class="card-header" style="display:flex; justify-content:space-between;">
-                    <h3>2. Note Sécurité</h3><span style="font-weight:bold; color:var(--primary);">${data.averages.securite} / 4</span>
+                    <h3>2. Sécurité</h3><span style="font-weight:bold; color:var(--primary);">${data.averages.securite} / 4</span>
                 </div>
                 <div class="chart-container" style="height: 180px;"><canvas id="chart-q2"></canvas></div>
                 <div id="legend-q2"></div>
             </div>
             <div class="dash-card card-third">
                 <div class="card-header" style="display:flex; justify-content:space-between;">
-                    <h3>3. Note Services</h3><span style="font-weight:bold; color:var(--primary);">${data.averages.services} / 4</span>
+                    <h3>3. Services</h3><span style="font-weight:bold; color:var(--primary);">${data.averages.services} / 4</span>
                 </div>
                 <div class="chart-container" style="height: 180px;"><canvas id="chart-q3"></canvas></div>
                 <div id="legend-q3"></div>
             </div>
             
-            <!-- Rangée 2 : Sources, Pays et Accompagnement -->
+            <!-- Rangée 2 : Signalétique, Recommandation, Durée -->
             <div class="dash-card card-third">
-                <div class="card-header"><h3>4. Sources de découverte</h3></div>
+                <div class="card-header"><h3>4. Signalétique</h3></div>
+                <div class="chart-container" style="height: 180px;"><canvas id="chart-q6"></canvas></div>
+                <div id="legend-q6"></div>
+            </div>
+            <div class="dash-card card-third">
+                <div class="card-header"><h3>5. Recommandation</h3></div>
+                <div class="chart-container" style="height: 180px;"><canvas id="chart-q7"></canvas></div>
+                <div id="legend-q7"></div>
+            </div>
+            <div class="dash-card card-third">
+                <div class="card-header"><h3>6. Durée du séjour</h3></div>
+                <div class="chart-container" style="height: 180px;"><canvas id="chart-q8"></canvas></div>
+                <div id="legend-q8"></div>
+            </div>
+
+            <!-- Rangée 3 : Distance, Sources et Pays -->
+            <div class="dash-card card-third">
+                <div class="card-header"><h3>7. Distance par jour</h3></div>
+                <div class="chart-container" style="height: 180px;"><canvas id="chart-q9"></canvas></div>
+                <div id="legend-q9"></div>
+            </div>
+            <div class="dash-card card-third">
+                <div class="card-header"><h3>8. Sources de découverte</h3></div>
                 <div class="chart-container" style="height: 180px;"><canvas id="chart-q4"></canvas></div>
                 <div id="legend-q4"></div>
             </div>
@@ -304,11 +326,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 <div class="chart-container" style="height: 180px;"><canvas id="chart-pays"></canvas></div>
                 <div id="legend-pays"></div>
             </div>
+
+            <!-- Rangée 4 : Accompagnement isolé pour fermer la grille -->
             <div class="dash-card card-third">
                 <div class="card-header"><h3>Accompagnement</h3></div>
                 <div class="chart-container" style="height: 180px;"><canvas id="chart-acc"></canvas></div>
                 <div id="legend-acc"></div>
             </div>
+        \`;
         `;
 
         initTimelineChart(document.getElementById('chart-survey-timeline'), data.timeline, data.timeline_compare);
@@ -382,9 +407,29 @@ document.addEventListener('DOMContentLoaded', () => {
             if(distData) distData.forEach(r => { if(r.note>=1 && r.note<=4) vals[parseInt(r.note)-1] = parseInt(r.total); });
             return vals;
         };
-        renderCustomDoughnut('chart-q1', 'legend-q1', ['1/4', '2/4', '3/4', '4/4'], parseNotes(data.q1_dist));
-        renderCustomDoughnut('chart-q2', 'legend-q2', ['1/4', '2/4', '3/4', '4/4'], parseNotes(data.q2_dist));
-        renderCustomDoughnut('chart-q3', 'legend-q3', ['1/4', '2/4', '3/4', '4/4'], parseNotes(data.q3_dist));
+        // Rendu des 3 questions historiques (On remplace les '1/4' par du texte explicite pour plus d'élégance)
+        const labelsSatisfaction = ['Insatisfaisante', 'Peu satisfaisante', 'Satisfaisante', 'Très satisfaisante'];
+        renderCustomDoughnut('chart-q1', 'legend-q1', labelsSatisfaction, parseNotes(data.q1_dist));
+        renderCustomDoughnut('chart-q2', 'legend-q2', labelsSatisfaction, parseNotes(data.q2_dist));
+        renderCustomDoughnut('chart-q3', 'legend-q3', labelsSatisfaction, parseNotes(data.q3_dist));
+
+        // Rendu NOUVELLES QUESTIONS (Le mapping inverse parfait)
+        renderCustomDoughnut('chart-q6', 'legend-q6', labelsSatisfaction, parseNotes(data.q6_dist));
+
+        renderCustomDoughnut('chart-q7', 'legend-q7',
+            ['Non pas du tout', 'Non probablement pas', 'Oui probablement', 'Oui tout à fait'],
+            parseNotes(data.q7_dist)
+        );
+
+        renderCustomDoughnut('chart-q8', 'legend-q8',
+            ['1 journée', '2 à 3 jours', '4 à 7 jours', 'Plus d\'une semaine'],
+            parseNotes(data.q8_dist)
+        );
+
+        renderCustomDoughnut('chart-q9', 'legend-q9',
+            ['Moins de 25 km', '25 à 50 km', '50 à 75 km', 'Plus de 75 km'],
+            parseNotes(data.q9_dist)
+        );
 
         // Sources
         renderCustomDoughnut('chart-q4', 'legend-q4', Object.keys(sCount), Object.values(sCount));
