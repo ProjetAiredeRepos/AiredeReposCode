@@ -433,7 +433,13 @@ textarea[name="q5_suggestions"]:focus {
 }
 
 /* Boutons d'action du Header */
-.header-actions { display: flex; gap: 1rem; align-items: center; }
+.header-actions {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+    flex-wrap: wrap; /* Autorise les boutons à passer à la ligne */
+    justify-content: flex-end; /* Garde toujours les boutons alignés à droite */
+}
 .btn-action {
     display: inline-flex; align-items: center; gap: 8px;
     padding: 8px 16px; border-radius: 6px; font-weight: 500; font-size: 0.9rem; cursor: pointer;
@@ -467,14 +473,16 @@ textarea[name="q5_suggestions"]:focus {
 .content-header {
     display: flex;
     justify-content: space-between;
-    align-items: flex-start; /* Aligne le contenu vers le haut, plus de centrage forcé */
+    align-items: center; /* On recentre verticalement */
+    flex-wrap: wrap; /* UI SECRET : Autorise le passage à la ligne si l'écran est petit */
+    gap: 1.5rem;
     margin-bottom: 2rem;
 }
 
 .header-titles {
     display: flex;
     flex-direction: column;
-    gap: 8px; /* Espace net entre le fil d'Ariane et le H1 */
+    gap: 4px; /* Espace net entre le fil d'Ariane et le H1 */
 }
 
 .breadcrumbs-container {

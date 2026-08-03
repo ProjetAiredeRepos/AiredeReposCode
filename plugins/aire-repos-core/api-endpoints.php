@@ -118,8 +118,15 @@ function aire_repos_submit_survey( WP_REST_Request $request ) {
         'q1_satisfaction_aire' => absint($request->get_param('q1_satisfaction_aire')),
         'q2_satisfaction_securite' => absint($request->get_param('q2_satisfaction_securite')),
         'q3_satisfaction_services' => absint($request->get_param('q3_satisfaction_services')),
+
+        // --- INJECTION DES 4 NOUVELLES QUESTIONS ---
+        'q6_metrique_a' => absint($request->get_param('q6_metrique_a')),
+        'q7_metrique_b' => absint($request->get_param('q7_metrique_b')),
+        'q8_metrique_c' => absint($request->get_param('q8_metrique_c')),
+        'q9_metrique_d' => absint($request->get_param('q9_metrique_d')),
+
         'q4_connaissance' => $q4_clean,
-        'q5_suggestions' => sanitize_textarea_field($request->get_param('q5_suggestions')),
+
         // On injecte nos variables traitées
         'profil_origine' => $profil_origine,
         'profil_region' => $profil_region,
@@ -167,8 +174,11 @@ function cyclo_get_discovery_overview( WP_REST_Request $request ) {
     // -------------------------------------------------------------------------
 
     $params = [];
-    $where = build_dashboard_where_clause($request, 'date_visite', $params);
-    $where .= " AND (type_visite = 'discovery' OR type_visite IS NULL)";
+    // 1. On crée la clause de base (uniquement les dates et l'ID)
+    $where_base = build_dashboard_where_clause($request, 'date_visite', $params);
+
+    // 2. On génère la clause spécifique pour la table visite_site (qui a la colonne type_visite)
+    $where = $where_base . " AND (type_visite = 'discovery' OR type_visite IS NULL)";
     $filter_type = sanitize_text_field( $request->get_param('filter_type') ?: 'annee' );
     $compare = sanitize_text_field( $request->get_param('compare') ) === '1';
 
@@ -207,7 +217,8 @@ function cyclo_get_discovery_overview( WP_REST_Request $request ) {
     $hourly = $wpdb->get_results( $wpdb->prepare("SELECT HOUR(date_visite) as heure, COUNT(id_visite) as total FROM {$wpdb->prefix}visite_site {$where} GROUP BY HOUR(date_visite)", ...$params) );
     $geo = $wpdb->get_results( $wpdb->prepare("SELECT code_langue, COUNT(id_visite) as total FROM {$wpdb->prefix}visite_site {$where} GROUP BY code_langue ORDER BY total DESC LIMIT 5", ...$params) );
 
-    $where_clics = str_replace('date_visite', 'date_clic', $where);
+    // CORRECTION : On utilise $where_base pour ne pas injecter 'type_visite' dans la table des clics
+    $where_clics = str_replace('date_visite', 'date_clic', $where_base);
     $links = $wpdb->get_results( $wpdb->prepare("SELECT texte_lien, COUNT(id_clic) as total FROM {$wpdb->prefix}clic_lien {$where_clics} GROUP BY texte_lien ORDER BY total DESC LIMIT 6", ...$params) );
 
     return rest_ensure_response( [
@@ -232,7 +243,20 @@ function cyclo_get_survey_overview( WP_REST_Request $request ) {
     if (empty($col_exists)) {
         $wpdb->query("ALTER TABLE {$wpdb->prefix}visite_site ADD COLUMN type_visite varchar(20) DEFAULT 'discovery'");
     }
-    // -------------------------------------------------------------------------
+
+    // NOUVEAU BLOC : Ajout sécurisé des 4 nouvelles questions
+    $table_survey = $wpdb->prefix . 'reponse_questionnaire';
+    $q6_exists = $wpdb->get_results("SHOW COLUMNS FROM {$table_survey} LIKE 'q6_metrique_a'");
+
+    if (empty($q6_exists)) {
+        // Règle du CTO : Remplace "metrique_x" par les vrais sujets du client (ex: q6_proprete, q7_bruit)
+        $wpdb->query("ALTER TABLE {$table_survey} 
+            ADD COLUMN q6_metrique_a int(1) DEFAULT 0,
+            ADD COLUMN q7_metrique_b int(1) DEFAULT 0,
+            ADD COLUMN q8_metrique_c int(1) DEFAULT 0,
+            ADD COLUMN q9_metrique_d int(1) DEFAULT 0
+        ");
+    }
 
     $params = [];
     // Utilise la fonction générique pour générer le WHERE de base

@@ -35,7 +35,7 @@ $q_profil_q4 = get_field('q_profil_q4') ?: "Comment êtes-vous venu ?";
             <section class="q-content">
                 <header class="q-header">
                     <h1 class="q-title"><?php echo esc_html($q_titre); ?></h1>
-                    <p class="q-subtitle"><?php echo esc_html($q_sous_titre); ?></p>
+                    <div class="q-subtitle"><?php echo wp_kses_post($q_sous_titre); ?></div>
                 </header>
 
                 <form id="form-questionnaire" data-aire="<?php echo esc_attr($aire_id); ?>">
