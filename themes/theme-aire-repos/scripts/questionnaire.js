@@ -10,7 +10,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const progressFill = document.getElementById('progress-fill');
     const progressText = document.getElementById('progress-text');
 
-    // CORRECTION : On passe à 4 questions obligatoires (Q5 supprimée)
+    // CORRECTION : On déclare les 8 champs obligatoires avec leur VRAI nom en base de données
     const requiredSteps = [
         'input[name="q2_satisfaction_securite"]', // Visuel Q1
         'input[name="q3_satisfaction_services"]', // Visuel Q2
