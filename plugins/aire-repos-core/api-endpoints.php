@@ -123,7 +123,7 @@ function aire_repos_submit_survey( WP_REST_Request $request ) {
         'q6_satisfaction_signaletique' => absint($request->get_param('q6_satisfaction_signaletique')),
         'q7_recommandation' => absint($request->get_param('q7_recommandation')),
         'q8_duree_sejour' => absint($request->get_param('q8_duree_sejour')),
-        'q9_distance_jour' => absint($request->get_param('q9_distance_jour')),
+        'q9_distance_sejour' => absint($request->get_param('q9_distance_sejour')),
 
         'q4_connaissance' => $q4_clean,
 
@@ -254,7 +254,7 @@ function cyclo_get_survey_overview( WP_REST_Request $request ) {
             ADD COLUMN q6_satisfaction_signaletique int(1) DEFAULT 0,
             ADD COLUMN q7_recommandation int(1) DEFAULT 0,
             ADD COLUMN q8_duree_sejour int(1) DEFAULT 0,
-            ADD COLUMN q9_distance_jour int(1) DEFAULT 0
+            ADD COLUMN q9_distance_sejour int(1) DEFAULT 0
         ");
     }
 
@@ -310,7 +310,7 @@ function cyclo_get_survey_overview( WP_REST_Request $request ) {
     $q6_dist = $wpdb->get_results( $wpdb->prepare("SELECT q6_satisfaction_signaletique as note, COUNT(id_reponse) as total FROM {$table_survey} {$where} GROUP BY note", ...$params) );
     $q7_dist = $wpdb->get_results( $wpdb->prepare("SELECT q7_recommandation as note, COUNT(id_reponse) as total FROM {$table_survey} {$where} GROUP BY note", ...$params) );
     $q8_dist = $wpdb->get_results( $wpdb->prepare("SELECT q8_duree_sejour as note, COUNT(id_reponse) as total FROM {$table_survey} {$where} GROUP BY note", ...$params) );
-    $q9_dist = $wpdb->get_results( $wpdb->prepare("SELECT q9_distance_jour as note, COUNT(id_reponse) as total FROM {$table_survey} {$where} GROUP BY note", ...$params) );
+    $q9_dist = $wpdb->get_results( $wpdb->prepare("SELECT q9_distance_sejour as note, COUNT(id_reponse) as total FROM {$table_survey} {$where} GROUP BY note", ...$params) );
 
     $origine = $wpdb->get_results( $wpdb->prepare("SELECT profil_origine, COUNT(id_reponse) as total FROM {$table_survey} {$where} AND profil_origine != '' GROUP BY profil_origine", ...$params) );
     // NOUVELLE REQUÊTE : Extraction de la répartition des régions pour les Français

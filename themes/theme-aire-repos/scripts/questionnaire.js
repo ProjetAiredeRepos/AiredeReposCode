@@ -19,7 +19,7 @@ document.addEventListener('DOMContentLoaded', () => {
         'input[name="q1_satisfaction_aire"]', // Visuel Q5
         'input[name="q4_connaissance[]"]', // Visuel Q6
         'input[name="q8_duree_sejour"]', // Visuel Q7
-        'input[name="q9_distance_jour"]'  // Visuel Q8
+        'input[name="q9_distance_sejour"]'  // Visuel Q8
     ];
 
     // --- ACCORDÉON PROFILAGE ---

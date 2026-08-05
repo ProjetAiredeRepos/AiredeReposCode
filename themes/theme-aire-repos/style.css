@@ -246,8 +246,6 @@ textarea[name="q5_suggestions"]:focus {
     min-height: 0; /* Nécessaire pour que le grid 0fr fonctionne */
     padding-top: 1rem; /* Espace entre le bouton et les premières questions */
 }
-.q-rgpd-zone { padding: 1.5rem; border: 2px dashed var(--q-border); border-radius: var(--q-radius); margin-bottom: 1.5rem; }
-.q-rgpd-title { font-weight: 700; font-size: 0.9rem; margin-bottom: 1rem; }
 
 /* --- Bouton & Alertes --- */
 .q-submit-btn { width: 100%; padding: 1.2rem; background: var(--q-primary); color: #fff; font-size: 1.1rem; font-weight: 700; border: none; border-radius: 50px; cursor: pointer; transition: opacity 0.2s; }
@@ -259,6 +257,67 @@ textarea[name="q5_suggestions"]:focus {
 #q-success-screen { text-align: center; padding: 4rem 1.5rem; background: #fff; border-radius: var(--q-radius); box-shadow: 0 4px 20px rgba(0,0,0,0.05); }
 .q-success-icon { font-size: 4rem; color: #fff; background: var(--q-primary); width: 100px; height: 100px; line-height: 100px; border-radius: 50%; margin: 0 auto 2rem; }
 #q-success-screen h2 { color: var(--q-primary); margin-bottom: 1rem; }
+
+/* ==========================================================================
+   WIZARD UX (Assistant étape par étape)
+   ========================================================================== */
+
+/* 1. On fige le texte de présentation et la progression en haut de l'écran */
+.q-header {
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    background-color: var(--q-bg); /* S'assure que le texte ne se superpose pas au contenu en scrollant */
+    padding-top: 1rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid rgba(0,0,0,0.05);
+}
+
+/* 2. On masque toutes les étapes par défaut */
+.q-step,
+.q-profilage-zone {
+    display: none;
+    opacity: 0;
+    transform: translateY(15px);
+    transition: opacity 0.4s ease, transform 0.4s ease;
+}
+
+/* 3. On affiche uniquement l'étape active avec une animation fluide */
+.q-step.is-active,
+.q-profilage-zone.is-active {
+    display: block;
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* Masquer le bouton d'envoi jusqu'à la dernière étape */
+.q-submit-btn {
+    display: none;
+}
+.q-submit-btn.is-active {
+    display: block;
+    animation: fadeInStep 0.4s ease forwards;
+}
+
+@keyframes fadeInStep {
+    from { opacity: 0; transform: translateY(15px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Style du bouton dynamique "Continuer" pour la question à choix multiples */
+.btn-next-step {
+    margin-top: 20px;
+    width: 100%;
+    padding: 1rem;
+    background: var(--q-text);
+    color: #fff;
+    border: none;
+    border-radius: 50px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: transform 0.2s;
+}
+.btn-next-step:active { transform: scale(0.98); }
 
 /* --- Responsive Desktop --- */
 @media (min-width: 768px) {
