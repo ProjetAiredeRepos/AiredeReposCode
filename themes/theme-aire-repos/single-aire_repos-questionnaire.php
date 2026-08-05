@@ -159,10 +159,10 @@ $q_profil_q4 = get_field('q_profil_q4') ?: "Comment êtes-vous venu ?";
                             <div class="q-question-text"><?php echo esc_html(str_replace('*', '', $q_label_8)); ?> <span class="q-required">*</span></div>
                         </div>
                         <div class="q-options-container">
-                            <label class="q-radio-card"><input type="radio" name="q9_distance_jour" value="1"> Moins de 25 km</label>
-                            <label class="q-radio-card"><input type="radio" name="q9_distance_jour" value="2"> Entre 25 et 50 km</label>
-                            <label class="q-radio-card"><input type="radio" name="q9_distance_jour" value="3"> Entre 50 et 75 km</label>
-                            <label class="q-radio-card"><input type="radio" name="q9_distance_jour" value="4"> Plus de 75 km</label>
+                            <label class="q-radio-card"><input type="radio" name="q9_distance_sejour" value="1"> Moins de 25 km</label>
+                            <label class="q-radio-card"><input type="radio" name="q9_distance_sejour" value="2"> Entre 25 et 50 km</label>
+                            <label class="q-radio-card"><input type="radio" name="q9_distance_sejour" value="3"> Entre 50 et 75 km</label>
+                            <label class="q-radio-card"><input type="radio" name="q9_distance_sejour" value="4"> Plus de 75 km</label>
                         </div>
                     </div>
 
@@ -223,15 +223,10 @@ $q_profil_q4 = get_field('q_profil_q4') ?: "Comment êtes-vous venu ?";
                                 <label class="q-radio-card"><input type="radio" name="profil_accompagnement" value="amis"> Entre amis</label>
                                 <label class="q-radio-card"><input type="radio" name="profil_accompagnement" value="guide"> Avec un guide / agence</label>
                             </fieldset>
-                        </div> </div> <div class="q-rgpd-zone">
-                        <p class="q-rgpd-title">CONFIDENTIALITÉ (RGPD)</p>
-                        <label class="q-checkbox-card">
-                            <input type="checkbox" id="rgpd-consent" required>
-                            J'accepte que mes réponses soient traitées&nbsp;<strong><u>anonymement</u></strong>&nbsp;à des fins statistiques (RGPD). *
-                        </label>
+                        </div>
                     </div>
 
-                    <div id="q-error-message" class="q-alert hidden">Veuillez répondre aux questions obligatoires (1 à 4) et accepter les conditions RGPD.</div>
+                    <div id="q-error-message" class="q-alert hidden">Veuillez sélectionner au moins une option pour continuer.</div>
 
                     <button type="submit" class="q-submit-btn">Envoyer le questionnaire</button>
                 </form>
