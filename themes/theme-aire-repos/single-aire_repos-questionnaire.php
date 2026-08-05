@@ -17,7 +17,7 @@ $q_label_6 = get_field('q_label_6') ?: "Comment avez-vous connu la Loire à vél
 $q_label_7 = get_field('q_label_7') ?: "Combien de jours dure votre séjour sur la Loire à vélo ?  *";
 $q_label_8 = get_field('q_label_8') ?: "Quelle distance moyenne parcourez-vous par jour ? *";
 
-$q_bg = get_field('q_image_fond') ? 'background-image: url(' . esc_url(get_field('q_image_fond')) . '); background-size: cover; background-position: center;' : '';
+$q_bg = get_field('q_image_fond') ? 'background-image: url(' . esc_url(get_field('q_image_fond')) . ');' : '';
 
 $q_profil_titre = get_field('q_profil_titre') ?: "Aidez-nous à mieux vous connaître";
 $q_profil_q1 = get_field('q_profil_q1') ?: "D'où venez-vous ?";

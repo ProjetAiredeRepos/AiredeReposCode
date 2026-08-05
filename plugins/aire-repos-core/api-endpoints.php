@@ -123,7 +123,7 @@ function aire_repos_submit_survey( WP_REST_Request $request ) {
         'q6_satisfaction_signaletique' => absint($request->get_param('q6_satisfaction_signaletique')),
         'q7_recommandation' => absint($request->get_param('q7_recommandation')),
         'q8_duree_sejour' => absint($request->get_param('q8_duree_sejour')),
-        'q9_distance_sejour' => absint($request->get_param('q9_distance_sejour')),
+        'q9_distance_jour' => absint($request->get_param('q9_distance_jour')),
 
         'q4_connaissance' => $q4_clean,
 

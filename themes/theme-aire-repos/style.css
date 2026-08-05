@@ -16,10 +16,27 @@
     --q-border: #E0E5E2;
     --q-text: #2C3E35;
     --q-radius: 8px;
-    background-color: var(--q-bg);
+
+    position: relative;
+    z-index: 1;
     min-height: 100vh;
     font-family: 'DM Sans', sans-serif;
     color: var(--q-text);
+    /* Sécurité pour prendre au moins la hauteur de l'écran */
+    min-height: 100vh;
+    min-height: -webkit-fill-available;
+}
+
+/* Un fond fixe indépendant du défilement */
+.questionnaire-app::before {
+    content: '';
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    z-index: -1;
+    background-color: var(--q-bg); /* Vert par défaut */
+    background-image: inherit; /* Récupère dynamiquement l'image PHP */
+    background-size: cover;
+    background-position: center;
 }
 
 .q-layout {
