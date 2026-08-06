@@ -10,6 +10,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const progressFill = document.getElementById('progress-fill');
     const progressText = document.getElementById('progress-text');
 
+    if (!form) return; // Sécurité
+
     // CORRECTION : On déclare les 8 champs obligatoires avec leur VRAI nom en base de données
     const requiredSteps = [
         'input[name="q2_satisfaction_securite"]', // Visuel Q1
@@ -21,6 +23,85 @@ document.addEventListener('DOMContentLoaded', () => {
         'input[name="q8_duree_sejour"]', // Visuel Q7
         'input[name="q9_distance_sejour"]'  // Visuel Q8
     ];
+
+    // MOTEUR DU WIZARD (Assistant étape par étape)
+    const steps = Array.from(document.querySelectorAll('.q-step'));
+    const profilageZone = document.querySelector('.q-profilage-zone');
+    if (profilageZone) steps.push(profilageZone);
+
+    let currentStepIndex = 0;
+    const totalQuestions = 8;
+
+    // Fonction qui affiche l'étape active et masque les autres
+    function showStep(index) {
+        errorAlert.classList.add('hidden'); // Cache les erreurs
+
+        steps.forEach((step, i) => {
+            if (i === index) {
+                step.classList.add('is-active');
+                window.scrollTo({ top: 0, behavior: 'smooth' }); // Remonte en haut
+            } else {
+                step.classList.remove('is-active');
+            }
+        });
+
+        // Affiche le bouton Envoyer uniquement à la toute fin
+        if (index === steps.length - 1) {
+            submitBtn.classList.add('is-active');
+        } else {
+            submitBtn.classList.remove('is-active');
+        }
+
+        // Mise à jour de la barre de progression
+        let displayIndex = Math.min(index + 1, totalQuestions);
+        if (index === steps.length - 1) displayIndex = totalQuestions; // Force 8/8 sur le profilage
+
+        if (progressText && progressFill) {
+            progressText.innerText = `${displayIndex}/${totalQuestions}`;
+            progressFill.style.width = `${(displayIndex / totalQuestions) * 100}%`;
+        }
+    }
+
+    // Écouteurs pour l'auto-avancement
+    steps.forEach((step, index) => {
+        const radios = step.querySelectorAll('input[type="radio"]');
+        const checkboxes = step.querySelectorAll('input[type="checkbox"]');
+
+        // A. Boutons radio : Avancement automatique après 400ms
+        if (radios.length > 0) {
+            radios.forEach(radio => {
+                radio.addEventListener('change', () => {
+                    setTimeout(() => {
+                        if (currentStepIndex < steps.length - 1) {
+                            currentStepIndex++;
+                            showStep(currentStepIndex);
+                        }
+                    }, 400);
+                });
+            });
+        }
+
+        // B. Checkboxes (Choix multiples) : Ajout d'un bouton de validation manuel
+        if (checkboxes.length > 0 && index < steps.length - 1) {
+            const nextBtn = document.createElement('button');
+            nextBtn.type = 'button';
+            nextBtn.className = 'btn-next-step';
+            nextBtn.innerText = 'Valider et continuer';
+
+            nextBtn.addEventListener('click', () => {
+                const isChecked = Array.from(checkboxes).some(cb => cb.checked);
+                if (!isChecked) {
+                    errorAlert.innerText = "Veuillez sélectionner au moins une option pour continuer.";
+                    errorAlert.classList.remove('hidden');
+                    return;
+                }
+                currentStepIndex++;
+                showStep(currentStepIndex);
+            });
+
+            step.querySelector('.q-options-container').appendChild(nextBtn);
+        }
+    });
 
     // --- ACCORDÉON PROFILAGE ---
     const profilageTrigger = document.getElementById('profilage-trigger');
@@ -174,4 +255,6 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     }
+    // LANCEMENT DU WIZARD
+    showStep(currentStepIndex);
 });
