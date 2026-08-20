@@ -91,26 +91,38 @@ function aire_repos_submit_survey( WP_REST_Request $request ) {
 
     // --- NOUVELLE LOGIQUE DE PROFILAGE ---
     // On récupère les valeurs envoyées par le nouveau formulaire
-    $country_input = sanitize_text_field( $request->get_param('user_country') );
-    $country_other = sanitize_text_field( $request->get_param('user_country_other') );
-    $region_fr     = sanitize_text_field( $request->get_param('user_region_fr') );
+    $origine_input  = sanitize_text_field( $request->get_param('user_origine') ); // "France" ou "Etranger"
+    $region_fr      = sanitize_text_field( $request->get_param('user_region_fr') );
+    $dep_fr         = sanitize_text_field( $request->get_param('user_dep_fr') );
+    $pays_etranger  = sanitize_text_field( $request->get_param('user_pays_etranger') );
+    $accomp         = sanitize_text_field( $request->get_param('profil_accompagnement') );
+
+    // NOUVEAU : Récupération du champ texte libre
+    $pays_autre     = sanitize_text_field( $request->get_param('user_pays_autre') );
 
     $profil_origine = '';
     $profil_pays    = '';
     $profil_region  = '';
+    $profil_dep     = '';
 
-    if ($country_input === 'France') {
+    if ($origine_input === 'France') {
         $profil_origine = 'fr';
         $profil_pays    = 'France';
-        $profil_region  = $region_fr; // Ex: Loir-et-Cher (41)
-    } elseif ($country_input === 'Autre') {
+        $profil_region  = $region_fr;
+        $profil_dep     = $dep_fr;
+    } elseif ($origine_input === 'Etranger') {
         $profil_origine = 'etranger';
-        $profil_pays    = $country_other; // Le pays tapé à la main
+
+        // Logique avancée : Si le menu est sur "Autre" et que le champ texte n'est pas vide, on utilise le champ texte.
+        if ( ($pays_etranger === 'Autre' || $pays_etranger === 'Autres pays européens') && !empty($pays_autre) ) {
+            // ucfirst(strtolower()) permet de formater proprement la saisie (ex: "cANADA" devient "Canada")
+            $profil_pays = ucfirst(strtolower(trim($pays_autre)));
+        } else {
+            $profil_pays = $pays_etranger;
+        }
+
         $profil_region  = '';
-    } elseif (!empty($country_input)) {
-        $profil_origine = 'etranger';
-        $profil_pays    = $country_input; // Le pays sélectionné dans la liste
-        $profil_region  = '';
+        $profil_dep     = '';
     }
 
     $wpdb->insert( $wpdb->prefix.'reponse_questionnaire', [
@@ -130,6 +142,7 @@ function aire_repos_submit_survey( WP_REST_Request $request ) {
         // On injecte nos variables traitées
         'profil_origine' => $profil_origine,
         'profil_region' => $profil_region,
+        'profil_departement' => $profil_dep, // <-- NOUVELLE COLONNE
         'profil_pays' => $profil_pays,
         'profil_accompagnement' => sanitize_text_field($request->get_param('profil_accompagnement')),
         'date_soumission' => current_time('mysql')
@@ -278,6 +291,12 @@ function cyclo_get_survey_overview( WP_REST_Request $request ) {
 
     $kpi = $wpdb->get_row( $wpdb->prepare("SELECT COUNT(id_reponse) as total, AVG(q1_satisfaction_aire) as a1, AVG(q2_satisfaction_securite) as a2, AVG(q3_satisfaction_services) as a3 FROM {$table_survey} {$where}", ...$params) );
     $timeline = $wpdb->get_results( $wpdb->prepare("SELECT {$group_sql}, COUNT(id_reponse) as total FROM {$table_survey} {$where} GROUP BY {$group_by} ORDER BY label ASC", ...$params) );
+
+    // NOUVEAU BLOC : Ajout de la colonne département pour le profilage
+    $survey_cols = $wpdb->get_col("DESCRIBE {$table_survey}", 0);
+    if (!in_array('profil_departement', $survey_cols)) {
+        $wpdb->query("ALTER TABLE {$table_survey} ADD COLUMN profil_departement varchar(100) DEFAULT NULL");
+    }
 
     // Comparaison
     // NOUVEAU : On récupère les dates exactes voulues par l'utilisateur

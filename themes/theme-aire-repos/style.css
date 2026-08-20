@@ -2364,3 +2364,27 @@ h1, h2, h3, h4, h5, h6 {
         to { transform: translateX(0) scale(1); opacity: 1; }
     }
 }
+
+/* ==========================================================================
+   STYLE DE L'EN-TÊTE PROFILAGE (Questions Facultatives)
+   ========================================================================== */
+.q-profilage-header {
+    background-color: var(--q-primary);
+    padding: 1.5rem;
+    border-radius: var(--q-radius);
+    margin-bottom: 2rem;
+    text-align: center;
+}
+
+/* Le CTO fixe le conflit d'héritage ici */
+.q-profilage-header h3 {
+    margin: 0 !important;
+    font-size: 1.3rem !important;
+    font-weight: 700 !important;
+    color: #ffffff !important; /* Force le texte en blanc contre le fond vert */
+}
+
+.q-profilage-header h3 span {
+    font-weight: 400;
+    opacity: 0.9;
+}

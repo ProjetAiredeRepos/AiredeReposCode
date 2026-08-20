@@ -21,9 +21,10 @@ $q_bg = get_field('q_image_fond') ? 'background-image: url(' . esc_url(get_field
 
 $q_profil_titre = get_field('q_profil_titre') ?: "Aidez-nous à mieux vous connaître";
 $q_profil_q1 = get_field('q_profil_q1') ?: "D'où venez-vous ?";
-$q_profil_q2 = get_field('q_profil_q2') ?: "Précisez votre pays";
-$q_profil_q3 = get_field('q_profil_q3') ?: "De quel région venez-vous";
-$q_profil_q4 = get_field('q_profil_q4') ?: "Comment êtes-vous venu ?";
+$q_profil_q2 = get_field('q_profil_q2') ?: "Sélectionnez votre pays...";
+$q_profil_q3 = get_field('q_profil_q3') ?: "Sélectionnez votre région...";
+$q_profil_q4 = get_field('q_profil_q4') ?: "Sélectionnez votre département...";
+$q_profil_q5 = get_field('q_profil_q5') ?: "Comment voyagez-vous ?";
 ?>
 
     <main class="questionnaire-app" style="<?php echo $q_bg; ?>">
@@ -166,63 +167,103 @@ $q_profil_q4 = get_field('q_profil_q4') ?: "Comment êtes-vous venu ?";
                         </div>
                     </div>
 
-                    <!-- Zone Profilage Dynamique (Accordéon) -->
-                    <div class="q-profilage-zone">
-                        <!-- Le bouton déclencheur de l'accordéon -->
-                        <button type="button" class="q-accordion-trigger" id="profilage-trigger" aria-expanded="false">
-                            <div class="q-profilage-header">
-                                <h3><?php echo esc_html($q_profil_titre); ?> <span class="q-badge-facultatif">Facultatif</span></h3>
-                                <p>Quelques questions anonymes sur votre profil de visiteur</p>
-                            </div>
-                            <svg class="q-chevron" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
-                        </button>
+                    <!-- Étape 9 : Question Facultative A (Origine) -->
+                    <!-- L'attribut data-no-auto indique au JS de ne pas passer à la suite tout de suite -->
+                    <div class="q-step" role="group" data-no-auto="true">
 
-                        <!-- Le conteneur masqué -->
-                        <div class="q-accordion-content" id="profilage-content">
-                            <div class="form-group" style="margin-bottom: 20px;">
-                                <label for="user_country" style="display: block; font-weight: 600; margin-bottom: 8px;"><?php echo esc_html($q_profil_q1); ?> </label>
-                                <select id="user_country" name="user_country" style="width: 100%; padding: 12px; border: 1px solid #E2E8F0; border-radius: 6px; background-color: #F7FAFC; color: #4A5568;">
-                                    <option value="">Sélectionnez votre pays...</option>
-                                    <option value="France">France</option>
+                        <div class="q-profilage-header">
+                            <h3>Aidez-nous à mieux vous connaître <span>(facultatif)</span></h3>
+                            <!-- NOUVEAU : Texte de réassurance -->
+                            <p style="margin: 0.5rem 0 0 0; font-size: 0.9rem; color: rgba(255,255,255,0.9);">Vos réponses sont 100% anonymes.</p>
+                        </div>
+
+                        <div class="q-question-header">
+                            <div class="q-number" style="background-color: #4A5568; color: white;">a</div>
+                            <div class="q-question-text"><?php echo esc_html($q_profil_q1); ?></div>
+                        </div>
+
+                        <div class="q-options-container" style="display: flex; gap: 1rem; margin-bottom: 1rem;">
+                            <label class="q-radio-card" style="flex: 1;"><input type="radio" name="user_origine" value="France"> France</label>
+                            <label class="q-radio-card" style="flex: 1;"><input type="radio" name="user_origine" value="Etranger"> Étranger</label>
+                        </div>
+
+                        <!-- Sous-menu France -->
+                        <div id="group-france" style="display: none; padding: 1.5rem; background: #F7FAFC; border-left: 4px solid var(--q-primary); border-radius: 4px; margin-bottom: 1.5rem;">
+                            <div class="form-group" style="margin-bottom: 1rem;">
+                                <label for="user_region_fr" style="display: block; font-weight: 600; margin-bottom: 8px;">Quelle région ?</label>
+                                <select id="user_region_fr" name="user_region_fr" style="width: 100%; padding: 12px; border: 1px solid #E2E8F0; border-radius: 6px;">
+                                    <option value="">Sélectionnez votre région...</option>
+                                    <option value="Auvergne-Rhône-Alpes">Auvergne-Rhône-Alpes</option>
+                                    <option value="Bourgogne-Franche-Comté">Bourgogne-Franche-Comté</option>
+                                    <option value="Bretagne">Bretagne</option>
+                                    <option value="Centre-Val de Loire">Centre-Val de Loire</option>
+                                    <option value="Corse">Corse</option>
+                                    <option value="Grand Est">Grand Est</option>
+                                    <option value="Hauts-de-France">Hauts-de-France</option>
+                                    <option value="Île-de-France">Île-de-France</option>
+                                    <option value="Normandie">Normandie</option>
+                                    <option value="Nouvelle-Aquitaine">Nouvelle-Aquitaine</option>
+                                    <option value="Occitanie">Occitanie</option>
+                                    <option value="Pays de la Loire">Pays de la Loire</option>
+                                    <option value="Provence-Alpes-Côte d'Azur">Provence-Alpes-Côte d'Azur</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="user_dep_fr" style="display: block; font-weight: 600; margin-bottom: 8px;">Quel département ?</label>
+                                <select id="user_dep_fr" name="user_dep_fr" style="width: 100%; padding: 12px; border: 1px solid #E2E8F0; border-radius: 6px;">
+                                    <option value="">Sélectionnez votre département...</option>
+                                    <?php
+                                    // Le CTO : Génération dynamique des 96 départements métropolitains + DOM-TOM
+                                    $departements = [
+                                            '01 - Ain', '02 - Aisne', '03 - Allier', '04 - Alpes-de-Haute-Provence', '05 - Hautes-Alpes', '06 - Alpes-Maritimes', '07 - Ardèche', '08 - Ardennes', '09 - Ariège', '10 - Aube', '11 - Aude', '12 - Aveyron', '13 - Bouches-du-Rhône', '14 - Calvados', '15 - Cantal', '16 - Charente', '17 - Charente-Maritime', '18 - Cher', '19 - Corrèze', '2A - Corse-du-Sud', '2B - Haute-Corse', '21 - Côte-d\'Or', '22 - Côtes-d\'Armor', '23 - Creuse', '24 - Dordogne', '25 - Doubs', '26 - Drôme', '27 - Eure', '28 - Eure-et-Loir', '29 - Finistère', '30 - Gard', '31 - Haute-Garonne', '32 - Gers', '33 - Gironde', '34 - Hérault', '35 - Ille-et-Vilaine', '36 - Indre', '37 - Indre-et-Loire', '38 - Isère', '39 - Jura', '40 - Landes', '41 - Loir-et-Cher', '42 - Loire', '43 - Haute-Loire', '44 - Loire-Atlantique', '45 - Loiret', '46 - Lot', '47 - Lot-et-Garonne', '48 - Lozère', '49 - Maine-et-Loire', '50 - Manche', '51 - Marne', '52 - Haute-Marne', '53 - Mayenne', '54 - Meurthe-et-Moselle', '55 - Meuse', '56 - Morbihan', '57 - Moselle', '58 - Nièvre', '59 - Nord', '60 - Oise', '61 - Orne', '62 - Pas-de-Calais', '63 - Puy-de-Dôme', '64 - Pyrénées-Atlantiques', '65 - Hautes-Pyrénées', '66 - Pyrénées-Orientales', '67 - Bas-Rhin', '68 - Haut-Rhin', '69 - Rhône', '70 - Haute-Saône', '71 - Saône-et-Loire', '72 - Sarthe', '73 - Savoie', '74 - Haute-Savoie', '75 - Paris', '76 - Seine-Maritime', '77 - Seine-et-Marne', '78 - Yvelines', '79 - Deux-Sèvres', '80 - Somme', '81 - Tarn', '82 - Tarn-et-Garonne', '83 - Var', '84 - Vaucluse', '85 - Vendée', '86 - Vienne', '87 - Haute-Vienne', '88 - Vosges', '89 - Yonne', '90 - Territoire de Belfort', '91 - Essonne', '92 - Hauts-de-Seine', '93 - Seine-Saint-Denis', '94 - Val-de-Marne', '95 - Val-d\'Oise', '971 - Guadeloupe', '972 - Martinique', '973 - Guyane', '974 - La Réunion', '976 - Mayotte'
+                                    ];
+                                    foreach ($departements as $dep) {
+                                        echo '<option value="' . esc_attr($dep) . '">' . esc_html($dep) . '</option>';
+                                    }
+                                    ?>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Sous-menu Étranger -->
+                        <div id="group-etranger" style="display: none; padding: 1.5rem; background: #F7FAFC; border-left: 4px solid var(--q-primary); border-radius: 4px; margin-bottom: 1.5rem;">
+                            <div class="form-group">
+                                <label for="user_pays_etranger" style="display: block; font-weight: 600; margin-bottom: 8px;">Quel pays ?</label>
+                                <select id="user_pays_etranger" name="user_pays_etranger" style="width: 100%; padding: 12px; border: 1px solid #E2E8F0; border-radius: 6px;">
+                                    <option value=""><?php echo esc_html($q_profil_q2); ?></option>
                                     <option value="Allemagne">Allemagne</option>
                                     <option value="Belgique">Belgique</option>
                                     <option value="Espagne">Espagne</option>
                                     <option value="Italie">Italie</option>
                                     <option value="Pays-Bas">Pays-Bas</option>
                                     <option value="Royaume-Uni">Royaume-Uni</option>
-                                    <option value="Suisse">Suisse</option>
-                                    <option value="États-Unis">États-Unis</option>
-                                    <option value="Canada">Canada</option>
-                                    <option value="Australie">Australie</option>
-                                    <option value="Japon">Japon</option>
-                                    <option value="Chine">Chine</option>
-                                    <option value="Brésil">Brésil</option>
-                                    <option value="Autre">Autre (Préciser)...</option>
+                                    <option value="Autres pays européens">Autres pays européens</option>
+                                    <option value="Autre">Autre</option>
                                 </select>
                             </div>
 
-                            <div class="form-group" id="group-country-other" style="display: none; margin-bottom: 20px; padding-left: 15px; border-left: 3px solid #1A9E66;">
-                                <label for="user_country_other" style="display: block; font-weight: 600; margin-bottom: 8px;"><?php echo esc_html($q_profil_q2); ?> </label>
-                                <input type="text" id="user_country_other" name="user_country_other" placeholder="Saisissez votre pays" style="width: 100%; padding: 12px; border: 1px solid #E2E8F0; border-radius: 6px;">
+                            <!-- NOUVEAU : Champ texte caché pour saisir son propre pays -->
+                            <div class="form-group" id="group-pays-autre" style="display: none; margin-top: 1rem;">
+                                <label for="user_pays_autre" style="display: block; font-weight: 600; margin-bottom: 8px;">Précisez votre pays :</label>
+                                <input type="text" id="user_pays_autre" name="user_pays_autre" placeholder="Ex: Canada, Suisse..." style="width: 100%; padding: 12px; border: 1px solid #E2E8F0; border-radius: 6px;">
                             </div>
+                        </div>
 
-                            <div class="form-group" id="group-region-fr" style="display: none; margin-bottom: 20px; padding-left: 15px; border-left: 3px solid #1A9E66;">
-                                <label for="user_region_fr" style="display: block; font-weight: 600; margin-bottom: 8px;"><?php echo esc_html($q_profil_q3); ?> </label>
-                                <select id="user_region_fr" name="user_region_fr" style="width: 100%; padding: 12px; border: 1px solid #E2E8F0; border-radius: 6px; background-color: #F7FAFC; color: #4A5568;">
-                                    <option value="">Sélectionnez votre région...</option>
-                                    <option value="Loir-et-Cher (41)">Département du Loir-et-Cher (41)</option>
-                                    <option value="Centre-Val de Loire (hors 41)">Région Centre-Val de Loire (hors 41)</option>
-                                    <option value="Autre région française">Autre région française</option>
-                                </select>
-                            </div>
+                        <!-- Bouton manuel pour passer à l'étape suivante -->
+                        <button type="button" class="btn-next-step btn-profil-next">Continuer</button>
+                    </div>
 
-                            <fieldset class="q-sub-step">
-                                <legend><div class="legend-content"><?php echo esc_html($q_profil_q4); ?></div></legend>
-                                <label class="q-radio-card"><input type="radio" name="profil_accompagnement" value="seul"> Seul(e)</label>
-                                <label class="q-radio-card"><input type="radio" name="profil_accompagnement" value="famille"> En famille</label>
-                                <label class="q-radio-card"><input type="radio" name="profil_accompagnement" value="amis"> Entre amis</label>
-                                <label class="q-radio-card"><input type="radio" name="profil_accompagnement" value="guide"> Avec un guide / agence</label>
-                            </fieldset>
+                    <!-- Étape 10 : Question Facultative B (Accompagnement) -->
+                    <div class="q-step" role="group">
+                        <div class="q-question-header">
+                            <div class="q-number" style="background-color: #4A5568; color: white;">b</div>
+                            <div class="q-question-text"><?php echo esc_html($q_profil_q5); ?></div>
+                        </div>
+                        <div class="q-options-container">
+                            <label class="q-radio-card"><input type="radio" name="profil_accompagnement" value="Seul(e)"> Seul(e)</label>
+                            <label class="q-radio-card"><input type="radio" name="profil_accompagnement" value="En famille"> En famille</label>
+                            <label class="q-radio-card"><input type="radio" name="profil_accompagnement" value="Entre amis"> Entre amis</label>
+                            <label class="q-radio-card"><input type="radio" name="profil_accompagnement" value="Autre"> Autre</label>
                         </div>
                     </div>
 
