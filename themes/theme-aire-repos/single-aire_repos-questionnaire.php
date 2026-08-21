@@ -171,10 +171,10 @@ $q_profil_q5 = get_field('q_profil_q5') ?: "Comment voyagez-vous ?";
                     <!-- L'attribut data-no-auto indique au JS de ne pas passer à la suite tout de suite -->
                     <div class="q-step" role="group" data-no-auto="true">
 
+                        <!-- En-tête Profilage (Propre et contrôlé par le CSS) -->
                         <div class="q-profilage-header">
                             <h3>Aidez-nous à mieux vous connaître <span>(facultatif)</span></h3>
-                            <!-- NOUVEAU : Texte de réassurance -->
-                            <p style="margin: 0.5rem 0 0 0; font-size: 0.9rem; color: rgba(255,255,255,0.9);">Vos réponses sont 100% anonymes.</p>
+                            <p>Vos réponses sont 100% anonymes.</p>
                         </div>
 
                         <div class="q-question-header">

@@ -2373,18 +2373,34 @@ h1, h2, h3, h4, h5, h6 {
     padding: 1.5rem;
     border-radius: var(--q-radius);
     margin-bottom: 2rem;
+
+    /* L'arme fatale du CTO pour un centrage absolu */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
     text-align: center;
+    gap: 0.5rem; /* Gère l'espacement parfait entre le H3 et le P */
 }
 
-/* Le CTO fixe le conflit d'héritage ici */
+/* Forçage strict du titre (Annule les interférences du thème) */
 .q-profilage-header h3 {
     margin: 0 !important;
     font-size: 1.3rem !important;
     font-weight: 700 !important;
-    color: #ffffff !important; /* Force le texte en blanc contre le fond vert */
+    color: #ffffff !important;
+    line-height: 1.2 !important;
 }
 
 .q-profilage-header h3 span {
     font-weight: 400;
     opacity: 0.9;
+}
+
+/* Forçage strict du texte d'anonymat */
+.q-profilage-header p {
+    margin: 0 !important;
+    font-size: 0.9rem !important;
+    color: rgba(255, 255, 255, 0.9) !important;
+    line-height: 1.4 !important;
 }
