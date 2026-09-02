@@ -14,6 +14,14 @@
 
         let currentOpenModal = null;
 
+        // ==========================================================================
+        // --- CTO FIX : KILLSWITCH DES FLÈCHES SUR DESKTOP ---
+        // ==========================================================================
+        if (window.matchMedia("(min-width: 1024px)").matches) {
+            const arrows = document.querySelectorAll('.carousel-arrow, .js-car-prev, .js-car-next');
+            arrows.forEach(arrow => arrow.remove());
+        }
+
         // --- MOTEUR D'ANIMATION CENTRALISÉ (Soulage le processeur) ---
         const smoothAnimate = (start, distance, duration, type, onUpdate, onComplete) => {
             let startTime = null;
