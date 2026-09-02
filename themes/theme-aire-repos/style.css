@@ -2380,6 +2380,64 @@ body.page-id-412 .site-branding img {
 }
 
 /* ==========================================================================
+   VERSION DESKTOP : Ajustement du Carrousel (Centrage et Masquage)
+   ========================================================================== */
+
+@media (min-width: 1024px) {
+
+    /* 1. Masquer les flèches (et la pagination si tu le souhaites) */
+    .carousel-arrows,
+    .carousel-pagination {
+        display: none !important;
+    }
+
+    /* 2. Modifier le comportement du conteneur des cartes */
+    .carousel-track {
+        /* On désactive le scroll horizontal si tu utilisais overflow-x: auto/scroll */
+        overflow-x: visible !important;
+
+        /* On utilise Flexbox pour centrer les éléments */
+        display: flex;
+        justify-content: center; /* Centre les cartes horizontalement */
+        align-items: center; /* Aligne verticalement si les hauteurs diffèrent */
+
+        /* Permet aux cartes de passer à la ligne s'il y en a trop pour l'écran */
+        flex-wrap: wrap;
+
+        /* Espace entre les cartes (remplace tes marges si tu en as) */
+        gap: 20px;
+
+        /* Force la suppression de tout décalage JS (ex: transform: translateX) */
+        transform: none !important;
+        width: 100%;
+    }
+
+    /* 3. Ajustement de la largeur des cartes (Optionnel) */
+    .carousel-card {
+        /* S'assure que les cartes ne s'étirent pas de manière disproportionnée */
+        flex: 0 0 auto;
+    }
+}
+
+/* ==========================================================================
+   VERSION DESKTOP : Nettoyage radical de l'UI du carrousel
+   ========================================================================== */
+@media (min-width: 1024px) {
+    /* AJOUT : .carousel-dots ajouté à la liste d'élimination */
+    .carousel-arrow,
+    .js-car-prev,
+    .js-car-next,
+    .carousel-dots {
+        display: none !important;
+        visibility: hidden !important;
+        opacity: 0 !important;
+        pointer-events: none !important;
+    }
+
+    /* Le reste de ton code pour centrer .carousel-track reste identique... */
+}
+
+/* ==========================================================================
    STYLE DE L'EN-TÊTE PROFILAGE (Questions Facultatives)
    ========================================================================== */
 .q-profilage-header {
