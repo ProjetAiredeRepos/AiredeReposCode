@@ -16,27 +16,10 @@
     --q-border: #E0E5E2;
     --q-text: #2C3E35;
     --q-radius: 8px;
-
-    position: relative;
-    z-index: 1;
+    background-color: var(--q-bg);
     min-height: 100vh;
     font-family: 'DM Sans', sans-serif;
     color: var(--q-text);
-    /* Sécurité pour prendre au moins la hauteur de l'écran */
-    min-height: 100vh;
-    min-height: -webkit-fill-available;
-}
-
-/* Un fond fixe indépendant du défilement */
-.questionnaire-app::before {
-    content: '';
-    position: fixed;
-    top: 0; left: 0; right: 0; bottom: 0;
-    z-index: -1;
-    background-color: var(--q-bg); /* Vert par défaut */
-    background-image: inherit; /* Récupère dynamiquement l'image PHP */
-    background-size: cover;
-    background-position: center;
 }
 
 .q-layout {
@@ -174,7 +157,7 @@
     padding: 16px;
     border: 3px solid #E1E3E2;
     border-radius: 8px;
-    background: #E8E8E8; /* Fond gris très clair pour trancher avec le blanc de la carte */
+    background: #E1E3E2; /* Fond gris très clair pour trancher avec le blanc de la carte */
     cursor: pointer;
     transition: all 0.2s ease;
     font-weight: 500;
@@ -246,6 +229,8 @@ textarea[name="q5_suggestions"]:focus {
     min-height: 0; /* Nécessaire pour que le grid 0fr fonctionne */
     padding-top: 1rem; /* Espace entre le bouton et les premières questions */
 }
+.q-rgpd-zone { padding: 1.5rem; border: 2px dashed var(--q-border); border-radius: var(--q-radius); margin-bottom: 1.5rem; }
+.q-rgpd-title { font-weight: 700; font-size: 0.9rem; margin-bottom: 1rem; }
 
 /* --- Bouton & Alertes --- */
 .q-submit-btn { width: 100%; padding: 1.2rem; background: var(--q-primary); color: #fff; font-size: 1.1rem; font-weight: 700; border: none; border-radius: 50px; cursor: pointer; transition: opacity 0.2s; }
@@ -257,67 +242,6 @@ textarea[name="q5_suggestions"]:focus {
 #q-success-screen { text-align: center; padding: 4rem 1.5rem; background: #fff; border-radius: var(--q-radius); box-shadow: 0 4px 20px rgba(0,0,0,0.05); }
 .q-success-icon { font-size: 4rem; color: #fff; background: var(--q-primary); width: 100px; height: 100px; line-height: 100px; border-radius: 50%; margin: 0 auto 2rem; }
 #q-success-screen h2 { color: var(--q-primary); margin-bottom: 1rem; }
-
-/* ==========================================================================
-   WIZARD UX (Assistant étape par étape)
-   ========================================================================== */
-
-/* 1. On fige le texte de présentation et la progression en haut de l'écran */
-.q-header {
-    position: sticky;
-    top: 0;
-    z-index: 20;
-    background-color: var(--q-bg); /* S'assure que le texte ne se superpose pas au contenu en scrollant */
-    padding-top: 1rem;
-    padding-bottom: 1rem;
-    border-bottom: 1px solid rgba(0,0,0,0.05);
-}
-
-/* 2. On masque toutes les étapes par défaut */
-.q-step,
-.q-profilage-zone {
-    display: none;
-    opacity: 0;
-    transform: translateY(15px);
-    transition: opacity 0.4s ease, transform 0.4s ease;
-}
-
-/* 3. On affiche uniquement l'étape active avec une animation fluide */
-.q-step.is-active,
-.q-profilage-zone.is-active {
-    display: block;
-    opacity: 1;
-    transform: translateY(0);
-}
-
-/* Masquer le bouton d'envoi jusqu'à la dernière étape */
-.q-submit-btn {
-    display: none;
-}
-.q-submit-btn.is-active {
-    display: block;
-    animation: fadeInStep 0.4s ease forwards;
-}
-
-@keyframes fadeInStep {
-    from { opacity: 0; transform: translateY(15px); }
-    to { opacity: 1; transform: translateY(0); }
-}
-
-/* Style du bouton dynamique "Continuer" pour la question à choix multiples */
-.btn-next-step {
-    margin-top: 20px;
-    width: 100%;
-    padding: 1rem;
-    background: var(--q-text);
-    color: #fff;
-    border: none;
-    border-radius: 50px;
-    font-weight: 700;
-    cursor: pointer;
-    transition: transform 0.2s;
-}
-.btn-next-step:active { transform: scale(0.98); }
 
 /* --- Responsive Desktop --- */
 @media (min-width: 768px) {
@@ -408,21 +332,8 @@ textarea[name="q5_suggestions"]:focus {
 .cyclo-login-layout { display: flex; height: 100vh; font-family: 'DM Sans', sans-serif; }
 .login-cover-image { flex: 1; background-size: cover; background-position: center; position: relative; display: none; }
 @media (min-width: 992px) { .login-cover-image { display: block; } }
-.cover-overlay {
-    position: absolute;
-    inset: 0;
-    /* On enlève le filtre vert global et on met un léger dégradé noir juste en bas pour que ton texte blanc reste lisible */
-    background: linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0) 50%);
-    display: flex;
-    align-items: flex-end;
-    padding: 4rem;
-}
-
-/* On ajoute une petite ombre au texte pour garantir la lisibilité sur fond clair */
-.cover-brand {
-    color: white;
-    text-shadow: 0 2px 10px rgba(0,0,0,0.4);
-}
+.cover-overlay { position: absolute; inset: 0; background: linear-gradient(to top, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0) 50%); display: flex; align-items: flex-end; padding: 4rem; }
+.cover-brand { color: white; }
 .brand-tag { background: rgba(255,255,255,0.2); padding: 4px 12px; border-radius: 20px; font-size: 0.8rem; margin-bottom: 1rem; display: inline-block;}
 .cover-brand h1 { font-size: 3rem; margin-bottom: 1rem; font-family: 'Outfit', sans-serif;}
 
@@ -509,13 +420,7 @@ textarea[name="q5_suggestions"]:focus {
 }
 
 /* Boutons d'action du Header */
-.header-actions {
-    display: flex;
-    gap: 1rem;
-    align-items: center;
-    flex-wrap: wrap; /* Autorise les boutons à passer à la ligne */
-    justify-content: flex-end; /* Garde toujours les boutons alignés à droite */
-}
+.header-actions { display: flex; gap: 1rem; align-items: center; }
 .btn-action {
     display: inline-flex; align-items: center; gap: 8px;
     padding: 8px 16px; border-radius: 6px; font-weight: 500; font-size: 0.9rem; cursor: pointer;
@@ -549,16 +454,14 @@ textarea[name="q5_suggestions"]:focus {
 .content-header {
     display: flex;
     justify-content: space-between;
-    align-items: center; /* On recentre verticalement */
-    flex-wrap: wrap; /* UI SECRET : Autorise le passage à la ligne si l'écran est petit */
-    gap: 1.5rem;
+    align-items: flex-start; /* Aligne le contenu vers le haut, plus de centrage forcé */
     margin-bottom: 2rem;
 }
 
 .header-titles {
     display: flex;
     flex-direction: column;
-    gap: 4px; /* Espace net entre le fil d'Ariane et le H1 */
+    gap: 8px; /* Espace net entre le fil d'Ariane et le H1 */
 }
 
 .breadcrumbs-container {
@@ -721,202 +624,13 @@ textarea[name="q5_suggestions"]:focus {
     font-family: 'Outfit', sans-serif;
 }
 
-/* ==========================================================================
-   MODALE (CREATION UTILISATEUR)
-   ========================================================================== */
 
-/* L'arrière-plan grisé (Overlay) */
-.cyclo-modal {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.5); /* Noir transparent */
-    z-index: 9999;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    backdrop-filter: blur(2px); /* Petit effet de flou moderne */
-}
 
-/* Le conteneur blanc de la modale */
-.cyclo-modal-content {
-    background-color: #ffffff;
-    border-radius: 8px;
-    width: 100%;
-    max-width: 500px; /* Largeur max de la modale */
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
-    animation: modalFadeIn 0.3s ease;
-}
-
-@keyframes modalFadeIn {
-    from { opacity: 0; transform: translateY(-20px); }
-    to { opacity: 1; transform: translateY(0); }
-}
-
-/* L'en-tête */
-.cyclo-modal-header {
-    padding: 24px 24px 16px;
-    border-bottom: 1px solid #EDF2F7;
-    position: relative;
-}
-
-.cyclo-modal-header h3 {
-    margin: 0 0 4px 0;
-    font-size: 1.25rem;
-    color: #2D3748;
-}
-
-.cyclo-modal-header p {
-    margin: 0;
-    color: #718096;
-    font-size: 0.9rem;
-}
-
-.close-modal {
-    position: absolute;
-    top: 24px;
-    right: 24px;
-    background: none;
-    border: none;
-    cursor: pointer;
-    color: #A0AEC0;
-    padding: 0;
-    display: flex;
-}
-
-.close-modal:hover {
-    color: #4A5568;
-}
-
-/* Le corps et le formulaire */
-.cyclo-modal-body {
-    padding: 24px;
-}
-
-.cyclo-form .form-row {
-    display: flex;
-    gap: 16px;
-    margin-bottom: 16px;
-}
-
-.cyclo-form .form-row .form-group {
-    flex: 1;
-    margin-bottom: 0;
-}
-
-.cyclo-form .form-group {
-    margin-bottom: 16px;
-    display: flex;
-    flex-direction: column;
-}
-
-.cyclo-form label {
-    font-weight: 500;
-    font-size: 0.9rem;
-    color: #4A5568;
-    margin-bottom: 6px;
-}
-
-.cyclo-form input[type="text"],
-.cyclo-form input[type="email"],
-.cyclo-form input[type="password"],
-.cyclo-form select {
-    padding: 10px 12px;
-    border: 1px solid #E2E8F0;
-    border-radius: 6px;
-    font-family: inherit;
-    font-size: 0.95rem;
-    color: #2D3748;
-    background-color: #F7FAFC;
-    transition: border-color 0.2s;
-}
-
-.cyclo-form input:focus,
-.cyclo-form select:focus {
-    outline: none;
-    border-color: #1A9E66;
-    background-color: #fff;
-}
-
-/* Actions (Boutons) */
-.form-actions {
-    display: flex;
-    justify-content: flex-end;
-    gap: 12px;
-    margin-top: 24px;
-}
-
-.btn-primary {
-    background-color: #1A9E66;
-    color: white;
-    padding: 10px 20px;
-    border: none;
-    border-radius: 6px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: background-color 0.2s;
-}
-
-.btn-primary:hover {
-    background-color: #148354;
-}
-
-.btn-secondary {
-    background-color: white;
-    color: #4A5568;
-    padding: 10px 20px;
-    border: 1px solid #E2E8F0;
-    border-radius: 6px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: background-color 0.2s;
-}
-
-.btn-secondary:hover {
-    background-color: #F7FAFC;
-}
-
-/* Écran de succès (Mot de passe généré) */
-.alert-success {
-    background-color: #E7F5EF;
-    color: #148354;
-    padding: 16px;
-    border-radius: 6px;
-    margin-bottom: 20px;
-}
-
-.alert-success p {
-    margin: 0 0 8px 0;
-}
-.alert-success p:last-child {
-    margin: 0;
-    font-size: 0.9rem;
-}
-
-.password-display {
-    display: flex;
-    gap: 8px;
-    margin-top: 8px;
-}
-
-.password-display input {
-    flex: 1;
-    background-color: #EDF2F7;
-    font-family: monospace;
-    font-weight: bold;
-    font-size: 1.1rem;
-    color: #2D3748;
-}
-
-/* ==========================================================================
-   SITE DÉCOUVERTE
-   ========================================================================== */
+/* Site Découverte */
 
 /* --- 0. RESET ET COMPORTEMENT GLOBAL --- */
 html {
-    scroll-behavior: smooth;
+    scroll-behavior: smooth !important;
 }
 
 * {
@@ -1038,6 +752,7 @@ h1, h2, h3, h4, h5, h6 {
     font-weight: 500;
 }
 
+/* --- LE BOUTON DÉCOUVRIR (OPTIMISÉ MOBILE-FIRST) --- */
 .btn-scroll {
     width: 44px;
     height: 44px;
@@ -1047,11 +762,49 @@ h1, h2, h3, h4, h5, h6 {
     justify-content: center;
     align-items: center;
     text-decoration: none;
-    transition: transform 0.3s;
+    background-color: transparent;
+
+    /* Supprime le carré bleu disgracieux natif d'Android/iOS lors du clic */
+    -webkit-tap-highlight-color: transparent;
+
+    /* Animation automatique qui "respire" pour attirer l'œil sans souris */
+    animation: floatButton 2.5s ease-in-out infinite;
+    transition: all 0.2s ease-out;
 }
 
+.btn-scroll svg {
+    transition: stroke 0.2s ease;
+}
+
+/* --- L'ANIMATION INFINIE (Idéal sur téléphone) --- */
+@keyframes floatButton {
+    0%   { transform: translateY(0); box-shadow: 0 0 0 rgba(255,255,255,0); }
+    50%  { transform: translateY(8px); box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
+    100% { transform: translateY(0); box-shadow: 0 0 0 rgba(255,255,255,0); }
+}
+
+/* --- L'EFFET AU TOUCHER / CLIC (:active) --- */
 .btn-scroll:active {
-    transform: translateY(5px);
+    animation: none; /* On stoppe le mouvement naturel quand on touche */
+    transform: scale(0.9) translateY(4px); /* S'enfonce sous le doigt */
+    background-color: white; /* S'allume en blanc */
+}
+
+/* La flèche passe en noir pour rester visible sur le fond blanc */
+.btn-scroll:active svg {
+    stroke: #111111;
+}
+
+/* Gardien pour Desktop (Si consulté sur PC) */
+@media (hover: hover) {
+    .btn-scroll:hover {
+        background-color: white;
+        animation: none;
+        transform: translateY(4px);
+    }
+    .btn-scroll:hover svg {
+        stroke: #111111;
+    }
 }
 
 /* --- 4. SECTION 2 : CARTE INTERACTIVE --- */
@@ -1109,9 +862,9 @@ h1, h2, h3, h4, h5, h6 {
 
 .pin-label {
     font-family: 'Outfit', sans-serif;
-    font-size: 0.5rem;
-    font-weight: 500;
-    color: #FFFFFF;
+    font-size: 0.6rem;
+    font-weight: bold;
+    color: #FFFFFF !important;
     padding: 3px 8px;
     border-radius: 12px;
     box-shadow: 0 4px 10px rgba(0,0,0,0.15);
@@ -1230,14 +983,35 @@ h1, h2, h3, h4, h5, h6 {
     box-shadow: 0 4px 12px rgba(0,0,0,0.15);
 }
 
+.header-modal {
+    display:flex;
+    justify-content: space-between;
+    margin-bottom: 25px;
+    align-items: center;
+}
+
+.logo-modal {
+    display: flex;
+    justify-content: space-between;
+}
+
+.modal-logo {
+    max-width: 110px;
+    height: auto;
+    display: block;
+}
+
 .badge {
-    display: inline-block;
+    display: block;
     border-radius: 8px;
     font-family: 'Outfit', sans-serif;
-    font-size: 1rem;
+    font-size: 0.9rem;
     color: #090909;
-    margin-bottom: 16px;
     text-transform: uppercase;
+}
+
+.header-modal .badge {
+    margin-left: auto;
 }
 
 .modal-body h3 {
@@ -1249,8 +1023,58 @@ h1, h2, h3, h4, h5, h6 {
 .modal-description {
     font-size: 1rem;
     color: #555555;
-    line-height: 1.5;
-    margin-bottom: 24px;
+    line-height: 1.6;
+    margin-bottom: 0;
+    padding-bottom: 32px; /* Force l'ascenseur à descendre plus bas que le texte */
+    overflow-wrap: break-word;
+    word-wrap: break-word;
+    word-break: break-word;
+
+    /* Optionnel mais recommandé : ajoute un trait d'union si le navigateur coupe un vrai mot */
+    -webkit-hyphens: auto;
+    -ms-hyphens: auto;
+    hyphens: auto;
+}
+
+/* --- STYLE DES ICÔNES RÉSEAUX SOCIAUX (MOBILE FIRST) --- */
+
+.modal-social-links a {
+    /* Zone de clic optimale pour le tactile */
+    width: 44px;
+    height: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    /* Design Premium en cercle */
+    border-radius: 50%;
+    background-color: #F4F6F8; /* Fond gris très doux */
+    border: 1px solid #EBEBEB; /* Bordure subtile */
+
+    /* Animation fluide et naturelle */
+    transition: transform 0.2s cubic-bezier(0.25, 1, 0.5, 1), background-color 0.1s ease;
+
+    /* Coupe la surbrillance bleue par défaut d'Android/iOS au tap */
+    -webkit-tap-highlight-color: transparent;
+}
+
+/* L'effet physique au moment précis où le doigt touche l'écran */
+.modal-social-links a:active {
+    transform: scale(0.85); /* Le bouton s'enfonce */
+    background-color: currentColor; /* Le fond prend la couleur de ton thème ! */
+    border-color: currentColor;
+}
+
+/* L'icône SVG à l'intérieur */
+.modal-social-links a svg {
+    width: 20px;
+    height: 20px;
+    transition: color 0.1s ease;
+}
+
+/* Quand le bouton est enfoncé, l'icône devient blanche pour contraster */
+.modal-social-links a:active svg {
+    color: #FFFFFF !important;
 }
 
 .modal-actions {
@@ -1260,31 +1084,54 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 /* --- LE BOUTON --- */
+/* 1. On retire le gap global pour contrôler les espaces individuellement */
+.modal-actions-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    margin-top: 15px;
+    margin-bottom: 24px;
+}
+
+/* 2. Le texte intermédiaire : aligné à gauche et plus proche de son bouton */
+.modal-text-inter {
+    font-size: 0.95rem;
+    font-weight: 500;
+    color: #4A4742; /* Un gris/brun très doux et élégant */
+    text-align: left; /* Finis les espaces bizarres entre les mots ! */
+    margin: 32px 0 10px 0; /* Grand espace au-dessus, petit espace en dessous */
+    line-height: 1.4;
+}
+
+/* Si le texte intermédiaire est tout en haut, on réduit son espace */
+.modal-actions-list .modal-text-inter:first-child {
+    margin-top: 4px;
+}
+
+/* 3. Léger polish du bouton pour un rendu plus "App Mobile" */
 .btn-modal-link {
     scale: 1.0;
     display: inline-flex;
     align-items: center;
     justify-content: center;
     width: 100%;
-    min-height: 54px;
-    padding: 14px 28px;
+    min-height: 52px;
+    padding: 12px 24px;
+
+    /* Les deux lignes importantes pour l'affichage : */
     color: #FFFFFF;
+    background-color: var(--modal-theme-color);
+
     border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 30px;
+    border-radius: 50px;
     font-family: 'Outfit', sans-serif;
     font-size: 14px;
     font-weight: 500;
     text-transform: uppercase;
     letter-spacing: 1px;
     text-decoration: none;
-    box-shadow:
-            0 4px 6px -1px rgba(0, 0, 0, 0.08),
-            0 10px 15px -3px rgba(17, 17, 17, 0.12),
-            inset 0 1px 0 rgba(255, 255, 255, 0.2);
-    transition:
-            background-color 0.3s ease,
-            transform 0.4s cubic-bezier(0.16, 1, 0.3, 1),
-            box-shadow 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    box-shadow: 0 6px 15px -3px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
+    transition: background-color 0.3s ease, transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.4s cubic-bezier(0.16, 1, 0.3, 1);
     cursor: pointer;
     -webkit-tap-highlight-color: transparent;
 }
@@ -1306,23 +1153,44 @@ h1, h2, h3, h4, h5, h6 {
     transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
+
+/* 1. On empêche le conteneur de créer une barre de scroll */
 .modal-header-image {
     position: relative;
     width: 100%;
-    height: 250px;
     background-color: #EEE;
+    overflow: hidden; /* LA CORRECTION EST ICI : empêche tout débordement */
 }
 
+#carte .modal-header-image {
+    height: 250px;
+}
+
+#section-activites .modal-header-image {
+    height: 300px;
+}
+
+
 .modal-header-image img {
+    display: block;
     width: 100%;
     height: 100%;
     object-fit: cover;
 }
 
+
+#carte .modal-header-image img {
+    object-position: center 70%;
+}
+
+#section-activites .modal-header-image img {
+    object-position: 300% center ;
+}
+
 .modal-image-gradient {
     position: absolute;
     bottom: 0; left: 0; right: 0;
-    height: 40%;
+    height: 20%;
     background: linear-gradient(to top, rgba(155,155,155,1) 0%, rgba(155,155,155,0) 100%);
 }
 
@@ -1337,7 +1205,7 @@ h1, h2, h3, h4, h5, h6 {
     text-transform: uppercase;
     font-weight: 400;
     letter-spacing: 1px;
-    margin-bottom: 12px;
+
 }
 
 /* --- 7. CARROUSEL DYNAMIQUE IMMERSIF --- */
@@ -1353,7 +1221,6 @@ h1, h2, h3, h4, h5, h6 {
         margin-top:50px;
     }
 }
-
 .carousel-blur-bg {
     position: absolute;
     top: 0; left: 0; right: 0; bottom: 0;
@@ -1442,7 +1309,7 @@ h1, h2, h3, h4, h5, h6 {
 
 .card-gradient {
     position: absolute;
-    bottom: 0; left: 0; right: 0; height: 75%;
+    bottom: 0; left: 0; right: -2px; height: 75%;
     background: linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0) 100%);
     z-index: 2;
 }
@@ -1481,13 +1348,13 @@ h1, h2, h3, h4, h5, h6 {
 
 .btn-card-action {
     background-color: #FFFFFF;
-    color: var(--nav-active-color, #1A3D22);
     border: none;
     padding: 12px 24px;
     border-radius: 100px;
     font-family: 'DM Sans', sans-serif;
+    text-transform: uppercase;
     font-weight: 700;
-    font-size: 0.9rem;
+    font-size: 0.8rem;
     cursor: pointer;
     display: flex;
     align-items: center;
@@ -1567,25 +1434,33 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .modal-content-area {
-    padding: 24px;
+    padding: 24px 32px 10px 24px;
     flex-grow: 1;
     overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(0,0,0,0.2) transparent;
 }
 
-.modal-footer-wrapper {
-    position: relative;
-    background: rgba(15, 15, 15, 0.85);
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
-    padding: 24px 24px 32px 24px;
-    margin-top: auto;
-    border-top: 1px solid rgba(255, 255, 255, 0.08);
-    box-shadow: 0 -15px 40px rgba(0, 0, 0, 0.2);
+.modal-content-area::-webkit-scrollbar {
+    width: 6px;
+}
+.modal-content-area::-webkit-scrollbar-track {
+    background: transparent;
+    margin: 20px 0;
+}
+.modal-content-area::-webkit-scrollbar-thumb {
+    background-color: rgba(0, 0, 0, 0.2);
+    border-radius: 10px;
 }
 
-.modal-footer-wrapper > * {
+
+
+.footer-wrapper {
+    padding: 0 24px 16px 24px;
+    flex-shrink: 0;
+    background-color: #FFFFFF;
     position: relative;
-    z-index: 2;
+    z-index: 10;
 }
 
 .modal-actions {
@@ -1681,6 +1556,42 @@ h1, h2, h3, h4, h5, h6 {
     z-index: 2;
 }
 
+/* --- SECTION LIEN QUESTIONNAIRE --- */
+.cta-questionnaire-section {
+    padding: 60px 24px;
+    background-color: #F4F6F8; /* Un gris très doux pour séparer du reste */
+    display: flex;
+    justify-content: center;
+}
+
+.cta-questionnaire-container {
+    background-color: #FFFFFF;
+    width: 100%;
+    max-width: 800px;
+    border-radius: 24px;
+    padding: 40px;
+    text-align: center;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 24px;
+}
+
+.cta-questionnaire-text h2 {
+    font-size: 1.8rem;
+    color: #111111;
+    margin-bottom: 12px;
+}
+
+.cta-questionnaire-text p {
+    font-size: 1.05rem;
+    color: #555555;
+    line-height: 1.5;
+    max-width: 600px;
+    margin: 0 auto;
+}
+
 /* --- 8. ARCHITECTURE DU MENU BURGER --- */
 .menu-full-screen {
     position: fixed;
@@ -1759,7 +1670,7 @@ h1, h2, h3, h4, h5, h6 {
 
 .menu-header h2 {
     font-family: 'Outfit', sans-serif;
-    font-size: 2.2rem;
+    font-size: 1.8rem;
     color: #ffffff;
     font-weight: 500;
     line-height: 1.1;
@@ -1942,33 +1853,63 @@ h1, h2, h3, h4, h5, h6 {
 .footer-top-row {
     display: flex;
     flex-direction: column;
-    align-items: center;
-    gap: 24px;
+    align-items: center; /* FIX CTO : On centre le bloc entier sur mobile */
+    gap: 40px;
+    width: 100%;
+}
+
+.footer-partners-wrapper {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    gap: 16px;
+    width: 100%;
+    justify-content: center; /* FIX CTO : On centre les deux colonnes de logos */
+    align-items: flex-start;
+}
+
+/* Les blocs individuels (Initiative & Partenaire) */
+.initiative-block {
+    display: flex;
+    flex-direction: column;
+    align-items: center; /* FIX CTO : Centre le titre et le logo verticalement */
+    flex: 1;
+    min-width: 0;
+    text-align: center; /* Centre le texte s'il passe sur 2 lignes */
+}
+
+.title-footer {
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 500;
+    font-size: 0.8rem;
+    color: #000000;
+    margin-bottom: 8px;
+    line-height: 1.3;
 }
 
 .footer-logo {
     display: flex;
-    justify-content: center;
     width: 100%;
+    justify-content: center; /* FIX CTO : Centre l'image dans sa colonne */
 }
 
 .footer-logo img {
-    max-width: 160px;
+    max-width: 100%;
     height: auto;
+    max-height: 55px;
+    object-fit: contain;
+    object-position: center; /* FIX CTO : Image centrée dans sa box */
     display: block;
     transition: opacity 0.3s ease, transform 0.3s ease;
 }
 
-.footer-logo img:hover {
-    opacity: 1;
-    transform: translateY(-3px);
-}
-
 .footer-nav {
     display: flex;
-    flex-direction: column;
+    flex-direction: row;
+    flex-wrap: wrap;
     align-items: center;
-    gap: 16px;
+    justify-content: center; /* FIX CTO : Les liens légaux sont centrés */
+    gap: 20px;
 }
 
 .footer-link {
@@ -1995,25 +1936,42 @@ h1, h2, h3, h4, h5, h6 {
 .footer-copyright {
     font-family: 'DM Sans', sans-serif;
     font-size: 0.85rem;
-    color: rgba(44, 42, 38, 0.6);
+    color: #595959 !important;
     margin: 0;
 }
 
 /* --- VERSION DESKTOP (À partir de 768px) --- */
-@media (min-width: 768px) {
+@media screen and (min-width: 768px) {
     .footer-top-row {
         flex-direction: row;
         justify-content: space-between;
-        align-items: center; /* Centre verticalement le logo et le menu */
+        align-items: center;
+    }
+
+    .footer-partners-wrapper {
+        width: auto;
+        flex-wrap: nowrap;
+        justify-content: flex-start; /* Ré-aligne à gauche sur PC */
+    }
+
+    .initiative-block {
+        align-items: flex-start; /* Titre aligné à gauche */
+        text-align: left;
     }
 
     .footer-logo {
-        width: auto; /* Empêche le logo de prendre toute la largeur sur ordinateur */
-        justify-content: flex-start;
+        width: auto;
+        justify-content: flex-start; /* Image alignée à gauche */
+    }
+
+    .footer-logo img {
+        object-position: left center;
     }
 
     .footer-nav {
         flex-direction: row;
+        flex-wrap: nowrap;
+        justify-content: flex-end; /* Menu repoussé à droite */
         gap: 40px;
     }
 }
@@ -2062,7 +2020,7 @@ h1, h2, h3, h4, h5, h6 {
     text-decoration: none;
     font-size: 14px;
     font-weight: 500;
-    border: 1px solid rgba(44, 42, 38, 0.15);
+    border: 1px solid black;
     border-radius: 50px;
     transition: all 0.3s ease;
 }
@@ -2113,6 +2071,14 @@ h1, h2, h3, h4, h5, h6 {
     color: #2C2A26;
     text-decoration: underline;
     font-weight: 500;
+}
+
+/* ==========================================================================
+   INVERSION DU LOGO (Ciblage absolu par ID de page - Mentions Légales)
+   ========================================================================== */
+body.page-id-412 .site-branding img {
+    /* Le !important force la priorité sur n'importe quel autre CSS du thème */
+    filter: invert(1) brightness(0) !important;
 }
 
 /* ==========================================================================
@@ -2190,8 +2156,9 @@ h1, h2, h3, h4, h5, h6 {
     }
 
     .carte-scroll-pan {
+        position: relative;
         width: 100%;
-        max-width: 1200px;
+        max-width:1200px;
         min-width: unset;
         box-shadow: 0 20px 40px rgba(0,0,0,0.08);
     }
@@ -2226,7 +2193,9 @@ h1, h2, h3, h4, h5, h6 {
         opacity: 1;
     }
 
-    .modal-header-image {
+    .modal-header-image,
+    #carte .modal-header-image,
+    #section-activites .modal-header-image {
         width: 45%;
         height: 100%;
         min-height: unset;
@@ -2266,36 +2235,67 @@ h1, h2, h3, h4, h5, h6 {
         animation: slideInLateralDesktopReverse 0.5s cubic-bezier(0.25, 1, 0.5, 1) forwards;
     }
 
+    /* ==========================================================================
+      CARROUSEL IMMERSIF (Architecture Mobile-First & CSS Natif)
+      ========================================================================== */
+
+    /* 1. Le conteneur global (Il empêche le site entier de scroller horizontalement) */
     .carousel-container {
-        overflow: visible;
-        scroll-snap-type: none;
+        width: 100%;
+        overflow: hidden; /* Coupe tout ce qui dépasse de l'écran */
+        position: relative;
+        border: none !important;
+        outline: none !important;
     }
+
+    /* 2. La "Piste" de défilement (C'est elle qui bouge de gauche à droite) */
+    /* ==========================================================================
+   MASQUAGE ABSOLU DE LA SCROLLBAR (Toutes plateformes)
+   ========================================================================== */
 
     .carousel-track {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-        justify-content: center;
-        gap: 30px;
-        padding: 0 24px;
-        max-width: 1300px;
-        margin: 0 auto;
+        /* ... (garde tes propriétés flexbox ici) ... */
+        scrollbar-width: none !important; /* Firefox */
+        -ms-overflow-style: none !important; /* IE/Edge */
     }
 
-    .carousel-track::after {
-        display: none;
+    /* Forçage extrême pour Chrome, Safari, iOS */
+    .carousel-track::-webkit-scrollbar {
+        display: none !important;
+        width: 0 !important;
+        height: 0 !important;
+        background: transparent !important;
+        -webkit-appearance: none !important;
     }
 
+    /* Forçage sur le conteneur de navigation au cas où la ligne viendrait de là */
+    .carousel-navigation {
+        border: none !important;
+        outline: none !important;
+        box-shadow: none !important;
+        background: transparent !important;
+    }
+
+    /* 3. La Carte (L'élément individuel) */
     .carousel-card-immersive {
-        width: 100%;
-        max-width: none;
+        /* flex: 0 0 auto; empêche la carte de s'écraser. Elle garde sa taille. */
+        flex: 0 0 auto;
+
+        /* Sur mobile, on veut voir un bout de la carte suivante (ex: 85% de largeur) */
+        width: 85vw;
+        max-width: 320px; /* Limite la taille sur les plus grands écrans */
+
+        /* Le point d'aimantation au centre de l'écran */
+        scroll-snap-align: center;
+
+        /* Nettoyage de tes anciens styles */
         opacity: 1 !important;
         transform: scale(1) !important;
-        scroll-snap-align: none;
         margin-bottom: 0;
-    }
 
-    .carousel-navigation {
-        display: none;
+        /* Optionnel : Assure-toi de ne pas avoir de bordures fantômes ici */
+        border: none;
+        outline: none;
     }
 
     .menu-inner {
@@ -2343,6 +2343,20 @@ h1, h2, h3, h4, h5, h6 {
 
     .legal-content h2 {
         font-size: 24px;
+    }
+
+    .modal-content-area {
+        padding: 40px 48px 10px 40px; /* Marges parfaites sur ordinateur */
+    }
+
+    .footer-wrapper {
+        padding: 10px 40px 24px 40px;
+        text-align: center; /* Centre le bouton */
+    }
+
+    .btn-modal-link {
+        width: auto; /* Le bouton ne s'étire plus à l'infini */
+        min-width: 280px; /* Donne une belle taille premium */
     }
 }
 

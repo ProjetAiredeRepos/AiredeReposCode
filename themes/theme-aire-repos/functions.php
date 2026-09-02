@@ -1,4 +1,61 @@
 <?php
+/**
+ * Fichier functions.php
+ * Regroupe la configuration du thème et les fonctions réutilisables.
+ */
+
+/**
+ * Purge les transients liés aux Aires Cyclo lorsqu'un point d'intérêt est sauvegardé
+ */
+
+function cyclo_clear_poi_transients( $post_id, $post, $update ) {
+    // Si ce n'est pas un point d'intérêt, on ne fait rien
+    if ( $post->post_type !== 'poi_carte' ) {
+        return;
+    }
+
+    // Sécurité : Ne pas lancer lors d'une sauvegarde automatique
+    if ( defined( 'DOING_AUTOSAVE' ) && DOING_AUTOSAVE ) {
+        return;
+    }
+
+    // On récupère toutes les Aires de repos existantes pour vider leur cache spécifique
+    $aires = get_posts([
+        'post_type'      => 'aire_repos',
+        'posts_per_page' => -1,
+        'fields'         => 'ids' // Ultra-léger, on ne récupère que les IDs
+    ]);
+
+    foreach ( $aires as $aire_id ) {
+        delete_transient( 'cyclo_poi_data_' . $aire_id );
+    }
+}
+add_action( 'save_post', 'cyclo_clear_poi_transients', 10, 3 );
+
+// Enregistrement du Custom Post Type pour les Points d'intérêt de la carte
+function cyclo_register_poi_cpt()
+{
+    $labels = [
+        'name' => 'Points d\'intérêt',
+        'singular_name' => 'Point d\'intérêt',
+        'add_new_item' => 'Ajouter un nouveau point d\'intérêt',
+        'edit_item' => 'Modifier le point d\'intérêt',
+        'all_items' => 'Tous les points d\'intérêt',
+    ];
+
+    $args = [
+        'labels' => $labels,
+        'public' => true,
+        'has_archive' => false,
+        'supports' => ['title'], // Le titre servira de nom (ex: Découvrir)
+        'menu_icon' => 'dashicons-location-alt',
+        'show_in_rest' => true,
+    ];
+
+    register_post_type('poi_carte', $args);
+}
+
+add_action('init', 'cyclo_register_poi_cpt');
 
 // 1. CONFIGURATION DE BASE DU THEME
 function cyclo_theme_setup() {
@@ -98,6 +155,41 @@ function cyclo_customizer_settings( $wp_customize ) {
         'section'     => 'title_tagline',
         'settings'    => 'footer_logo',
     ) ) );
+
+    $wp_customize->add_setting( 'footer_logo_link', array(
+        'default'           => '',
+        'sanitize_callback' => 'esc_url_raw', // Sécurité BDD
+    ) );
+    $wp_customize->add_control( 'footer_logo_link', array(
+        'label'       => 'Lien du site Initiative',
+        'description' => 'Ex: https://www.loir-et-cher.fr',
+        'type'        => 'url',
+        'section'     => 'title_tagline',
+        'settings'    => 'footer_logo_link',
+    ) );
+
+    // 2ème logo
+    $wp_customize->add_setting( 'partner_logo', array(
+        'default'           => '',
+        'sanitize_callback' => 'esc_url_raw',
+    ) );
+    $wp_customize->add_control( new WP_Customize_Image_Control( $wp_customize, 'partner_logo', array(
+        'label'       => 'Logo Partenaire (Footer)',
+        'description' => 'Importez le logo sous "En partenariat avec :".',
+        'section'     => 'title_tagline',
+        'settings'    => 'partner_logo',
+    ) ) );
+    $wp_customize->add_setting( 'partner_logo_link', array(
+        'default'           => '',
+        'sanitize_callback' => 'esc_url_raw', // Sécurité BDD
+    ) );
+    $wp_customize->add_control( 'partner_logo_link', array(
+        'label'       => 'Lien du site Partenaire',
+        'description' => 'Ex: https://www.lafabriquenumerique.fr',
+        'type'        => 'url',
+        'section'     => 'title_tagline',
+        'settings'    => 'partner_logo_link',
+    ) );
 }
 // Enregistre l'option dans l'outil de personnalisation WordPress
 add_action( 'customize_register', 'cyclo_customizer_settings' );
@@ -172,3 +264,34 @@ add_filter('acf/settings/load_json', function( $paths ) {
     $paths[] = get_template_directory() . '/acf-json';
     return $paths;
 });
+
+// ==========================================================================
+// --- 8. OPTIMISATION DES PERFORMANCES (LIGHTHOUSE) ---
+// ==========================================================================
+
+/**
+ * Ajoute l'attribut "defer" aux scripts pour ne pas bloquer l'affichage de la page
+ */
+function cyclo_defer_scripts( $tag, $handle, $src ) {
+    // La liste de nos scripts à charger en arrière-plan
+    $scripts_to_defer = array(
+        'cyclo-main-script',
+        'aire-repos-tracking',
+        'cyclo-questionnaire-script'
+    );
+
+    if ( in_array( $handle, $scripts_to_defer ) ) {
+        return str_replace( ' src', ' defer="defer" src', $tag );
+    }
+    return $tag;
+}
+add_filter( 'script_loader_tag', 'cyclo_defer_scripts', 10, 3 );
+
+/**
+ * Ajoute les balises "preconnect" pour accélérer le chargement des polices Google
+ */
+function cyclo_google_fonts_preconnect() {
+    echo '<link rel="preconnect" href="https://fonts.googleapis.com">' . "\n";
+    echo '<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>' . "\n";
+}
+add_action( 'wp_head', 'cyclo_google_fonts_preconnect', 1 );

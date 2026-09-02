@@ -10,7 +10,7 @@ get_header();
     <div class="legal-container">
 
         <div class="legal-back">
-            <a  href="javascript:history.back()" class="btn-retour" id="back-button">
+            <a  href="/" class="btn-retour" id="back-button">
                 &larr; Retour au site
             </a>
 
@@ -26,6 +26,18 @@ get_header();
 
     </div>
 </main>
+
+<script>
+    document.addEventListener("DOMContentLoaded", () => {
+        const btnRetour = document.getElementById('back-button');
+
+        const lastAire = localStorage.getItem('cyclo_last_aire');
+
+        if (btnRetour && lastAire) {
+            btnRetour.href = lastAire;
+        }
+    });
+</script>
 
 <?php
 get_footer();
